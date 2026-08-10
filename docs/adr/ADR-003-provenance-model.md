@@ -15,3 +15,4 @@ Model scientific provenance as structured records linked to scientific entities 
 
 Scientific feature migrations must include provenance relationships in their definition of done. Logging is useful for diagnosis but never satisfies provenance requirements.
 
+The first persisted implementation uses separate `prompt_versions`, `ai_runs`, `scientific_provenance`, and `audit_events` tables. Tenant/review composite constraints bind cross-table attribution, while ORM mutation guards and append-only repository protocols prevent application-level rewriting of ledger history.

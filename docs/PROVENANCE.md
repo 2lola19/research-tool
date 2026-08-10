@@ -6,3 +6,15 @@ Audit history answers who changed an application record and when. Scientific pro
 
 Corrections create append-only change events carrying previous value, new value, reason, and actor. Normal application operations must not erase history.
 
+## Persisted ledger foundation
+
+Migration `20260810_0005` implements four separate append-only record families:
+
+- `prompt_versions` stores immutable, monotonically numbered prompt templates and output schemas per organization.
+- `ai_runs` captures the exact prompt version, provider/model/version labels, parameters, input and output snapshots, status, usage, review, and responsible human initiator. It records runs from mock/fixture providers today; it does not invoke a paid provider.
+- `scientific_provenance` links a subject to an optional source and precise structured locator, method/version, human or AI actor, confidence, and verification state.
+- `audit_events` records application changes with actor, before/after snapshots, reason, and optional review scope.
+
+ORM mutation guards reject updates and deletes for all four families. Application services expose append and tenant-scoped read operations only. Corrections therefore append a new record or audit event; they never rewrite the historical row.
+
+Actor constraints are explicit. Human provenance points to an active same-organization membership. AI provenance points to an AI run in the same organization and review. System provenance is reserved for internal services. Generic subject/source identifiers make the ledger usable across later scientific domains without collapsing those domains into the provenance schema.
