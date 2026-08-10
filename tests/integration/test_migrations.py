@@ -8,7 +8,7 @@ from contextlib import closing
 from pathlib import Path
 
 
-def test_alembic_upgrade_applies_phase_two_schema(tmp_path: Path) -> None:
+def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     database_path = tmp_path / "migration.db"
     environment = os.environ.copy()
     environment["DATABASE_URL"] = f"sqlite+aiosqlite:///{database_path.as_posix()}"
@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_phase_two_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260810_0002",)
+    assert version == ("20260810_0010",)
     assert {
         "users",
         "organizations",
@@ -41,4 +41,28 @@ def test_alembic_upgrade_applies_phase_two_schema(tmp_path: Path) -> None:
         "local_credentials",
         "reviews",
         "review_memberships",
+        "workflow_runs",
+        "workflow_jobs",
+        "job_events",
+        "human_checkpoints",
+        "prompt_versions",
+        "ai_runs",
+        "scientific_provenance",
+        "audit_events",
+        "protocol_versions",
+        "protocol_decisions",
+        "search_strategy_versions",
+        "search_translations",
+        "citation_import_batches",
+        "citation_source_records",
+        "articles",
+        "deduplication_runs",
+        "duplicate_candidates",
+        "deduplication_decisions",
+        "screening_rounds",
+        "screening_assignments",
+        "screening_decisions",
+        "screening_outcomes",
+        "screening_adjudications",
+        "screening_progressions",
     } <= tables
