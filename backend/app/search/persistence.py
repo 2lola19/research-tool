@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, Mapper, mapped_column
 
 from backend.app.db.base import Base
+from backend.app.db.sequence import insert_next_unique_integer
 from backend.app.search.domain import SearchStrategyVersion, SearchTranslation
 
 
@@ -164,22 +165,26 @@ class SqlAlchemySearchRepository:
         content_hash: str,
         created_by_user_id: UUID,
     ) -> SearchStrategyVersion:
-        query = select(func.coalesce(func.max(SearchStrategyVersionRecord.version), 0)).where(
-            SearchStrategyVersionRecord.organization_id == organization_id,
-            SearchStrategyVersionRecord.review_id == review_id,
+        async def read_next_version() -> int:
+            query = select(func.coalesce(func.max(SearchStrategyVersionRecord.version), 0)).where(
+                SearchStrategyVersionRecord.organization_id == organization_id,
+                SearchStrategyVersionRecord.review_id == review_id,
+            )
+            return int((await self._session.execute(query)).scalar_one()) + 1
+
+        record = await insert_next_unique_integer(
+            self._session,
+            read_next_version,
+            lambda version: SearchStrategyVersionRecord(
+                organization_id=organization_id,
+                review_id=review_id,
+                protocol_version_id=protocol_version_id,
+                version=version,
+                content=content,
+                content_hash=content_hash,
+                created_by_user_id=created_by_user_id,
+            ),
         )
-        version = int((await self._session.execute(query)).scalar_one()) + 1
-        record = SearchStrategyVersionRecord(
-            organization_id=organization_id,
-            review_id=review_id,
-            protocol_version_id=protocol_version_id,
-            version=version,
-            content=content,
-            content_hash=content_hash,
-            created_by_user_id=created_by_user_id,
-        )
-        self._session.add(record)
-        await self._session.flush()
         await self._session.refresh(record)
         return _strategy_to_domain(record)
 

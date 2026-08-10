@@ -22,6 +22,7 @@ from sqlalchemy.orm import Mapped, Mapper, mapped_column
 
 from backend.app.core.errors import ResourceNotFoundError
 from backend.app.db.base import Base
+from backend.app.db.sequence import insert_next_unique_integer
 from backend.app.screening.domain import (
     ScreeningAdjudication,
     ScreeningAssignment,
@@ -439,24 +440,28 @@ class SqlAlchemyScreeningRepository:
         blinded: bool,
         created_by_user_id: UUID,
     ) -> ScreeningRound:
-        query = select(func.coalesce(func.max(ScreeningRoundRecord.sequence), 0)).where(
-            ScreeningRoundRecord.organization_id == organization_id,
-            ScreeningRoundRecord.review_id == review_id,
+        async def read_next_sequence() -> int:
+            query = select(func.coalesce(func.max(ScreeningRoundRecord.sequence), 0)).where(
+                ScreeningRoundRecord.organization_id == organization_id,
+                ScreeningRoundRecord.review_id == review_id,
+            )
+            return int((await self._session.execute(query)).scalar_one()) + 1
+
+        row = await insert_next_unique_integer(
+            self._session,
+            read_next_sequence,
+            lambda sequence: ScreeningRoundRecord(
+                organization_id=organization_id,
+                review_id=review_id,
+                name=name,
+                stage=stage.value,
+                sequence=sequence,
+                required_decisions=required_decisions,
+                blinded=blinded,
+                state=ScreeningRoundState.OPEN.value,
+                created_by_user_id=created_by_user_id,
+            ),
         )
-        sequence = int((await self._session.execute(query)).scalar_one()) + 1
-        row = ScreeningRoundRecord(
-            organization_id=organization_id,
-            review_id=review_id,
-            name=name,
-            stage=stage.value,
-            sequence=sequence,
-            required_decisions=required_decisions,
-            blinded=blinded,
-            state=ScreeningRoundState.OPEN.value,
-            created_by_user_id=created_by_user_id,
-        )
-        self._session.add(row)
-        await self._session.flush()
         await self._session.refresh(row)
         return _round(row)
 

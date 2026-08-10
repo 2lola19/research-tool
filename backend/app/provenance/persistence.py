@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, Mapper, mapped_column
 
 from backend.app.db.base import Base
+from backend.app.db.sequence import insert_next_unique_integer
 from backend.app.provenance.domain import (
     AIRun,
     AIRunStatus,
@@ -289,21 +290,25 @@ class SqlAlchemyProvenanceRepository:
         output_schema: dict[str, Any],
         created_by_user_id: UUID,
     ) -> PromptVersion:
-        version_query = select(func.coalesce(func.max(PromptVersionRecord.version), 0)).where(
-            PromptVersionRecord.organization_id == organization_id,
-            PromptVersionRecord.prompt_key == prompt_key,
+        async def read_next_version() -> int:
+            version_query = select(func.coalesce(func.max(PromptVersionRecord.version), 0)).where(
+                PromptVersionRecord.organization_id == organization_id,
+                PromptVersionRecord.prompt_key == prompt_key,
+            )
+            return int((await self._session.execute(version_query)).scalar_one()) + 1
+
+        record = await insert_next_unique_integer(
+            self._session,
+            read_next_version,
+            lambda version: PromptVersionRecord(
+                organization_id=organization_id,
+                prompt_key=prompt_key.strip(),
+                version=version,
+                template=template,
+                output_schema=output_schema,
+                created_by_user_id=created_by_user_id,
+            ),
         )
-        version = int((await self._session.execute(version_query)).scalar_one()) + 1
-        record = PromptVersionRecord(
-            organization_id=organization_id,
-            prompt_key=prompt_key.strip(),
-            version=version,
-            template=template,
-            output_schema=output_schema,
-            created_by_user_id=created_by_user_id,
-        )
-        self._session.add(record)
-        await self._session.flush()
         await self._session.refresh(record)
         return _prompt_to_domain(record)
 

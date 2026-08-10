@@ -21,6 +21,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.core.errors import ConflictError, ResourceNotFoundError
 from backend.app.db.base import Base
+from backend.app.db.sequence import insert_next_unique_integer
 from backend.app.orchestration.contracts import JobState
 from backend.app.workflow.domain import (
     CheckpointState,
@@ -444,24 +445,27 @@ class SqlAlchemyWorkflowRepository:
         record.state = target_state.value
         record.updated_at = datetime.now(UTC)
 
-        sequence_statement = select(func.coalesce(func.max(JobEventRecord.sequence), 0)).where(
-            JobEventRecord.job_id == job_id,
-            JobEventRecord.organization_id == organization_id,
-        )
-        next_sequence = int((await self._session.execute(sequence_statement)).scalar_one()) + 1
-        self._session.add(
-            JobEventRecord(
+        async def read_next_sequence() -> int:
+            sequence_statement = select(func.coalesce(func.max(JobEventRecord.sequence), 0)).where(
+                JobEventRecord.job_id == job_id,
+                JobEventRecord.organization_id == organization_id,
+            )
+            return int((await self._session.execute(sequence_statement)).scalar_one()) + 1
+
+        await insert_next_unique_integer(
+            self._session,
+            read_next_sequence,
+            lambda sequence: JobEventRecord(
                 organization_id=organization_id,
                 job_id=job_id,
-                sequence=next_sequence,
+                sequence=sequence,
                 event_type=JobEventType.STATE_CHANGED.value,
                 from_state=current_state.value,
                 to_state=target_state.value,
                 actor_user_id=actor_user_id,
                 reason=reason.strip() if reason else None,
-            )
+            ),
         )
-        await self._session.flush()
         await self._session.refresh(record)
         return _job_to_domain(record)
 
@@ -573,21 +577,24 @@ class SqlAlchemyWorkflowRepository:
         actor_user_id: UUID | None,
         reason: str | None,
     ) -> None:
-        sequence_statement = select(func.coalesce(func.max(JobEventRecord.sequence), 0)).where(
-            JobEventRecord.job_id == job.id,
-            JobEventRecord.organization_id == organization_id,
-        )
-        next_sequence = int((await self._session.execute(sequence_statement)).scalar_one()) + 1
-        self._session.add(
-            JobEventRecord(
+        async def read_next_sequence() -> int:
+            sequence_statement = select(func.coalesce(func.max(JobEventRecord.sequence), 0)).where(
+                JobEventRecord.job_id == job.id,
+                JobEventRecord.organization_id == organization_id,
+            )
+            return int((await self._session.execute(sequence_statement)).scalar_one()) + 1
+
+        await insert_next_unique_integer(
+            self._session,
+            read_next_sequence,
+            lambda sequence: JobEventRecord(
                 organization_id=organization_id,
                 job_id=job.id,
-                sequence=next_sequence,
+                sequence=sequence,
                 event_type=event_type.value,
                 from_state=job.state.value,
                 to_state=job.state.value,
                 actor_user_id=actor_user_id,
                 reason=reason.strip() if reason else None,
-            )
+            ),
         )
-        await self._session.flush()
