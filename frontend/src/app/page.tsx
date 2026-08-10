@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { getBackendHealth } from "@/lib/api";
 
 const pillars = [
@@ -9,10 +11,10 @@ const pillars = [
 ] as const;
 
 const upcoming = [
-  "Organizations and access boundaries",
-  "Review projects and memberships",
   "Versioned protocols",
   "Persisted workflows and provenance",
+  "Search strategy design",
+  "Citation import and deduplication",
 ] as const;
 
 export default async function Home() {
@@ -26,16 +28,24 @@ export default async function Home() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--brand)]">
             Evidence workspace
           </p>
-          <p className="mt-1 text-sm text-[var(--muted)]">Foundation milestone</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">Review Projects milestone</p>
         </div>
-        <div
-          className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm shadow-sm"
-          aria-label={`API ${backend.status}`}
-        >
-          <span
-            className={`h-2.5 w-2.5 rounded-full ${isReady ? "bg-emerald-500" : "bg-amber-500"}`}
-          />
-          API {isReady ? "ready" : "unavailable"}
+        <div className="flex items-center gap-3">
+          <Link
+            className="rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-white"
+            href="/reviews"
+          >
+            Open workspace
+          </Link>
+          <div
+            className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm shadow-sm"
+            aria-label={`API ${backend.status}`}
+          >
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${isReady ? "bg-emerald-500" : "bg-amber-500"}`}
+            />
+            API {isReady ? "ready" : "unavailable"}
+          </div>
         </div>
       </header>
 
@@ -92,9 +102,8 @@ export default async function Home() {
 
       <footer className="flex flex-col gap-2 border-t border-[var(--line)] py-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
         <span>Local-first. Provider-neutral. Reproducibility-led.</span>
-        <span>Phase 0/1 · v0.1.0</span>
+        <span>Review Projects · v0.2.0</span>
       </footer>
     </main>
   );
 }
-

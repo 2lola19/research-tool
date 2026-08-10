@@ -2,7 +2,7 @@
 
 A local-first, production-oriented platform for reproducible systematic reviews and meta-analysis. The repository is intentionally organized around five pillars: workflow orchestration, specialized research engines, a structured evidence store, a provenance ledger, and explicit human checkpoints.
 
-The current milestone is the verified Phase 0/1 foundation: FastAPI, SQLAlchemy/Alembic, PostgreSQL, a Next.js App Router frontend, provider contracts with local mocks, structured logging, health/readiness endpoints, Docker Compose, and automated quality checks.
+The current source milestone includes the verified foundation, local identity and tenant isolation, and Review Projects. FastAPI services enforce organization/review access, Alembic owns the schema, and the Next.js App Router dashboard keeps local signed tokens in HTTP-only cookies.
 
 ## Quick start with Docker
 
@@ -21,6 +21,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 Copy-Item .env.example .env
 .\.venv\Scripts\alembic.exe upgrade head
+.\.venv\Scripts\python.exe -m backend.app.identity.bootstrap
 .\.venv\Scripts\uvicorn.exe backend.app.main:app --reload
 ```
 
@@ -48,5 +49,4 @@ Read [ARCHITECTURE.md](ARCHITECTURE.md), [AGENTS.md](AGENTS.md), and the relevan
 
 ## Current scope
 
-This is a foundation, not a scientific-feature demo. Identity, review projects, protocol versioning, citation processing, screening, extraction, PRISMA, and analysis are implemented in later phases tracked in `docs/IMPLEMENTATION_STATUS.md`.
-
+Identity, tenant isolation, and administrative Review Projects are implemented. Scientific workflow state, provenance, protocol versioning, citation processing, screening, extraction, PRISMA, and analysis follow in the ordered milestones tracked in `docs/IMPLEMENTATION_STATUS.md`.
