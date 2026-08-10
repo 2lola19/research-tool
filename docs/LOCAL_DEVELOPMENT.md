@@ -20,3 +20,5 @@ After migrations apply, set the five `LOCAL_*` bootstrap values in the ignored `
 ```
 
 Obtain a short-lived token with `POST /api/v1/auth/token` using the configured email/password. Tenant endpoints require both `Authorization: Bearer <token>` and `X-Organization-ID: <organization UUID>`. The bootstrap command prints only the created user and organization identifiers, never credentials.
+
+The web sign-in page is available at `http://localhost:3000/login`; enter the bootstrap email/password and printed organization ID. Successful sign-in redirects to the server-rendered `/reviews` dashboard. The frontend holds the signed token only in an HTTP-only cookie.

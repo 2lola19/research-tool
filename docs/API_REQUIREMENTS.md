@@ -2,8 +2,8 @@
 
 | Service | Purpose | Required stage | Providers | Credentials | Free/open alternative | Current mock | Status |
 |---|---|---|---|---|---|---|---|
-| AI inference | Screening, extraction, adjudication assistance | Screening onward | OpenAI, Anthropic, Gemini | Provider API key | Local models where validated | `MockAIProvider` | Interface created |
-| Scholarly metadata | Discovery and enrichment | Search/import | OpenAlex, PubMed, Europe PMC, Crossref | Usually none; polite email/key may apply | Fixture provider | Fixture planned | Deferred to Phase 7 |
+| AI inference | Screening, extraction, adjudication assistance | Screening onward | OpenAI, Anthropic, Gemini | Provider API key | Local models where validated | `MockAIProvider` | Mock interface only; real providers deferred |
+| Scholarly metadata | Discovery and enrichment | Search/import | OpenAlex, PubMed, Europe PMC, Crossref | Usually none; polite email/key may apply | Deterministic fixture translator/provider | Offline translator implemented | Live execution deferred; no credentials required yet |
 | Document parsing | Scholarly PDF to structured TEI | Document management | GROBID | None for self-hosted | Local GROBID container | Adapter planned | Deferred to Phase 11 |
 | Object storage | Durable document storage | Document management | S3-compatible providers | Access key/secret/role | Local filesystem | Local adapter contract | Foundation created |
 | Notifications | Human checkpoints and job failures | Workflow | Email providers | Provider credentials | Console/mock notifications | Mock planned | Deferred to Phase 4 |
