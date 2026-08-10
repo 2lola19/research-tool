@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +27,21 @@ class Settings(BaseSettings):
     object_storage_provider: Literal["local", "s3"] = "local"
     local_storage_path: Path = Path("data/objects")
     notification_provider: Literal["mock", "email"] = "mock"
+    authentication_provider: Literal["local", "oidc"] = "local"
+    local_auth_secret: SecretStr = Field(
+        default=SecretStr("local-development-only-change-me"),
+        repr=False,
+    )
+    local_auth_token_ttl_seconds: int = Field(default=3600, ge=60, le=86400)
+
+    @model_validator(mode="after")
+    def validate_local_authentication_scope(self) -> "Settings":
+        if self.authentication_provider == "local" and self.app_env not in {
+            "development",
+            "test",
+        }:
+            raise ValueError("local authentication is restricted to development and test")
+        return self
 
     @property
     def docs_enabled(self) -> bool:

@@ -1,6 +1,6 @@
 # Open-Source Component Evaluation
 
-Evaluation snapshot: 2026-08-09. Versions are pinned only when integration begins.
+Evaluation snapshot: 2026-08-10. Versions are pinned only when integration begins.
 
 | Component | Repository | License | Purpose | Evaluated | Decision | Reason / integration approach | Version |
 |---|---|---|---|---|---|---|---|
@@ -14,3 +14,4 @@ Evaluation snapshot: 2026-08-09. Versions are pinned only when integration begin
 
 No candidate code is copied into this repository. Direct integration requires a maintenance, license, security, and fit review at the relevant phase.
 
+Phase 2 adds no authentication dependency or SaaS. Its local-only provider uses Python standard-library scrypt and HMAC behind an application protocol; a production OIDC implementation remains deferred.

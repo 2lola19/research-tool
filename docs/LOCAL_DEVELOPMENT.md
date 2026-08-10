@@ -11,3 +11,12 @@ Useful endpoints:
 - `GET http://localhost:8000/api/v1/system/info`: non-secret runtime metadata.
 - `GET http://localhost:3000/api/health`: frontend liveness.
 
+## Local identity bootstrap
+
+After migrations apply, set the five `LOCAL_*` bootstrap values in the ignored `.env` file. Keep `LOCAL_ADMIN_PASSWORD` and `LOCAL_AUTH_SECRET` private. Create the initial organization owner once:
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.app.identity.bootstrap
+```
+
+Obtain a short-lived token with `POST /api/v1/auth/token` using the configured email/password. Tenant endpoints require both `Authorization: Bearer <token>` and `X-Organization-ID: <organization UUID>`. The bootstrap command prints only the created user and organization identifiers, never credentials.

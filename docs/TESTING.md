@@ -20,5 +20,6 @@ npm test
 npm run build
 ```
 
-Critical future suites cover protocol immutability, tenant isolation, deduplication, audit append-only behavior, provenance completeness, PRISMA counts, workflow transitions, and effect calculations.
+Phase 2 includes negative tenant-isolation integration tests for cross-organization reads, writes, enumeration, identifier inference, invalid actor context, membership removal, role restrictions, ownership, and review assignment. The Alembic chain is also applied to a disposable SQLite database in the automated suite. PostgreSQL remains canonical and its database-specific execution gate is tracked as `ENVIRONMENT_BLOCKED` until the host Docker engine is available.
 
+Critical future suites cover protocol immutability, deduplication, audit append-only behavior, provenance completeness, PRISMA counts, workflow transitions, and effect calculations.
