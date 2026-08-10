@@ -28,6 +28,7 @@ class Permission(StrEnum):
     MANAGE_DEDUPLICATION = "manage_deduplication"
     MANAGE_SCREENING = "manage_screening"
     SCREEN_ARTICLES = "screen_articles"
+    MANAGE_DOCUMENTS = "manage_documents"
 
 
 ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
@@ -45,6 +46,7 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_DEDUPLICATION,
             Permission.MANAGE_SCREENING,
             Permission.SCREEN_ARTICLES,
+            Permission.MANAGE_DOCUMENTS,
         }
     ),
     OrganizationRole.REVIEWER: frozenset(
@@ -54,6 +56,7 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.IMPORT_CITATIONS,
             Permission.MANAGE_DEDUPLICATION,
             Permission.SCREEN_ARTICLES,
+            Permission.MANAGE_DOCUMENTS,
         }
     ),
     OrganizationRole.STATISTICIAN: frozenset({Permission.RECORD_PROVENANCE}),

@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from backend.app.api.routes.citations import router as citations_router
 from backend.app.api.routes.deduplication import router as deduplication_router
+from backend.app.api.routes.documents import router as documents_router
 from backend.app.api.routes.health import router as health_router
 from backend.app.api.routes.identity import router as identity_router
 from backend.app.api.routes.protocols import router as protocols_router
@@ -19,6 +20,7 @@ def build_api_router(api_prefix: str) -> APIRouter:
     router.include_router(health_router)
     router.include_router(citations_router, prefix=api_prefix)
     router.include_router(deduplication_router, prefix=api_prefix)
+    router.include_router(documents_router, prefix=api_prefix)
     router.include_router(system_router, prefix=api_prefix)
     router.include_router(identity_router, prefix=api_prefix)
     router.include_router(provenance_router, prefix=api_prefix)

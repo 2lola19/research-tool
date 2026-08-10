@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     ai_provider: Literal["mock", "openai", "anthropic", "gemini"] = "mock"
     object_storage_provider: Literal["local", "s3"] = "local"
     local_storage_path: Path = Path("data/objects")
+    max_document_file_size_bytes: int = Field(default=25_000_000, ge=1024, le=200_000_000)
     notification_provider: Literal["mock", "email"] = "mock"
     authentication_provider: Literal["local", "oidc"] = "local"
     local_auth_secret: SecretStr = Field(

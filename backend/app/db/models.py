@@ -10,6 +10,15 @@ from backend.app.deduplication.persistence import (
     DeduplicationRunRecord,
     DuplicateCandidateRecord,
 )
+from backend.app.documents.persistence import (
+    DocumentBlockRecord,
+    DocumentEvidenceLocationRecord,
+    DocumentProcessingRunRecord,
+    DocumentRecord,
+    DocumentWarningRecord,
+    FullTextCriterionJudgmentRecord,
+    FullTextScreeningRecord,
+)
 from backend.app.identity.persistence import (
     LocalCredentialRecord,
     MembershipRecord,
@@ -48,7 +57,14 @@ __all__ = [
     "CitationSourceRecordRow",
     "DeduplicationDecisionRecord",
     "DeduplicationRunRecord",
+    "DocumentBlockRecord",
+    "DocumentEvidenceLocationRecord",
+    "DocumentProcessingRunRecord",
+    "DocumentRecord",
+    "DocumentWarningRecord",
     "DuplicateCandidateRecord",
+    "FullTextCriterionJudgmentRecord",
+    "FullTextScreeningRecord",
     "HumanCheckpointRecord",
     "JobEventRecord",
     "LocalCredentialRecord",

@@ -12,6 +12,8 @@ from backend.app.identity.persistence import SqlAlchemyIdentityRepository
 from backend.app.identity.security import LocalTokenAuthenticationProvider
 from backend.app.identity.service import ActorContextService
 from backend.app.services.health import HealthService, get_health_service
+from backend.app.storage.contracts import ObjectStorageProvider
+from backend.app.storage.local import LocalFileStorageProvider
 
 HealthServiceDependency = Annotated[HealthService, Depends(get_health_service)]
 DbSessionDependency = Annotated[AsyncSession, Depends(get_db_session)]
@@ -22,6 +24,15 @@ def get_request_settings(request: Request) -> Settings:
 
 
 SettingsDependency = Annotated[Settings, Depends(get_request_settings)]
+
+
+def get_object_storage(settings: SettingsDependency) -> ObjectStorageProvider:
+    if settings.object_storage_provider != "local":
+        raise RuntimeError("the configured object storage provider is not installed")
+    return LocalFileStorageProvider(settings.local_storage_path)
+
+
+ObjectStorageDependency = Annotated[ObjectStorageProvider, Depends(get_object_storage)]
 
 
 def build_authentication_provider(settings: Settings) -> LocalTokenAuthenticationProvider:
