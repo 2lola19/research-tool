@@ -47,6 +47,14 @@ class InvalidOrganizationContextError(DomainError):
     status_code = status.HTTP_400_BAD_REQUEST
 
 
+class InvalidStateTransitionError(ConflictError):
+    code = "invalid_state_transition"
+
+
+class InvalidCitationImportError(DomainError):
+    code = "invalid_citation_import"
+
+
 def install_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
     async def handle_domain_error(_: Request, exc: DomainError) -> JSONResponse:

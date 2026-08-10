@@ -14,10 +14,13 @@ class JobState(StrEnum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     PAUSED = "PAUSED"
+    CANCELLED = "CANCELLED"
 
 
 @dataclass(frozen=True, slots=True)
 class JobSubmission:
+    organization_id: UUID
+    review_id: UUID
     workflow_run_id: UUID
     task_name: str
     task_version: str
@@ -35,8 +38,8 @@ class JobHandle:
 class Orchestrator(Protocol):
     async def submit(self, submission: JobSubmission) -> JobHandle: ...
 
-    async def pause(self, job_id: UUID) -> JobHandle: ...
+    async def pause(self, organization_id: UUID, job_id: UUID) -> JobHandle: ...
 
-    async def resume(self, job_id: UUID) -> JobHandle: ...
+    async def resume(self, organization_id: UUID, job_id: UUID) -> JobHandle: ...
 
-    async def cancel(self, job_id: UUID) -> JobHandle: ...
+    async def cancel(self, organization_id: UUID, job_id: UUID) -> JobHandle: ...
