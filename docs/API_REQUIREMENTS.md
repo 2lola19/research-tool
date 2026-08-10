@@ -4,8 +4,8 @@
 |---|---|---|---|---|---|---|---|
 | AI inference | Screening, extraction, adjudication assistance | Screening onward | OpenAI, Anthropic, Gemini | Provider API key | Local models where validated | `MockAIProvider` | Mock interface only; real providers deferred |
 | Scholarly metadata | Discovery and enrichment | Search/import | OpenAlex, PubMed, Europe PMC, Crossref | Usually none; polite email/key may apply | Deterministic fixture translator/provider | Offline translator implemented | Live execution deferred; no credentials required yet |
-| Document parsing | Scholarly PDF to structured TEI | Document management | GROBID | None for self-hosted | Local GROBID container | Adapter planned | Deferred to Phase 11 |
-| Object storage | Durable document storage | Document management | S3-compatible providers | Access key/secret/role | Local filesystem | Local adapter contract | Foundation created |
+| Document parsing | Scholarly PDF to structured TEI | Document management | GROBID | None for self-hosted | Fixture parser + TEI adapter | `DocumentParser` + `GrobidTeiParser` | Adapter foundation implemented; live service deferred |
+| Object storage | Durable document storage | Document management | S3-compatible providers | Access key/secret/role | Local filesystem | `LocalFileStorageProvider` | Local-first foundation implemented; S3 adapter deferred |
 | Notifications | Human checkpoints and job failures | Workflow | Email providers | Provider credentials | Console/mock notifications | Mock planned | Deferred to Phase 4 |
 | Durable orchestration | Retries, timers, checkpoints | Workflow | Temporal self-hosted/cloud | None locally; cloud credentials later | Local PostgreSQL-backed adapter | Contract created | Evaluate in Phase 4 |
 | Statistical service | Deterministic meta-analysis | Analysis | R service with metafor | None | Local R container | Interface planned | Deferred to Phase 20 |

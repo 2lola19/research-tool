@@ -1,10 +1,10 @@
 # Open-Source Component Evaluation
 
-Evaluation snapshot: 2026-08-10. Versions are pinned only when integration begins.
+Evaluation snapshot: 2026-08-11. Versions are pinned only when integration begins.
 
 | Component | Repository | License | Purpose | Evaluated | Decision | Reason / integration approach | Version |
 |---|---|---|---|---|---|---|---|
-| GROBID | https://github.com/grobidOrg/grobid | Apache-2.0 | Scholarly PDF parsing | Preliminary | Candidate accepted for adapter evaluation | Run as isolated service; normalize TEI without making GROBID output canonical | TBD |
+| GROBID | https://github.com/grobidOrg/grobid | Apache-2.0 | Scholarly PDF parsing | Evaluated | Adapter boundary accepted; live service deferred | PDF-to-TEI service remains isolated; `GrobidTeiParser` normalizes fixture TEI into the canonical document model; Docker execution is blocked | TBD |
 | ASReview | https://github.com/asreview/asreview | Apache-2.0 | Active-learning screening | Preliminary | Deferred | Screening Foundation uses the local blinded decision/provenance model; evaluate ASReview only after this recovery checkpoint | TBD |
 | dedupe | https://github.com/dedupeio/dedupe | MIT | Fuzzy entity resolution | Preliminary | Candidate | Layer after deterministic DOI/PMID/title rules; never destructively merge source records | TBD |
 | Temporal | https://github.com/temporalio/temporal | MIT (server); SDK licenses vary | Durable orchestration | Preliminary | Deferred behind port | Strong fit, but extra service complexity is premature before workflow semantics are implemented | TBD |

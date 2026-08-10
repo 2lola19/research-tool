@@ -10,7 +10,7 @@
 8. **Citation Import (complete):** RIS/BibTeX/CSV source records with import provenance.
 9. **Deduplication (complete):** deterministic identifiers followed by reviewable, non-destructive fuzzy candidates.
 10. **Screening Foundation (complete):** reviewer queues, blinded immutable decisions, deterministic conflicts, adjudication, and full-text progression.
-11. **Documents, extraction, and verification (next):** storage/validation, GROBID adapter, typed schemas, evidence locations, and conflict resolution.
+11. **Documents, extraction, and verification (in progress):** storage/validation, canonical parser adapter, evidence locations, and manual full-text eligibility. Mature extraction and dual-extractor verification remain subsequent milestones.
 12. **PRISMA, export, and scientific extensions:** database-derived flow counts, portable exports, risk of bias, deterministic R/metafor analysis, certainty, and reporting.
 
 Each milestone must meet the definition of done in the master specification before progression.
