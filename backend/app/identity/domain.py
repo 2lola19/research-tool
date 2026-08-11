@@ -33,6 +33,7 @@ class Permission(StrEnum):
     MANAGE_EXTRACTION_SCHEMA = "manage_extraction_schema"
     PERFORM_EXTRACTION = "perform_extraction"
     ADJUDICATE_EXTRACTION = "adjudicate_extraction"
+    EXPORT_REVIEW = "export_review"
 
 
 ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
@@ -55,6 +56,7 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_EXTRACTION_SCHEMA,
             Permission.PERFORM_EXTRACTION,
             Permission.ADJUDICATE_EXTRACTION,
+            Permission.EXPORT_REVIEW,
         }
     ),
     OrganizationRole.REVIEWER: frozenset(

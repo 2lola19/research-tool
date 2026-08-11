@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260811_0015",)
+    assert version == ("20260811_0017",)
     assert {
         "users",
         "organizations",
@@ -80,4 +80,28 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "extraction_values",
         "extraction_conflicts",
         "extraction_verifications",
+        "prisma_snapshots",
+        "export_artifacts",
     } <= tables
+
+    downgrade = subprocess.run(
+        [sys.executable, "-m", "alembic", "downgrade", "base"],
+        cwd=Path(__file__).parents[2],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+    )
+    assert downgrade.returncode == 0, downgrade.stderr
+    with closing(sqlite3.connect(database_path)) as connection:
+        remaining_tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+        versions = connection.execute("SELECT version_num FROM alembic_version").fetchall()
+    assert versions == []
+    assert "prisma_snapshots" not in remaining_tables
+    assert "export_artifacts" not in remaining_tables

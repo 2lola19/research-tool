@@ -19,6 +19,7 @@ from backend.app.documents.persistence import (
     FullTextCriterionJudgmentRecord,
     FullTextScreeningRecord,
 )
+from backend.app.exports.persistence import ExportArtifactRecord
 from backend.app.extraction.manual_persistence import ExtractionRunRecord, ExtractionValueRecord
 from backend.app.extraction.schema_persistence import (
     ExtractionSchemaRecord,
@@ -34,6 +35,7 @@ from backend.app.identity.persistence import (
     OrganizationRecord,
     UserRecord,
 )
+from backend.app.prisma.persistence import PrismaSnapshotRecord
 from backend.app.protocols.persistence import ProtocolDecisionRecord, ProtocolVersionRecord
 from backend.app.provenance.persistence import (
     AIRunRecord,
@@ -73,6 +75,7 @@ __all__ = [
     "DocumentRecord",
     "DocumentWarningRecord",
     "DuplicateCandidateRecord",
+    "ExportArtifactRecord",
     "ExtractionConflictRecord",
     "ExtractionRunRecord",
     "ExtractionSchemaRecord",
@@ -86,6 +89,7 @@ __all__ = [
     "LocalCredentialRecord",
     "MembershipRecord",
     "OrganizationRecord",
+    "PrismaSnapshotRecord",
     "PromptVersionRecord",
     "ProtocolDecisionRecord",
     "ProtocolVersionRecord",
