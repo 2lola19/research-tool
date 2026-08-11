@@ -108,3 +108,13 @@ async def list_articles(
 ) -> list[ArticleResponse]:
     articles = await _service(session).list_articles(actor, review_id)
     return [ArticleResponse.from_domain(article) for article in articles]
+
+
+@router.get("/reviews/{review_id}/imports", response_model=list[CitationImportResponse])
+async def list_citation_imports(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    review_id: Annotated[UUID, Path()],
+) -> list[CitationImportResponse]:
+    batches = await _service(session).list_imports(actor, review_id)
+    return [CitationImportResponse.from_domain(batch) for batch in batches]

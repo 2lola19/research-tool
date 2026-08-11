@@ -101,3 +101,7 @@ class CitationImportService:
     async def list_articles(self, actor: ActorContext, review_id: UUID) -> list[Article]:
         review = await self._review_service.get(actor, review_id)
         return await self._repository.list_articles(actor.organization_id, review.id)
+
+    async def list_imports(self, actor: ActorContext, review_id: UUID) -> list[CitationImportBatch]:
+        review = await self._review_service.get(actor, review_id)
+        return await self._repository.list_batches(actor.organization_id, review.id)

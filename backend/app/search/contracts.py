@@ -34,6 +34,10 @@ class SearchRepository(Protocol):
         translator_version: str,
     ) -> SearchTranslation | None: ...
 
+    async def get_translation_by_id(
+        self, organization_id: UUID, translation_id: UUID
+    ) -> SearchTranslation | None: ...
+
     async def append_translation(
         self,
         *,

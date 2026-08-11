@@ -38,6 +38,10 @@ class CitationRepository(Protocol):
         self, organization_id: UUID, batch_id: UUID
     ) -> CitationImportBatch | None: ...
 
+    async def list_batches(
+        self, organization_id: UUID, review_id: UUID
+    ) -> list[CitationImportBatch]: ...
+
     async def list_articles(self, organization_id: UUID, review_id: UUID) -> list[Article]: ...
 
     async def get_article(

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from collections.abc import AsyncIterator
 from pathlib import Path
+from uuid import uuid4
 
 
 class InvalidStorageKeyError(ValueError):
@@ -26,7 +28,15 @@ class LocalFileStorageProvider:
 
         def write() -> None:
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(content)
+            temporary = destination.with_name(f".{destination.name}.{uuid4().hex}.tmp")
+            try:
+                with temporary.open("xb") as stream:
+                    stream.write(content)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                temporary.replace(destination)
+            finally:
+                temporary.unlink(missing_ok=True)
 
         await asyncio.to_thread(write)
 

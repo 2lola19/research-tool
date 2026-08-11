@@ -109,6 +109,9 @@ class CitationSourceRecordRow(Base):
     __tablename__ = "citation_source_records"
     __table_args__ = (
         UniqueConstraint(
+            "id", "organization_id", "review_id", name="uq_citation_source_records_id_tenant"
+        ),
+        UniqueConstraint(
             "import_batch_id", "ordinal", name="uq_citation_source_records_batch_ordinal"
         ),
         ForeignKeyConstraint(
@@ -263,6 +266,19 @@ class SqlAlchemyCitationRepository:
         )
         record = (await self._session.execute(query)).scalar_one_or_none()
         return _batch_to_domain(record) if record is not None else None
+
+    async def list_batches(
+        self, organization_id: UUID, review_id: UUID
+    ) -> list[CitationImportBatch]:
+        query = (
+            select(CitationImportBatchRecord)
+            .where(
+                CitationImportBatchRecord.organization_id == organization_id,
+                CitationImportBatchRecord.review_id == review_id,
+            )
+            .order_by(CitationImportBatchRecord.imported_at, CitationImportBatchRecord.id)
+        )
+        return [_batch_to_domain(row) for row in await self._session.scalars(query)]
 
     async def list_articles(self, organization_id: UUID, review_id: UUID) -> list[Article]:
         query = (

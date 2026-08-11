@@ -52,6 +52,13 @@ from backend.app.screening.persistence import (
     ScreeningProgressionRecord,
     ScreeningRoundRecord,
 )
+from backend.app.search.execution_persistence import (
+    IdentificationSourceRecord,
+    SearchExecutionArtifactRecord,
+    SearchExecutionCitationLinkRecord,
+    SearchExecutionEventRecord,
+    SearchExecutionRecord,
+)
 from backend.app.search.persistence import SearchStrategyVersionRecord, SearchTranslationRecord
 from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
 from backend.app.workflow.persistence import (
@@ -85,6 +92,7 @@ __all__ = [
     "FullTextCriterionJudgmentRecord",
     "FullTextScreeningRecord",
     "HumanCheckpointRecord",
+    "IdentificationSourceRecord",
     "JobEventRecord",
     "LocalCredentialRecord",
     "MembershipRecord",
@@ -102,6 +110,10 @@ __all__ = [
     "ScreeningOutcomeRecord",
     "ScreeningProgressionRecord",
     "ScreeningRoundRecord",
+    "SearchExecutionArtifactRecord",
+    "SearchExecutionCitationLinkRecord",
+    "SearchExecutionEventRecord",
+    "SearchExecutionRecord",
     "SearchStrategyVersionRecord",
     "SearchTranslationRecord",
     "StudyArticleLinkRecord",

@@ -80,6 +80,13 @@ class SearchTranslationRecord(Base):
     __tablename__ = "search_translations"
     __table_args__ = (
         UniqueConstraint(
+            "id",
+            "search_strategy_version_id",
+            "organization_id",
+            "review_id",
+            name="uq_search_translations_id_strategy_tenant",
+        ),
+        UniqueConstraint(
             "search_strategy_version_id",
             "provider",
             "translator_version",
@@ -225,6 +232,19 @@ class SqlAlchemySearchRepository:
             SearchTranslationRecord.translator_version == translator_version,
         )
         record = (await self._session.execute(query)).scalar_one_or_none()
+        return _translation_to_domain(record) if record is not None else None
+
+    async def get_translation_by_id(
+        self, organization_id: UUID, translation_id: UUID
+    ) -> SearchTranslation | None:
+        record = (
+            await self._session.execute(
+                select(SearchTranslationRecord).where(
+                    SearchTranslationRecord.organization_id == organization_id,
+                    SearchTranslationRecord.id == translation_id,
+                )
+            )
+        ).scalar_one_or_none()
         return _translation_to_domain(record) if record is not None else None
 
     async def append_translation(

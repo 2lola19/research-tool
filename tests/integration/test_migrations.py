@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260811_0017",)
+    assert version == ("20260811_0018",)
     assert {
         "users",
         "organizations",
@@ -82,6 +82,11 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "extraction_verifications",
         "prisma_snapshots",
         "export_artifacts",
+        "identification_sources",
+        "search_executions",
+        "search_execution_events",
+        "search_execution_citation_links",
+        "search_execution_artifacts",
     } <= tables
 
     downgrade = subprocess.run(
@@ -105,3 +110,4 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert versions == []
     assert "prisma_snapshots" not in remaining_tables
     assert "export_artifacts" not in remaining_tables
+    assert "search_executions" not in remaining_tables
