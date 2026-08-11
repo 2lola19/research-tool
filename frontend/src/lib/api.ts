@@ -374,3 +374,206 @@ export async function getRiskOfBiasWorkspace(
     };
   }
 }
+
+export type OutcomeVersion = {
+  id: string;
+  outcome_id: string;
+  version: number;
+  definition: {
+    name: string;
+    description: string | null;
+    outcome_type: string;
+    directionality: string;
+    role: string;
+    compatible_effect_measures: string[];
+    expected_timepoint_window_ids: string[];
+  };
+  content_hash: string;
+  protocol_version_id: string | null;
+};
+
+export type OutcomeDefinition = {
+  id: string;
+  key: string;
+  versions: OutcomeVersion[];
+};
+
+export type OutcomeConfiguration = {
+  timepoint_windows: Array<{
+    id: string;
+    key: string;
+    label: string;
+    anchor: string;
+    minimum_days: string | null;
+    maximum_days: string | null;
+    rule_version: string;
+  }>;
+  units: Array<{
+    id: string;
+    key: string;
+    label: string;
+    dimension: string;
+    context_key: string;
+    rule_version: string;
+  }>;
+  measurement_scales: Array<{
+    id: string;
+    key: string;
+    name: string;
+    directionality: string;
+  }>;
+};
+
+export type OutcomeMapping = {
+  id: string;
+  study_id: string;
+  extraction_value_id: string;
+  outcome_version_id: string;
+  method: string;
+  reported_value: string | null;
+  reported_unit: string | null;
+  normalized_value: string | null;
+  normalized_time_days: string | null;
+  timepoint_window_id: string | null;
+  extraction_verified: boolean;
+};
+
+export type EffectEstimate = {
+  id: string;
+  study_id: string;
+  outcome_version_id: string;
+  effect_measure: string;
+  origin: string;
+  estimate: string | null;
+  standard_error: string | null;
+  variance: string | null;
+  variance_scale: string;
+  adjustment: string;
+  analysis_population: string;
+  components: Record<string, string>;
+  source_mapping_ids: string[];
+  calculation_version: string | null;
+  zero_event_pattern: string;
+};
+
+export type SynthesisCandidate = {
+  id: string;
+  outcome_version_id: string;
+  effect_measure: string;
+  timepoint_window_id: string | null;
+  population_label: string | null;
+  estimate_ids: string[];
+};
+
+export type ReadinessSnapshot = {
+  id: string;
+  candidate_set_id: string;
+  algorithm_version: string;
+  status: string;
+  blockers: Array<{ code: string; estimate_id?: string; study_id?: string }>;
+};
+
+export type OutcomeWorkspaceResult =
+  | {
+      status: "ready";
+      outcomes: OutcomeDefinition[];
+      configuration: OutcomeConfiguration;
+      mappings: OutcomeMapping[];
+      estimates: EffectEstimate[];
+      candidates: SynthesisCandidate[];
+      readiness: ReadinessSnapshot[];
+      studies: StudySummary[];
+    }
+  | {
+      status: "unauthorized" | "unavailable";
+      outcomes: [];
+      configuration: OutcomeConfiguration;
+      mappings: [];
+      estimates: [];
+      candidates: [];
+      readiness: [];
+      studies: [];
+    };
+
+const emptyOutcomeConfiguration: OutcomeConfiguration = {
+  timepoint_windows: [],
+  units: [],
+  measurement_scales: [],
+};
+
+export async function getOutcomeWorkspace(
+  accessToken: string,
+  organizationId: string,
+  reviewId: string,
+): Promise<OutcomeWorkspaceResult> {
+  const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8000";
+  const headers = {
+    Accept: "application/json",
+    Authorization: `Bearer ${accessToken}`,
+    "X-Organization-ID": organizationId,
+  };
+  const paths = [
+    `/api/v1/outcomes/reviews/${reviewId}`,
+    `/api/v1/outcomes/reviews/${reviewId}/configuration`,
+    `/api/v1/outcomes/reviews/${reviewId}/mappings`,
+    `/api/v1/outcomes/reviews/${reviewId}/effect-estimates`,
+    `/api/v1/outcomes/reviews/${reviewId}/candidate-sets`,
+    `/api/v1/studies/reviews/${reviewId}`,
+  ];
+  try {
+    const responses = await Promise.all(
+      paths.map((path) => fetch(`${apiBaseUrl}${path}`, { cache: "no-store", headers })),
+    );
+    if (responses.some((response) => response.status === 401 || response.status === 403)) {
+      return {
+        status: "unauthorized",
+        outcomes: [],
+        configuration: emptyOutcomeConfiguration,
+        mappings: [],
+        estimates: [],
+        candidates: [],
+        readiness: [],
+        studies: [],
+      };
+    }
+    if (responses.some((response) => !response.ok)) {
+      return {
+        status: "unavailable",
+        outcomes: [],
+        configuration: emptyOutcomeConfiguration,
+        mappings: [],
+        estimates: [],
+        candidates: [],
+        readiness: [],
+        studies: [],
+      };
+    }
+    const [outcomes, configuration, mappings, estimates, candidatePayload, studies] =
+      await Promise.all(responses.map((response) => response.json()));
+    const candidateData = candidatePayload as {
+      candidate_sets: SynthesisCandidate[];
+      readiness_snapshots: ReadinessSnapshot[];
+    };
+    return {
+      status: "ready",
+      outcomes: outcomes as OutcomeDefinition[],
+      configuration: configuration as OutcomeConfiguration,
+      mappings: mappings as OutcomeMapping[],
+      estimates: estimates as EffectEstimate[],
+      candidates: candidateData.candidate_sets,
+      readiness: candidateData.readiness_snapshots,
+      studies: studies as StudySummary[],
+    };
+  } catch {
+    return {
+      status: "unavailable",
+      outcomes: [],
+      configuration: emptyOutcomeConfiguration,
+      mappings: [],
+      estimates: [],
+      candidates: [],
+      readiness: [],
+      studies: [],
+    };
+  }
+}

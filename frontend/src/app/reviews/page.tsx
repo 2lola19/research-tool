@@ -108,6 +108,9 @@ export default async function ReviewsPage() {
                       <Link className="hover:underline" href={`/reviews/${project.id}/risk-of-bias`}>
                         Risk of Bias
                       </Link>
+                      <Link className="hover:underline" href={`/reviews/${project.id}/outcomes`}>
+                        Outcomes
+                      </Link>
                     </div>
                   </article>
                 ))}

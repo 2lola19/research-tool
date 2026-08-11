@@ -18,7 +18,8 @@
 16. **Deterministic PRISMA and reproducible export foundation (implemented):** database-derived flow counts, immutable snapshots, readiness blockers, portable CSV/XLSX/JSON/RIS artifacts, manifests, and checksums.
 17. **Search execution and identification-source provenance (implemented):** structured source classes, immutable repeated executions, exact query/provider/method/status history, import discovery links, raw artifacts, deterministic PRISMA grouping, and search documentation exports/UI.
 18. **Risk of Bias foundation (verified):** versioned declarative instruments, Study-design compatibility, multi-Article evidence, independent blind assessments, deterministic disagreement, human adjudication, and reproducible exports.
-19. **Outcome/effect-estimate harmonization (recommended; not started):** versioned outcome definitions, timepoints, units, effect-measure compatibility, and analysis-readiness validation without performing meta-analysis.
-20. **Later scientific engines (deferred):** deterministic R/metafor analysis, certainty/GRADE, and mature reporting.
+19. **Outcome/effect-estimate harmonization (verified):** versioned outcomes, explicit extraction mappings, Review-specific timepoints/units/scales, structured reported/derived effects, immutable candidate sets, and deterministic readiness without pooling.
+20. **Meta-analysis engine (recommended; not started):** explicit analysis policy, validated fixed/random-effects models, heterogeneity, prediction intervals, sensitivity/subgroup handling, and reproducible forest-plot data built only from READY candidate sets.
+21. **Later scientific engines (deferred):** certainty/GRADE and mature reporting.
 
 Each milestone must meet the definition of done in the master specification before progression.

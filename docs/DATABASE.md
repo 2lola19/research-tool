@@ -73,3 +73,14 @@ evidence locations. Unique constraints preserve version numbers, assessor/round/
 single explicit corrections, one comparison per canonical pair, and one adjudication per conflict.
 Allowed states, positive rounds/revisions, and 64-character definition hashes are constrained. The
 migration upgrades linearly from `20260811_0018` and fully downgrades on SQLite.
+
+Migration `20260811_0020` adds logical and immutable versioned outcome definitions, Review-specific
+timepoint windows, unit definitions, measurement scales, append-only extraction mappings, structured
+effect estimates, synthesis candidate sets, and immutable analysis-readiness snapshots. Composite
+tenant/review foreign keys cover Studies, extraction values, protocol versions, evidence locations,
+mapping corrections, and configuration. Normalized `effect_estimate_sources` and
+`synthesis_candidate_estimates` tables enforce every scientific source/selection link rather than
+trusting serialized identifiers. Check constraints cover allowed states, ranges, rule ordinals,
+time anchors, direction transforms, effect measures, variance scales, analysis populations, and
+readiness states. ORM guards reject updates/deletes across the scientific history. The migration
+upgrades linearly from `20260811_0019` and fully downgrades on SQLite.

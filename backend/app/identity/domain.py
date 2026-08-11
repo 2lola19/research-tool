@@ -36,6 +36,9 @@ class Permission(StrEnum):
     MANAGE_ROB_INSTRUMENT = "manage_rob_instrument"
     PERFORM_ROB_ASSESSMENT = "perform_rob_assessment"
     ADJUDICATE_ROB = "adjudicate_rob"
+    MANAGE_OUTCOMES = "manage_outcomes"
+    HARMONIZE_OUTCOMES = "harmonize_outcomes"
+    PREPARE_SYNTHESIS = "prepare_synthesis"
     EXPORT_REVIEW = "export_review"
 
 
@@ -62,6 +65,9 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_ROB_INSTRUMENT,
             Permission.PERFORM_ROB_ASSESSMENT,
             Permission.ADJUDICATE_ROB,
+            Permission.MANAGE_OUTCOMES,
+            Permission.HARMONIZE_OUTCOMES,
+            Permission.PREPARE_SYNTHESIS,
             Permission.EXPORT_REVIEW,
         }
     ),
@@ -78,9 +84,17 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.PERFORM_EXTRACTION,
             Permission.ADJUDICATE_EXTRACTION,
             Permission.PERFORM_ROB_ASSESSMENT,
+            Permission.HARMONIZE_OUTCOMES,
         }
     ),
-    OrganizationRole.STATISTICIAN: frozenset({Permission.RECORD_PROVENANCE}),
+    OrganizationRole.STATISTICIAN: frozenset(
+        {
+            Permission.RECORD_PROVENANCE,
+            Permission.MANAGE_OUTCOMES,
+            Permission.HARMONIZE_OUTCOMES,
+            Permission.PREPARE_SYNTHESIS,
+        }
+    ),
     OrganizationRole.VIEWER: frozenset(),
 }
 

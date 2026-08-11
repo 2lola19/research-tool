@@ -30,3 +30,8 @@ instrument. Its declarative demonstration definition is intentionally incomplete
 validate the generic engine. Adoption of RoB 2, ROBINS-I, QUADAS-2, QUIPS, JBI, or another instrument
 requires methodology, licensing, maintenance, and validation review at the time its complete
 definition is introduced.
+
+The Outcome Harmonization foundation adds no statistical dependency. Foundational RR, OR, RD, and
+MD derivations use deterministic `Decimal` arithmetic and stop before pooling. A Phase 20 statistical
+engine must complete the documented legal, maintenance, and numerical-validation review before
+integrating a component such as `metafor`.

@@ -1,5 +1,17 @@
 # Future API Requirements
 
+## Outcome harmonization and synthesis preparation
+
+Authenticated Review-scoped endpoints under `/api/v1/outcomes` create/list logical outcomes and
+immutable versions, timepoint windows, units, and measurement scales; append explicit extraction
+mappings; append reported or deterministically derived effect estimates; construct immutable
+synthesis candidate sets; and append readiness evaluations. Mapping requests require a Study,
+extraction value, outcome version, method, and rationale, while preserving optional structured
+timing/unit/scale transformations. Derived estimates accept only supported structured components;
+RR/OR/RD/MD calculations never accept an arbitrary continuity correction. Reads return deterministic
+ordering. Mutations require centralized outcome/harmonization/synthesis permissions and use the
+existing provenance/audit ledgers. No endpoint performs pooled analysis.
+
 | Service | Purpose | Required stage | Providers | Credentials | Free/open alternative | Current mock | Status |
 |---|---|---|---|---|---|---|---|
 | AI inference | Screening, extraction, adjudication assistance | Screening onward | OpenAI, Anthropic, Gemini | Provider API key | Local models where validated | `MockAIProvider` | Mock interface only; real providers deferred |

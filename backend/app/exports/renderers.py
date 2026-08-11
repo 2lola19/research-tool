@@ -11,7 +11,7 @@ from typing import Any
 
 from backend.app.exports.domain import ExportArticle, ExportDataset, ExportFormat, RenderedExport
 
-EXPORT_SCHEMA_VERSION = "review-export-3"
+EXPORT_SCHEMA_VERSION = "review-export-4"
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
@@ -220,6 +220,13 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
                 for comparison in dataset.risk_of_bias_comparisons
             ],
         },
+        "outcomes": {
+            "definitions": list(dataset.outcome_versions),
+            "mappings": list(dataset.outcome_mappings),
+            "effect_estimates": list(dataset.effect_estimates),
+            "synthesis_candidate_sets": list(dataset.synthesis_candidate_sets),
+            "analysis_readiness": list(dataset.analysis_readiness),
+        },
     }
     content = (
         json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -234,6 +241,11 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             "search_executions": len(dataset.search_executions),
             "risk_of_bias_assessments": len(dataset.risk_of_bias_assessments),
             "risk_of_bias_comparisons": len(dataset.risk_of_bias_comparisons),
+            "outcome_versions": len(dataset.outcome_versions),
+            "outcome_mappings": len(dataset.outcome_mappings),
+            "effect_estimates": len(dataset.effect_estimates),
+            "synthesis_candidate_sets": len(dataset.synthesis_candidate_sets),
+            "analysis_readiness": len(dataset.analysis_readiness),
         },
     )
 
@@ -326,6 +338,11 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ["search_execution_count", len(dataset.search_executions)],
         ["risk_of_bias_assessment_count", len(dataset.risk_of_bias_assessments)],
         ["risk_of_bias_comparison_count", len(dataset.risk_of_bias_comparisons)],
+        ["outcome_version_count", len(dataset.outcome_versions)],
+        ["outcome_mapping_count", len(dataset.outcome_mappings)],
+        ["effect_estimate_count", len(dataset.effect_estimates)],
+        ["synthesis_candidate_set_count", len(dataset.synthesis_candidate_sets)],
+        ["analysis_readiness_count", len(dataset.analysis_readiness)],
     ]
     prisma_rows: list[list[object]] = [["counter", "value"]]
     exclusion_rows: list[list[object]] = [["reason", "count"]]
@@ -516,6 +533,91 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ]
         for item in dataset.risk_of_bias_comparisons
     )
+    outcome_rows = _structured_rows(
+        dataset.outcome_versions,
+        [
+            "id",
+            "outcome_id",
+            "outcome_key",
+            "version",
+            "definition",
+            "content_hash",
+            "protocol_version_id",
+        ],
+    )
+    mapping_rows = _structured_rows(
+        dataset.outcome_mappings,
+        [
+            "id",
+            "study_id",
+            "extraction_value_id",
+            "outcome_version_id",
+            "method",
+            "rationale",
+            "confidence",
+            "reported_value",
+            "reported_unit",
+            "reported_unit_id",
+            "normalized_value",
+            "normalized_unit_id",
+            "conversion_rule_version",
+            "reported_time_value",
+            "reported_time_unit",
+            "reported_time_anchor",
+            "normalized_time_days",
+            "timepoint_window_id",
+            "timepoint_rule_version",
+            "measurement_scale_id",
+            "direction_transformation",
+            "transformation_reason",
+            "extraction_verified",
+            "supersedes_mapping_id",
+        ],
+    )
+    estimate_rows = _structured_rows(
+        dataset.effect_estimates,
+        [
+            "id",
+            "study_id",
+            "outcome_version_id",
+            "effect_measure",
+            "origin",
+            "estimate",
+            "standard_error",
+            "variance",
+            "variance_scale",
+            "ci_lower",
+            "ci_upper",
+            "confidence_level",
+            "adjustment",
+            "analysis_population",
+            "covariates",
+            "model_description",
+            "timepoint_window_id",
+            "unit_id",
+            "measurement_scale_id",
+            "components",
+            "source_mapping_ids",
+            "source_evidence_location_id",
+            "calculation_version",
+            "zero_event_pattern",
+        ],
+    )
+    candidate_rows = _structured_rows(
+        dataset.synthesis_candidate_sets,
+        [
+            "id",
+            "outcome_version_id",
+            "effect_measure",
+            "timepoint_window_id",
+            "population_label",
+            "estimate_ids",
+        ],
+    )
+    readiness_rows = _structured_rows(
+        dataset.analysis_readiness,
+        ["id", "candidate_set_id", "algorithm_version", "status", "blockers"],
+    )
     sheets = [
         ("Manifest", manifest_rows),
         ("PRISMA", prisma_rows),
@@ -526,6 +628,11 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ("Risk of Bias Assessments", risk_assessment_rows),
         ("RoB Domains", risk_domain_rows),
         ("RoB Conflicts", risk_conflict_rows),
+        ("Outcomes", outcome_rows),
+        ("Outcome Mappings", mapping_rows),
+        ("Effect Estimates", estimate_rows),
+        ("Synthesis Candidates", candidate_rows),
+        ("Analysis Readiness", readiness_rows),
     ]
     content_types = "".join(
         f'<Override PartName="/xl/worksheets/sheet{index}.xml" '
@@ -596,5 +703,26 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
                 len(item.domain_judgments) for item in dataset.risk_of_bias_assessments
             ),
             "risk_of_bias_comparisons": len(dataset.risk_of_bias_comparisons),
+            "outcome_versions": len(dataset.outcome_versions),
+            "outcome_mappings": len(dataset.outcome_mappings),
+            "effect_estimates": len(dataset.effect_estimates),
+            "synthesis_candidate_sets": len(dataset.synthesis_candidate_sets),
+            "analysis_readiness": len(dataset.analysis_readiness),
         },
     )
+
+
+def _structured_rows(items: Sequence[dict[str, Any]], headers: list[str]) -> list[list[object]]:
+    rows: list[list[object]] = [list(headers)]
+    for item in items:
+        rows.append(
+            [
+                (
+                    json.dumps(value, sort_keys=True, separators=(",", ":"))
+                    if isinstance(value, dict | list)
+                    else value
+                )
+                for value in (item.get(header) for header in headers)
+            ]
+        )
+    return rows

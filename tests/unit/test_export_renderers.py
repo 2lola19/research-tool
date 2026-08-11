@@ -111,6 +111,58 @@ def _dataset() -> ExportDataset:
                 adjudication_reason=None,
             ),
         ),
+        outcome_versions=(
+            {
+                "id": "00000000-0000-0000-0000-000000000014",
+                "outcome_id": "00000000-0000-0000-0000-000000000015",
+                "outcome_key": "MORTALITY",
+                "version": 1,
+                "definition": {
+                    "name": "All-cause mortality",
+                    "compatible_effect_measures": ["RR"],
+                },
+                "content_hash": "b" * 64,
+                "protocol_version_id": None,
+            },
+        ),
+        outcome_mappings=(
+            {
+                "id": "00000000-0000-0000-0000-000000000016",
+                "study_id": "00000000-0000-0000-0000-000000000006",
+                "reported_value": "10",
+                "normalized_time_days": "28",
+                "extraction_verified": True,
+            },
+        ),
+        effect_estimates=(
+            {
+                "id": "00000000-0000-0000-0000-000000000017",
+                "study_id": "00000000-0000-0000-0000-000000000006",
+                "outcome_version_id": "00000000-0000-0000-0000-000000000014",
+                "effect_measure": "RR",
+                "origin": "DERIVED",
+                "estimate": "0.5",
+                "variance_scale": "LOG",
+                "components": {"events_intervention": "10"},
+            },
+        ),
+        synthesis_candidate_sets=(
+            {
+                "id": "00000000-0000-0000-0000-000000000018",
+                "outcome_version_id": "00000000-0000-0000-0000-000000000014",
+                "effect_measure": "RR",
+                "estimate_ids": ["00000000-0000-0000-0000-000000000017"],
+            },
+        ),
+        analysis_readiness=(
+            {
+                "id": "00000000-0000-0000-0000-000000000019",
+                "candidate_set_id": "00000000-0000-0000-0000-000000000018",
+                "algorithm_version": "analysis-readiness-1",
+                "status": "READY",
+                "blockers": [],
+            },
+        ),
     )
 
 
@@ -143,6 +195,11 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
             "xl/worksheets/sheet7.xml",
             "xl/worksheets/sheet8.xml",
             "xl/worksheets/sheet9.xml",
+            "xl/worksheets/sheet10.xml",
+            "xl/worksheets/sheet11.xml",
+            "xl/worksheets/sheet12.xml",
+            "xl/worksheets/sheet13.xml",
+            "xl/worksheets/sheet14.xml",
         } <= set(workbook.namelist())
         articles_xml = workbook.read("xl/worksheets/sheet4.xml").decode()
         executions_xml = workbook.read("xl/worksheets/sheet6.xml").decode()
@@ -154,8 +211,10 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
 def test_json_contains_versioned_search_and_risk_of_bias_documentation() -> None:
     rendered = render_export(ExportFormat.JSON, _dataset())
     payload = json.loads(rendered.content)
-    assert payload["schema_version"] == "review-export-3"
+    assert payload["schema_version"] == "review-export-4"
     assert payload["search_executions"][0]["source_classification"] == ("BIBLIOGRAPHIC_DATABASE")
     assert payload["search_executions"][0]["filters"] == {"language": "all"}
     assert payload["risk_of_bias"]["assessments"][0]["instrument_version"] == 1
     assert payload["risk_of_bias"]["comparisons"][0]["status"] == "CONFLICT"
+    assert payload["outcomes"]["effect_estimates"][0]["variance_scale"] == "LOG"
+    assert payload["outcomes"]["analysis_readiness"][0]["status"] == "READY"

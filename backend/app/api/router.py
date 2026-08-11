@@ -7,6 +7,7 @@ from backend.app.api.routes.exports import router as exports_router
 from backend.app.api.routes.extraction import router as extraction_router
 from backend.app.api.routes.health import router as health_router
 from backend.app.api.routes.identity import router as identity_router
+from backend.app.api.routes.outcomes import router as outcomes_router
 from backend.app.api.routes.prisma import router as prisma_router
 from backend.app.api.routes.protocols import router as protocols_router
 from backend.app.api.routes.provenance import router as provenance_router
@@ -39,6 +40,7 @@ def build_api_router(api_prefix: str) -> APIRouter:
     router.include_router(studies_router, prefix=api_prefix)
     router.include_router(extraction_router, prefix=api_prefix)
     router.include_router(risk_of_bias_router, prefix=api_prefix)
+    router.include_router(outcomes_router, prefix=api_prefix)
     router.include_router(prisma_router, prefix=api_prefix)
     router.include_router(exports_router, prefix=api_prefix)
     return router

@@ -105,6 +105,11 @@ class ExportDataset:
     search_executions: tuple[ExportSearchExecution, ...]
     risk_of_bias_assessments: tuple[ExportRiskOfBiasAssessment, ...]
     risk_of_bias_comparisons: tuple[ExportRiskOfBiasComparison, ...]
+    outcome_versions: tuple[dict[str, Any], ...]
+    outcome_mappings: tuple[dict[str, Any], ...]
+    effect_estimates: tuple[dict[str, Any], ...]
+    synthesis_candidate_sets: tuple[dict[str, Any], ...]
+    analysis_readiness: tuple[dict[str, Any], ...]
 
 
 @dataclass(frozen=True, slots=True)

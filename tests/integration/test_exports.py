@@ -35,7 +35,7 @@ def test_export_artifacts_have_manifests_checksums_and_downloads(
     assert artifact["format"] == export_format
     assert artifact["manifest"]["prisma_ready_for_final"] is False
     assert artifact["manifest"]["row_counts"]["articles"] == 2
-    assert artifact["schema_version"] == "review-export-3"
+    assert artifact["schema_version"] == "review-export-4"
     download = tenant_api.client.get(
         f"/api/v1/exports/{artifact['id']}/download",
         headers=headers,

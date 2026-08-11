@@ -33,3 +33,12 @@ comparison, and adjudication lookup repeats Organization and Review scope, and f
 return not-found semantics. Evidence locations are accepted only when their Document's Article has
 an active link to the assessment Study. Viewers cannot mutate; reviewers cannot approve instruments
 or adjudicate; completed submissions cannot be silently edited.
+
+Outcome configuration uses centralized `MANAGE_OUTCOMES`, `HARMONIZE_OUTCOMES`, and
+`PREPARE_SYNTHESIS` permissions. Every definition, version, window, unit, scale, mapping, estimate,
+candidate set, and readiness query repeats Organization and Review scope. Composite foreign keys
+also constrain Study, extraction value, protocol version, evidence location, mapping sources, and
+candidate estimates to the same tenant/review. Effect evidence must resolve through an Article in the
+target Study Family. Foreign and cross-review identifiers return not-found semantics, viewers cannot
+mutate, and scientific history is append-only. Context-keyed unit conversion prevents a generic unit
+rule from crossing analytes or dimensions.

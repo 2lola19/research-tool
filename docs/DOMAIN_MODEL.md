@@ -78,4 +78,22 @@ blockers prevent incomplete workflow state from being presented as final.
 PRISMA snapshot reference, SHA-256 checksum, media metadata, creator, audit event, and scientific
 provenance. Artifacts are append-only; creating another export never rewrites an earlier file.
 
+`OutcomeDefinition` is a Review-scoped canonical outcome identity. Immutable
+`OutcomeDefinitionVersion` records endpoint type, direction, protocol role, compatible effect
+measures, allowed units/scales, expected timepoint windows, optional protocol version, and content
+hash. `TimepointWindow`, `UnitDefinition`, and `MeasurementScale` are immutable Review scientific
+configuration; no universal window, analyte conversion, or scale transform is inferred.
+
+`OutcomeMapping` is an append-only relationship from one Study extraction value to one canonical
+outcome version. It preserves the reported value/unit/time/anchor, normalized value/unit/duration,
+conversion and timepoint rule versions, optional scale and sign transformation, actor, rationale,
+method, confidence, and extraction-verification state. Corrections create a successor mapping.
+
+`EffectEstimate` preserves a reported or deterministically derived structured estimate, its
+components, natural/log variance scale, adjustment state, analysis population, timepoint, unit,
+scale, evidence, calculation version, and zero-event pattern. Tenant-scoped source links retain every
+mapping used. `SynthesisCandidateSet` is an immutable future-analysis selection, while
+`AnalysisReadinessSnapshot` records a deterministic status and ordered structured blockers. Neither
+entity performs statistical pooling.
+
 Tenant-owned aggregates carry organization ownership and review scope. Immutable versioned aggregates carry a logical identity plus monotonically increasing version and approval state.

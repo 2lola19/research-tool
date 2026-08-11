@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getBackendHealth,
+  getOutcomeWorkspace,
   getReviewProjects,
   getReviewReport,
   getRiskOfBiasWorkspace,
@@ -37,6 +38,48 @@ describe("getBackendHealth", () => {
       status: "unavailable",
       checks: { api: "down" },
     });
+  });
+});
+
+describe("getOutcomeWorkspace", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("loads harmonization and readiness records in parallel", async () => {
+    const payloads = [
+      [{ id: "outcome-1", versions: [] }],
+      { timepoint_windows: [], units: [], measurement_scales: [] },
+      [{ id: "mapping-1", extraction_verified: true }],
+      [{ id: "estimate-1", effect_measure: "RR" }],
+      {
+        candidate_sets: [{ id: "candidate-1" }],
+        readiness_snapshots: [{ candidate_set_id: "candidate-1", status: "READY" }],
+      },
+      [{ id: "study-1", study_key: "S1" }],
+    ];
+    const fetchMock = vi.fn();
+    for (const payload of payloads) {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getOutcomeWorkspace("signed-token", "organization-1", "review-1");
+
+    expect(result.status).toBe("ready");
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/api/v1/outcomes/reviews/review-1/effect-estimates",
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({ "X-Organization-ID": "organization-1" }),
+      }),
+    );
   });
 });
 

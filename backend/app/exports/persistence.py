@@ -33,6 +33,7 @@ from backend.app.exports.domain import (
     ExportSearchExecution,
     ExportStudy,
 )
+from backend.app.outcomes.persistence import SqlAlchemyOutcomeRepository
 from backend.app.prisma.domain import PrismaSnapshot
 from backend.app.reviews.persistence import ReviewRecord
 from backend.app.risk_of_bias.domain import RiskOfBiasInstrumentVersion
@@ -185,6 +186,26 @@ class SqlAlchemyExportRepository:
         risk_comparisons = await risk_repository.list_comparisons(
             snapshot.organization_id, snapshot.review_id
         )
+        outcome_repository = SqlAlchemyOutcomeRepository(self._session)
+        outcome_definitions = await outcome_repository.list_outcomes(
+            snapshot.organization_id, snapshot.review_id
+        )
+        outcome_versions = await outcome_repository.list_outcome_versions(
+            snapshot.organization_id, snapshot.review_id
+        )
+        outcome_mappings = await outcome_repository.list_mappings(
+            snapshot.organization_id, snapshot.review_id
+        )
+        effect_estimates = await outcome_repository.list_effect_estimates(
+            snapshot.organization_id, snapshot.review_id
+        )
+        candidate_sets = await outcome_repository.list_candidate_sets(
+            snapshot.organization_id, snapshot.review_id
+        )
+        readiness_snapshots = await outcome_repository.list_readiness_snapshots(
+            snapshot.organization_id, snapshot.review_id
+        )
+        outcome_keys = {item.id: item.key for item in outcome_definitions}
         risk_versions = {
             item.instrument_version_id: cast(
                 RiskOfBiasInstrumentVersion,
@@ -322,6 +343,121 @@ class SqlAlchemyExportRepository:
                     adjudication_reason=comparison.adjudication_reason,
                 )
                 for comparison in risk_comparisons
+            ),
+            outcome_versions=tuple(
+                {
+                    "id": str(item.id),
+                    "outcome_id": str(item.outcome_id),
+                    "outcome_key": outcome_keys[item.outcome_id],
+                    "version": item.version,
+                    "definition": item.definition,
+                    "content_hash": item.content_hash,
+                    "protocol_version_id": (
+                        str(item.protocol_version_id) if item.protocol_version_id else None
+                    ),
+                }
+                for item in outcome_versions
+            ),
+            outcome_mappings=tuple(
+                {
+                    "id": str(item.id),
+                    "study_id": str(item.study_id),
+                    "extraction_value_id": str(item.extraction_value_id),
+                    "outcome_version_id": str(item.outcome_version_id),
+                    "method": item.method.value,
+                    "rationale": item.rationale,
+                    "confidence": item.confidence,
+                    "reported_value": item.reported_value,
+                    "reported_unit": item.reported_unit,
+                    "reported_unit_id": str(item.reported_unit_id)
+                    if item.reported_unit_id
+                    else None,
+                    "normalized_value": item.normalized_value,
+                    "normalized_unit_id": str(item.normalized_unit_id)
+                    if item.normalized_unit_id
+                    else None,
+                    "conversion_rule_version": item.conversion_rule_version,
+                    "reported_time_value": item.reported_time_value,
+                    "reported_time_unit": item.reported_time_unit.value
+                    if item.reported_time_unit
+                    else None,
+                    "reported_time_anchor": item.reported_time_anchor.value
+                    if item.reported_time_anchor
+                    else None,
+                    "normalized_time_days": item.normalized_time_days,
+                    "timepoint_window_id": str(item.timepoint_window_id)
+                    if item.timepoint_window_id
+                    else None,
+                    "timepoint_rule_version": item.timepoint_rule_version,
+                    "measurement_scale_id": str(item.measurement_scale_id)
+                    if item.measurement_scale_id
+                    else None,
+                    "direction_transformation": item.direction_transformation.value,
+                    "transformation_reason": item.transformation_reason,
+                    "extraction_verified": item.extraction_verified,
+                    "supersedes_mapping_id": str(item.supersedes_mapping_id)
+                    if item.supersedes_mapping_id
+                    else None,
+                }
+                for item in outcome_mappings
+            ),
+            effect_estimates=tuple(
+                {
+                    "id": str(item.id),
+                    "study_id": str(item.study_id),
+                    "outcome_version_id": str(item.outcome_version_id),
+                    "effect_measure": item.effect_measure.value,
+                    "origin": item.origin.value,
+                    "estimate": item.estimate,
+                    "standard_error": item.standard_error,
+                    "variance": item.variance,
+                    "variance_scale": item.variance_scale.value,
+                    "ci_lower": item.ci_lower,
+                    "ci_upper": item.ci_upper,
+                    "confidence_level": item.confidence_level,
+                    "adjustment": item.adjustment.value,
+                    "analysis_population": item.analysis_population.value,
+                    "covariates": item.covariates,
+                    "model_description": item.model_description,
+                    "timepoint_window_id": str(item.timepoint_window_id)
+                    if item.timepoint_window_id
+                    else None,
+                    "unit_id": str(item.unit_id) if item.unit_id else None,
+                    "measurement_scale_id": str(item.measurement_scale_id)
+                    if item.measurement_scale_id
+                    else None,
+                    "components": item.components,
+                    "source_mapping_ids": [str(value) for value in item.source_mapping_ids],
+                    "source_evidence_location_id": str(item.source_evidence_location_id)
+                    if item.source_evidence_location_id
+                    else None,
+                    "calculation_version": item.calculation_version,
+                    "zero_event_pattern": item.zero_event_pattern.value,
+                }
+                for item in effect_estimates
+            ),
+            synthesis_candidate_sets=tuple(
+                {
+                    "id": str(item.id),
+                    "outcome_version_id": str(item.outcome_version_id),
+                    "effect_measure": item.effect_measure.value,
+                    "timepoint_window_id": str(item.timepoint_window_id)
+                    if item.timepoint_window_id
+                    else None,
+                    "population_label": item.population_label,
+                    "estimate_ids": [str(value) for value in item.estimate_ids],
+                }
+                for item in candidate_sets
+            ),
+            analysis_readiness=tuple(
+                {
+                    "id": str(item.id),
+                    "candidate_set_id": str(item.candidate_set_id),
+                    "algorithm_version": item.algorithm_version,
+                    "status": item.status.value,
+                    "blockers": list(item.blockers),
+                }
+                for item in readiness_snapshots
             ),
         )
 

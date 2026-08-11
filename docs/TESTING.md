@@ -49,3 +49,11 @@ tests cite protocol and results Documents in one Study and reject evidence linke
 Study. Export tests verify stable JSON/XLSX RoB sections, instrument hashes/versions, sheet ordering,
 and `review-export-3`. Migration tests validate the complete `20260811_0019` SQLite upgrade and
 downgrade chain; PostgreSQL-specific execution remains environment-blocked.
+
+Outcome harmonization tests use hand-verifiable Decimal examples for RR, OR, RD, MD, sampling
+variance/standard error, unit conversion, time normalization, direction reversal, invalid counts and
+denominators, rounding, and zero/boundary events. Integration tests cover version history, verified
+extraction linkage, explicit time anchors/windows, immutable mappings, derived provenance, candidate
+readiness, duplicate-Study protection, cross-review selection rejection, role/tenant isolation,
+deterministic `review-export-4` JSON/XLSX sections, and the full `20260811_0020` SQLite
+upgrade/downgrade chain. PostgreSQL-specific execution remains environment-blocked.

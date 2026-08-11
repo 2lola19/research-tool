@@ -22,3 +22,14 @@ Actor constraints are explicit. Human provenance points to an active same-organi
 ## Extraction provenance
 
 Study-family links record their method, actor, reason, confidence, and source evidence. Manual extraction values use the same scientific provenance ledger as documents and screening: each value records its Article or Document source, field locator, selected evidence text, manual method version, and extractor actor. Verification does not replace either run. It records canonical agreement or an explicit conflict, and adjudication appends a human-verified provenance record linked to the conflict while retaining both original evidence snapshots.
+
+## Outcome and effect-estimate provenance
+
+Outcome versions retain a canonical content hash and optional protocol-version source. Every outcome
+mapping points to its original extraction value and records the mapping method, actor, rationale,
+reported timing/unit, normalization rule versions, and any explicit direction transformation.
+Effect estimates point through normalized tenant-scoped links to their source mappings and optionally
+to an existing Document evidence location in the same Study Family. Derived estimates record
+`effect-foundation-1`, structured input components, Decimal output, variance scale, and zero-event
+state. Candidate selections and `analysis-readiness-1` snapshots are append-only downstream uses;
+they never replace or mutate the source extraction, mapping, or estimate.

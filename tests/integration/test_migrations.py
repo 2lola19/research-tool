@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260811_0019",)
+    assert version == ("20260811_0020",)
     assert {
         "users",
         "organizations",
@@ -95,6 +95,17 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "rob_domain_judgments",
         "rob_comparisons",
         "rob_adjudications",
+        "outcome_definitions",
+        "outcome_definition_versions",
+        "outcome_timepoint_windows",
+        "outcome_unit_definitions",
+        "outcome_measurement_scales",
+        "outcome_mappings",
+        "effect_estimates",
+        "effect_estimate_sources",
+        "synthesis_candidate_sets",
+        "synthesis_candidate_estimates",
+        "analysis_readiness_snapshots",
     } <= tables
 
     downgrade = subprocess.run(
@@ -120,3 +131,5 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert "export_artifacts" not in remaining_tables
     assert "search_executions" not in remaining_tables
     assert "rob_assessments" not in remaining_tables
+    assert "outcome_definitions" not in remaining_tables
+    assert "effect_estimates" not in remaining_tables

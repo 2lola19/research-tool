@@ -35,6 +35,19 @@ from backend.app.identity.persistence import (
     OrganizationRecord,
     UserRecord,
 )
+from backend.app.outcomes.persistence import (
+    AnalysisReadinessSnapshotRecord,
+    EffectEstimateRecord,
+    EffectEstimateSourceRecord,
+    MeasurementScaleRecord,
+    OutcomeDefinitionRecord,
+    OutcomeDefinitionVersionRecord,
+    OutcomeMappingRecord,
+    SynthesisCandidateEstimateRecord,
+    SynthesisCandidateSetRecord,
+    TimepointWindowRecord,
+    UnitDefinitionRecord,
+)
 from backend.app.prisma.persistence import PrismaSnapshotRecord
 from backend.app.protocols.persistence import ProtocolDecisionRecord, ProtocolVersionRecord
 from backend.app.provenance.persistence import (
@@ -80,6 +93,7 @@ from backend.app.workflow.persistence import (
 
 __all__ = [
     "AIRunRecord",
+    "AnalysisReadinessSnapshotRecord",
     "ArticleRecord",
     "AuditEventRecord",
     "CitationImportBatchRecord",
@@ -92,6 +106,8 @@ __all__ = [
     "DocumentRecord",
     "DocumentWarningRecord",
     "DuplicateCandidateRecord",
+    "EffectEstimateRecord",
+    "EffectEstimateSourceRecord",
     "ExportArtifactRecord",
     "ExtractionConflictRecord",
     "ExtractionRunRecord",
@@ -105,8 +121,12 @@ __all__ = [
     "IdentificationSourceRecord",
     "JobEventRecord",
     "LocalCredentialRecord",
+    "MeasurementScaleRecord",
     "MembershipRecord",
     "OrganizationRecord",
+    "OutcomeDefinitionRecord",
+    "OutcomeDefinitionVersionRecord",
+    "OutcomeMappingRecord",
     "PrismaSnapshotRecord",
     "PromptVersionRecord",
     "ProtocolDecisionRecord",
@@ -136,6 +156,10 @@ __all__ = [
     "SearchTranslationRecord",
     "StudyArticleLinkRecord",
     "StudyRecord",
+    "SynthesisCandidateEstimateRecord",
+    "SynthesisCandidateSetRecord",
+    "TimepointWindowRecord",
+    "UnitDefinitionRecord",
     "UserRecord",
     "WorkflowJobRecord",
     "WorkflowRunRecord",
