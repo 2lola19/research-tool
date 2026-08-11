@@ -11,6 +11,8 @@ from backend.app.exports.domain import (
     ExportArticle,
     ExportDataset,
     ExportFormat,
+    ExportRiskOfBiasAssessment,
+    ExportRiskOfBiasComparison,
     ExportSearchExecution,
     ExportStudy,
 )
@@ -73,6 +75,42 @@ def _dataset() -> ExportDataset:
                 status_history=((1, "COMPLETED", datetime(2026, 8, 11, 10, tzinfo=UTC), 1, None),),
             ),
         ),
+        risk_of_bias_assessments=(
+            ExportRiskOfBiasAssessment(
+                id=UUID("00000000-0000-0000-0000-000000000009"),
+                study_id=UUID("00000000-0000-0000-0000-000000000006"),
+                instrument_version_id=UUID("00000000-0000-0000-0000-000000000010"),
+                instrument_version=1,
+                instrument_content_hash="a" * 64,
+                assessor_user_id=UUID("00000000-0000-0000-0000-000000000011"),
+                round_number=1,
+                revision=1,
+                supersedes_assessment_id=None,
+                status="SUBMITTED",
+                overall_suggested_judgment="LOW",
+                overall_final_judgment="LOW",
+                overall_rationale="Structured synthesis",
+                answers=(("Q1", "YES", "Reported", None),),
+                domain_judgments=(("D1", "LOW", "LOW", "Reported", None, None),),
+            ),
+        ),
+        risk_of_bias_comparisons=(
+            ExportRiskOfBiasComparison(
+                id=UUID("00000000-0000-0000-0000-000000000012"),
+                study_id=UUID("00000000-0000-0000-0000-000000000006"),
+                instrument_version_id=UUID("00000000-0000-0000-0000-000000000010"),
+                round_number=1,
+                assessment_a_id=UUID("00000000-0000-0000-0000-000000000009"),
+                assessment_b_id=UUID("00000000-0000-0000-0000-000000000013"),
+                status="CONFLICT",
+                differences=(
+                    {"scope": "domain", "key": "D1", "value_a": "LOW", "value_b": "HIGH"},
+                ),
+                adjudicated_snapshot=None,
+                adjudicated_by_user_id=None,
+                adjudication_reason=None,
+            ),
+        ),
     )
 
 
@@ -102,6 +140,9 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
             "xl/worksheets/sheet4.xml",
             "xl/worksheets/sheet5.xml",
             "xl/worksheets/sheet6.xml",
+            "xl/worksheets/sheet7.xml",
+            "xl/worksheets/sheet8.xml",
+            "xl/worksheets/sheet9.xml",
         } <= set(workbook.namelist())
         articles_xml = workbook.read("xl/worksheets/sheet4.xml").decode()
         executions_xml = workbook.read("xl/worksheets/sheet6.xml").decode()
@@ -110,9 +151,11 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
     assert "review[Title]" in executions_xml
 
 
-def test_json_contains_versioned_search_documentation() -> None:
+def test_json_contains_versioned_search_and_risk_of_bias_documentation() -> None:
     rendered = render_export(ExportFormat.JSON, _dataset())
     payload = json.loads(rendered.content)
-    assert payload["schema_version"] == "review-export-2"
+    assert payload["schema_version"] == "review-export-3"
     assert payload["search_executions"][0]["source_classification"] == ("BIBLIOGRAPHIC_DATABASE")
     assert payload["search_executions"][0]["filters"] == {"language": "all"}
+    assert payload["risk_of_bias"]["assessments"][0]["instrument_version"] == 1
+    assert payload["risk_of_bias"]["comparisons"][0]["status"] == "CONFLICT"

@@ -11,7 +11,7 @@ from typing import Any
 
 from backend.app.exports.domain import ExportArticle, ExportDataset, ExportFormat, RenderedExport
 
-EXPORT_SCHEMA_VERSION = "review-export-2"
+EXPORT_SCHEMA_VERSION = "review-export-3"
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
@@ -154,6 +154,72 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             }
             for execution in dataset.search_executions
         ],
+        "risk_of_bias": {
+            "assessments": [
+                {
+                    "id": str(assessment.id),
+                    "study_id": str(assessment.study_id),
+                    "instrument_version_id": str(assessment.instrument_version_id),
+                    "instrument_version": assessment.instrument_version,
+                    "instrument_content_hash": assessment.instrument_content_hash,
+                    "assessor_user_id": str(assessment.assessor_user_id),
+                    "round_number": assessment.round_number,
+                    "revision": assessment.revision,
+                    "supersedes_assessment_id": (
+                        str(assessment.supersedes_assessment_id)
+                        if assessment.supersedes_assessment_id
+                        else None
+                    ),
+                    "status": assessment.status,
+                    "overall_suggested_judgment": assessment.overall_suggested_judgment,
+                    "overall_final_judgment": assessment.overall_final_judgment,
+                    "overall_rationale": assessment.overall_rationale,
+                    "answers": [
+                        {
+                            "question_key": key,
+                            "answer": answer,
+                            "rationale": rationale,
+                            "evidence_location_id": str(evidence_id) if evidence_id else None,
+                        }
+                        for key, answer, rationale, evidence_id in assessment.answers
+                    ],
+                    "domains": [
+                        {
+                            "domain_key": key,
+                            "suggested_judgment": suggested,
+                            "final_judgment": final,
+                            "rationale": rationale,
+                            "override_reason": override,
+                            "evidence_location_id": str(evidence_id) if evidence_id else None,
+                        }
+                        for key, suggested, final, rationale, override, evidence_id in (
+                            assessment.domain_judgments
+                        )
+                    ],
+                }
+                for assessment in dataset.risk_of_bias_assessments
+            ],
+            "comparisons": [
+                {
+                    "id": str(comparison.id),
+                    "study_id": str(comparison.study_id),
+                    "instrument_version_id": str(comparison.instrument_version_id),
+                    "round_number": comparison.round_number,
+                    "assessment_a_id": str(comparison.assessment_a_id),
+                    "assessment_b_id": str(comparison.assessment_b_id),
+                    "status": comparison.status,
+                    "differences": list(comparison.differences),
+                    "adjudicated_snapshot": comparison.adjudicated_snapshot,
+                    "adjudicated_by_user_id": (
+                        str(comparison.adjudicated_by_user_id)
+                        if comparison.adjudicated_by_user_id
+                        else None
+                    ),
+                    "adjudication_reason": comparison.adjudication_reason,
+                }
+                for comparison in dataset.risk_of_bias_comparisons
+            ],
+        },
     }
     content = (
         json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -166,6 +232,8 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             "articles": len(dataset.articles),
             "studies": len(dataset.studies),
             "search_executions": len(dataset.search_executions),
+            "risk_of_bias_assessments": len(dataset.risk_of_bias_assessments),
+            "risk_of_bias_comparisons": len(dataset.risk_of_bias_comparisons),
         },
     )
 
@@ -256,6 +324,8 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ["article_count", len(dataset.articles)],
         ["study_count", len(dataset.studies)],
         ["search_execution_count", len(dataset.search_executions)],
+        ["risk_of_bias_assessment_count", len(dataset.risk_of_bias_assessments)],
+        ["risk_of_bias_comparison_count", len(dataset.risk_of_bias_comparisons)],
     ]
     prisma_rows: list[list[object]] = [["counter", "value"]]
     exclusion_rows: list[list[object]] = [["reason", "count"]]
@@ -336,6 +406,116 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ]
         for execution in dataset.search_executions
     )
+    risk_assessment_rows: list[list[object]] = [
+        [
+            "assessment_id",
+            "study_id",
+            "instrument_version_id",
+            "instrument_version",
+            "instrument_content_hash",
+            "assessor_user_id",
+            "round_number",
+            "revision",
+            "supersedes_assessment_id",
+            "status",
+            "overall_suggested_judgment",
+            "overall_final_judgment",
+            "overall_rationale",
+            "answers",
+        ]
+    ]
+    risk_assessment_rows.extend(
+        [
+            str(item.id),
+            str(item.study_id),
+            str(item.instrument_version_id),
+            item.instrument_version,
+            item.instrument_content_hash,
+            str(item.assessor_user_id),
+            item.round_number,
+            item.revision,
+            str(item.supersedes_assessment_id) if item.supersedes_assessment_id else None,
+            item.status,
+            item.overall_suggested_judgment,
+            item.overall_final_judgment,
+            item.overall_rationale,
+            json.dumps(
+                [
+                    {
+                        "question_key": key,
+                        "answer": answer,
+                        "rationale": rationale,
+                        "evidence_location_id": str(evidence_id) if evidence_id else None,
+                    }
+                    for key, answer, rationale, evidence_id in item.answers
+                ],
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+        ]
+        for item in dataset.risk_of_bias_assessments
+    )
+    risk_domain_rows: list[list[object]] = [
+        [
+            "assessment_id",
+            "study_id",
+            "domain_key",
+            "suggested_judgment",
+            "final_judgment",
+            "rationale",
+            "override_reason",
+            "evidence_location_id",
+        ]
+    ]
+    risk_domain_rows.extend(
+        [
+            str(assessment.id),
+            str(assessment.study_id),
+            key,
+            suggested,
+            final,
+            rationale,
+            override,
+            str(evidence_id) if evidence_id else None,
+        ]
+        for assessment in dataset.risk_of_bias_assessments
+        for key, suggested, final, rationale, override, evidence_id in (assessment.domain_judgments)
+    )
+    risk_conflict_rows: list[list[object]] = [
+        [
+            "comparison_id",
+            "study_id",
+            "instrument_version_id",
+            "round_number",
+            "assessment_a_id",
+            "assessment_b_id",
+            "status",
+            "differences",
+            "adjudicated_snapshot",
+            "adjudicated_by_user_id",
+            "adjudication_reason",
+        ]
+    ]
+    risk_conflict_rows.extend(
+        [
+            str(item.id),
+            str(item.study_id),
+            str(item.instrument_version_id),
+            item.round_number,
+            str(item.assessment_a_id),
+            str(item.assessment_b_id),
+            item.status,
+            json.dumps(list(item.differences), sort_keys=True, separators=(",", ":")),
+            (
+                json.dumps(item.adjudicated_snapshot, sort_keys=True, separators=(",", ":"))
+                if item.adjudicated_snapshot
+                else None
+            ),
+            str(item.adjudicated_by_user_id) if item.adjudicated_by_user_id else None,
+            item.adjudication_reason,
+        ]
+        for item in dataset.risk_of_bias_comparisons
+    )
     sheets = [
         ("Manifest", manifest_rows),
         ("PRISMA", prisma_rows),
@@ -343,6 +523,9 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ("Articles", article_rows),
         ("Studies", study_rows),
         ("Search Executions", search_execution_rows),
+        ("Risk of Bias Assessments", risk_assessment_rows),
+        ("RoB Domains", risk_domain_rows),
+        ("RoB Conflicts", risk_conflict_rows),
     ]
     content_types = "".join(
         f'<Override PartName="/xl/worksheets/sheet{index}.xml" '
@@ -408,5 +591,10 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
             "articles": len(dataset.articles),
             "studies": len(dataset.studies),
             "search_executions": len(dataset.search_executions),
+            "risk_of_bias_assessments": len(dataset.risk_of_bias_assessments),
+            "risk_of_bias_domains": sum(
+                len(item.domain_judgments) for item in dataset.risk_of_bias_assessments
+            ),
+            "risk_of_bias_comparisons": len(dataset.risk_of_bias_comparisons),
         },
     )

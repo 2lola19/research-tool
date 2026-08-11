@@ -57,6 +57,40 @@ class ExportSearchExecution:
 
 
 @dataclass(frozen=True, slots=True)
+class ExportRiskOfBiasAssessment:
+    id: UUID
+    study_id: UUID
+    instrument_version_id: UUID
+    instrument_version: int
+    instrument_content_hash: str
+    assessor_user_id: UUID
+    round_number: int
+    revision: int
+    supersedes_assessment_id: UUID | None
+    status: str
+    overall_suggested_judgment: str | None
+    overall_final_judgment: str | None
+    overall_rationale: str | None
+    answers: tuple[tuple[str, str, str | None, UUID | None], ...]
+    domain_judgments: tuple[tuple[str, str | None, str, str, str | None, UUID | None], ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ExportRiskOfBiasComparison:
+    id: UUID
+    study_id: UUID
+    instrument_version_id: UUID
+    round_number: int
+    assessment_a_id: UUID
+    assessment_b_id: UUID
+    status: str
+    differences: tuple[dict[str, Any], ...]
+    adjudicated_snapshot: dict[str, Any] | None
+    adjudicated_by_user_id: UUID | None
+    adjudication_reason: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class ExportDataset:
     organization_id: UUID
     review_id: UUID
@@ -69,6 +103,8 @@ class ExportDataset:
     articles: tuple[ExportArticle, ...]
     studies: tuple[ExportStudy, ...]
     search_executions: tuple[ExportSearchExecution, ...]
+    risk_of_bias_assessments: tuple[ExportRiskOfBiasAssessment, ...]
+    risk_of_bias_comparisons: tuple[ExportRiskOfBiasComparison, ...]
 
 
 @dataclass(frozen=True, slots=True)

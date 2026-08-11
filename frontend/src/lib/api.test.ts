@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getBackendHealth, getReviewProjects, getReviewReport, getSearchDocumentation } from "./api";
+import {
+  getBackendHealth,
+  getReviewProjects,
+  getReviewReport,
+  getRiskOfBiasWorkspace,
+  getSearchDocumentation,
+} from "./api";
 
 describe("getBackendHealth", () => {
   afterEach(() => {
@@ -142,6 +148,43 @@ describe("getSearchDocumentation", () => {
     expect(fetchMock).toHaveBeenCalledTimes(4);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8000/api/v1/search-executions/reviews/review-1",
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({ "X-Organization-ID": "organization-1" }),
+      }),
+    );
+  });
+});
+
+describe("getRiskOfBiasWorkspace", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("loads instruments, Studies, blinded assessments, and comparisons in parallel", async () => {
+    const payloads = [
+      [{ id: "instrument-1", versions: [] }],
+      [{ id: "study-1", study_design: "RANDOMIZED_CONTROLLED_TRIAL" }],
+      [{ id: "assessment-1", status: "IN_PROGRESS" }],
+      [{ id: "comparison-1", status: "CONFLICT" }],
+    ];
+    const fetchMock = vi.fn();
+    for (const payload of payloads) {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getRiskOfBiasWorkspace("signed-token", "organization-1", "review-1");
+
+    expect(result.status).toBe("ready");
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/api/v1/risk-of-bias/reviews/review-1/assessments",
       expect.objectContaining({
         cache: "no-store",
         headers: expect.objectContaining({ "X-Organization-ID": "organization-1" }),

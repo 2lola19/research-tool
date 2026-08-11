@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -28,11 +28,15 @@ from backend.app.exports.domain import (
     ExportArtifact,
     ExportDataset,
     ExportFormat,
+    ExportRiskOfBiasAssessment,
+    ExportRiskOfBiasComparison,
     ExportSearchExecution,
     ExportStudy,
 )
 from backend.app.prisma.domain import PrismaSnapshot
 from backend.app.reviews.persistence import ReviewRecord
+from backend.app.risk_of_bias.domain import RiskOfBiasInstrumentVersion
+from backend.app.risk_of_bias.persistence import SqlAlchemyRiskOfBiasRepository
 from backend.app.search.execution_persistence import SqlAlchemySearchExecutionRepository
 from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
 
@@ -174,6 +178,22 @@ class SqlAlchemyExportRepository:
         executions = await SqlAlchemySearchExecutionRepository(self._session).list_executions(
             snapshot.organization_id, snapshot.review_id
         )
+        risk_repository = SqlAlchemyRiskOfBiasRepository(self._session)
+        risk_assessments = await risk_repository.list_assessments(
+            snapshot.organization_id, snapshot.review_id
+        )
+        risk_comparisons = await risk_repository.list_comparisons(
+            snapshot.organization_id, snapshot.review_id
+        )
+        risk_versions = {
+            item.instrument_version_id: cast(
+                RiskOfBiasInstrumentVersion,
+                await risk_repository.get_version(
+                    snapshot.organization_id, snapshot.review_id, item.instrument_version_id
+                ),
+            )
+            for item in risk_assessments
+        }
         source_ids: dict[UUID, list[UUID]] = defaultdict(list)
         for source in sources:
             source_ids[source.article_id].append(source.id)
@@ -246,6 +266,62 @@ class SqlAlchemyExportRepository:
                     ),
                 )
                 for execution in executions
+            ),
+            risk_of_bias_assessments=tuple(
+                ExportRiskOfBiasAssessment(
+                    id=assessment.id,
+                    study_id=assessment.study_id,
+                    instrument_version_id=assessment.instrument_version_id,
+                    instrument_version=risk_versions[assessment.instrument_version_id].version,
+                    instrument_content_hash=risk_versions[
+                        assessment.instrument_version_id
+                    ].content_hash,
+                    assessor_user_id=assessment.assessor_user_id,
+                    round_number=assessment.round_number,
+                    revision=assessment.revision,
+                    supersedes_assessment_id=assessment.supersedes_assessment_id,
+                    status=assessment.status.value,
+                    overall_suggested_judgment=assessment.overall_suggested_judgment,
+                    overall_final_judgment=assessment.overall_final_judgment,
+                    overall_rationale=assessment.overall_rationale,
+                    answers=tuple(
+                        (
+                            answer.question_key,
+                            answer.answer,
+                            answer.rationale,
+                            answer.evidence_location_id,
+                        )
+                        for answer in assessment.answers
+                    ),
+                    domain_judgments=tuple(
+                        (
+                            domain.domain_key,
+                            domain.suggested_judgment,
+                            domain.final_judgment,
+                            domain.rationale,
+                            domain.override_reason,
+                            domain.evidence_location_id,
+                        )
+                        for domain in assessment.domain_judgments
+                    ),
+                )
+                for assessment in risk_assessments
+            ),
+            risk_of_bias_comparisons=tuple(
+                ExportRiskOfBiasComparison(
+                    id=comparison.id,
+                    study_id=comparison.study_id,
+                    instrument_version_id=comparison.instrument_version_id,
+                    round_number=comparison.round_number,
+                    assessment_a_id=comparison.assessment_a_id,
+                    assessment_b_id=comparison.assessment_b_id,
+                    status=comparison.status.value,
+                    differences=comparison.differences,
+                    adjudicated_snapshot=comparison.adjudicated_snapshot,
+                    adjudicated_by_user_id=comparison.adjudicated_by_user_id,
+                    adjudication_reason=comparison.adjudication_reason,
+                )
+                for comparison in risk_comparisons
             ),
         )
 

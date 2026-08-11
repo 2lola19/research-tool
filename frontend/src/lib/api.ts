@@ -236,3 +236,141 @@ export async function getSearchDocumentation(
     return { status: "unavailable", strategies: [], sources: [], executions: [], imports: [] };
   }
 }
+
+export type RiskOfBiasInstrumentVersion = {
+  id: string;
+  instrument_id: string;
+  version: number;
+  definition: {
+    name: string;
+    applicable_study_designs: string[];
+    answer_choices: Array<{ value: string; label: string }>;
+    domain_judgment_choices: Array<{ value: string; label: string }>;
+    overall_judgment_choices: Array<{ value: string; label: string }>;
+    domains: Array<{
+      key: string;
+      label: string;
+      questions: Array<{ key: string; text: string; allowed_answers: string[] }>;
+    }>;
+  };
+  content_hash: string;
+  decision: "APPROVED" | "REJECTED" | null;
+};
+
+export type RiskOfBiasInstrument = {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  versions: RiskOfBiasInstrumentVersion[];
+};
+
+export type RiskOfBiasAssessment = {
+  id: string;
+  study_id: string;
+  instrument_version_id: string;
+  assessor_user_id: string;
+  round_number: number;
+  revision: number;
+  status: "IN_PROGRESS" | "SUBMITTED";
+  overall_final_judgment: string | null;
+  answers: Array<{ question_key: string; answer: string }>;
+  domain_judgments: Array<{
+    domain_key: string;
+    suggested_judgment: string | null;
+    final_judgment: string;
+  }>;
+};
+
+export type RiskOfBiasComparison = {
+  id: string;
+  study_id: string;
+  assessment_a_id: string;
+  assessment_b_id: string;
+  status: "AGREEMENT" | "CONFLICT" | "ADJUDICATED";
+  differences: Array<{ scope: string; key: string; value_a: unknown; value_b: unknown }>;
+  adjudication_reason: string | null;
+};
+
+export type StudySummary = {
+  id: string;
+  study_key: string;
+  label: string | null;
+  study_design: string | null;
+};
+
+export type RiskOfBiasWorkspaceResult =
+  | {
+      status: "ready";
+      instruments: RiskOfBiasInstrument[];
+      studies: StudySummary[];
+      assessments: RiskOfBiasAssessment[];
+      comparisons: RiskOfBiasComparison[];
+    }
+  | {
+      status: "unauthorized" | "unavailable";
+      instruments: [];
+      studies: [];
+      assessments: [];
+      comparisons: [];
+    };
+
+export async function getRiskOfBiasWorkspace(
+  accessToken: string,
+  organizationId: string,
+  reviewId: string,
+): Promise<RiskOfBiasWorkspaceResult> {
+  const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8000";
+  const headers = {
+    Accept: "application/json",
+    Authorization: `Bearer ${accessToken}`,
+    "X-Organization-ID": organizationId,
+  };
+  const paths = [
+    `/api/v1/risk-of-bias/reviews/${reviewId}/instruments`,
+    `/api/v1/studies/reviews/${reviewId}`,
+    `/api/v1/risk-of-bias/reviews/${reviewId}/assessments`,
+    `/api/v1/risk-of-bias/reviews/${reviewId}/comparisons`,
+  ];
+  try {
+    const responses = await Promise.all(
+      paths.map((path) => fetch(`${apiBaseUrl}${path}`, { cache: "no-store", headers })),
+    );
+    if (responses.some((response) => response.status === 401 || response.status === 403)) {
+      return {
+        status: "unauthorized",
+        instruments: [],
+        studies: [],
+        assessments: [],
+        comparisons: [],
+      };
+    }
+    if (responses.some((response) => !response.ok)) {
+      return {
+        status: "unavailable",
+        instruments: [],
+        studies: [],
+        assessments: [],
+        comparisons: [],
+      };
+    }
+    const [instruments, studies, assessments, comparisons] = await Promise.all(
+      responses.map((response) => response.json()),
+    );
+    return {
+      status: "ready",
+      instruments: instruments as RiskOfBiasInstrument[],
+      studies: studies as StudySummary[],
+      assessments: assessments as RiskOfBiasAssessment[],
+      comparisons: comparisons as RiskOfBiasComparison[],
+    };
+  } catch {
+    return {
+      status: "unavailable",
+      instruments: [],
+      studies: [],
+      assessments: [],
+      comparisons: [],
+    };
+  }
+}
