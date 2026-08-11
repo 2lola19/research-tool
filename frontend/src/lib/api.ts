@@ -132,3 +132,107 @@ export async function getReviewReport(
     return { status: "unavailable", summary: null, exports: [] };
   }
 }
+
+export type SearchStrategyVersion = {
+  id: string;
+  version: number;
+  content: { name: string };
+  content_hash: string;
+};
+
+export type IdentificationSource = {
+  id: string;
+  source_key: string;
+  display_name: string;
+  classification: string;
+  provider_name: string;
+  platform_name: string | null;
+};
+
+export type SearchExecution = {
+  id: string;
+  source: IdentificationSource;
+  search_strategy_version_id: string | null;
+  search_translation_id: string | null;
+  method: string;
+  exact_query: string | null;
+  filters: Record<string, string>;
+  executed_at: string;
+  software_version: string | null;
+  status: string;
+  provider_result_count: number | null;
+  imported_record_count: number;
+  events: Array<{
+    sequence: number;
+    status: string;
+    provider_result_count: number | null;
+    note: string | null;
+    occurred_at: string;
+  }>;
+};
+
+export type CitationImport = {
+  id: string;
+  source_format: string;
+  source_name: string;
+  content_hash: string;
+  record_count: number;
+};
+
+export type SearchDocumentationResult =
+  | {
+      status: "ready";
+      strategies: SearchStrategyVersion[];
+      sources: IdentificationSource[];
+      executions: SearchExecution[];
+      imports: CitationImport[];
+    }
+  | {
+      status: "unauthorized" | "unavailable";
+      strategies: [];
+      sources: [];
+      executions: [];
+      imports: [];
+    };
+
+export async function getSearchDocumentation(
+  accessToken: string,
+  organizationId: string,
+  reviewId: string,
+): Promise<SearchDocumentationResult> {
+  const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8000";
+  const headers = {
+    Accept: "application/json",
+    Authorization: `Bearer ${accessToken}`,
+    "X-Organization-ID": organizationId,
+  };
+  const paths = [
+    `/api/v1/search-strategies/reviews/${reviewId}/versions`,
+    `/api/v1/search-executions/reviews/${reviewId}/sources`,
+    `/api/v1/search-executions/reviews/${reviewId}`,
+    `/api/v1/citations/reviews/${reviewId}/imports`,
+  ];
+  try {
+    const responses = await Promise.all(
+      paths.map((path) => fetch(`${apiBaseUrl}${path}`, { cache: "no-store", headers })),
+    );
+    if (responses.some((response) => response.status === 401 || response.status === 403)) {
+      return { status: "unauthorized", strategies: [], sources: [], executions: [], imports: [] };
+    }
+    if (responses.some((response) => !response.ok)) {
+      return { status: "unavailable", strategies: [], sources: [], executions: [], imports: [] };
+    }
+    const [strategies, sources, executions, imports] = await Promise.all(
+      responses.map((response) => response.json()),
+    );
+    return {
+      status: "ready",
+      strategies: strategies as SearchStrategyVersion[],
+      sources: sources as IdentificationSource[],
+      executions: executions as SearchExecution[],
+      imports: imports as CitationImport[],
+    };
+  } catch {
+    return { status: "unavailable", strategies: [], sources: [], executions: [], imports: [] };
+  }
+}

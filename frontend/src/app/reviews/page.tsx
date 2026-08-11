@@ -98,12 +98,14 @@ export default async function ReviewsPage() {
                         {project.owner_user_id.slice(0, 8)}
                       </span>
                     </div>
-                    <Link
-                      className="mt-5 inline-flex text-sm font-semibold text-[var(--brand)] hover:underline"
-                      href={`/reviews/${project.id}/reports`}
-                    >
-                      Reports &amp; exports
-                    </Link>
+                    <div className="mt-5 flex gap-4 text-sm font-semibold text-[var(--brand)]">
+                      <Link className="hover:underline" href={`/reviews/${project.id}/search`}>
+                        Search
+                      </Link>
+                      <Link className="hover:underline" href={`/reviews/${project.id}/reports`}>
+                        Reports &amp; exports
+                      </Link>
+                    </div>
                   </article>
                 ))}
               </div>

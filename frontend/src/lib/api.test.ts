@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getBackendHealth, getReviewProjects, getReviewReport } from "./api";
+import { getBackendHealth, getReviewProjects, getReviewReport, getSearchDocumentation } from "./api";
 
 describe("getBackendHealth", () => {
   afterEach(() => {
@@ -109,6 +109,43 @@ describe("getReviewReport", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8000/api/v1/exports/reviews/review-1",
       expect.objectContaining({ cache: "no-store" }),
+    );
+  });
+});
+
+describe("getSearchDocumentation", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("loads strategies, sources, executions, and imports in parallel", async () => {
+    const payloads = [
+      [{ id: "strategy-1", version: 1, content: { name: "Core" } }],
+      [{ id: "source-1", display_name: "PubMed" }],
+      [{ id: "execution-1", status: "COMPLETED" }],
+      [{ id: "import-1", record_count: 10 }],
+    ];
+    const fetchMock = vi.fn();
+    for (const payload of payloads) {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getSearchDocumentation("signed-token", "organization-1", "review-1");
+
+    expect(result.status).toBe("ready");
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/api/v1/search-executions/reviews/review-1",
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({ "X-Organization-ID": "organization-1" }),
+      }),
     );
   });
 });
