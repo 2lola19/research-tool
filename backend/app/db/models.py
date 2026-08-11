@@ -19,6 +19,10 @@ from backend.app.documents.persistence import (
     FullTextCriterionJudgmentRecord,
     FullTextScreeningRecord,
 )
+from backend.app.extraction.schema_persistence import (
+    ExtractionSchemaRecord,
+    ExtractionSchemaVersionRecord,
+)
 from backend.app.identity.persistence import (
     LocalCredentialRecord,
     MembershipRecord,
@@ -41,8 +45,8 @@ from backend.app.screening.persistence import (
     ScreeningProgressionRecord,
     ScreeningRoundRecord,
 )
-from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
 from backend.app.search.persistence import SearchStrategyVersionRecord, SearchTranslationRecord
+from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
 from backend.app.workflow.persistence import (
     HumanCheckpointRecord,
     JobEventRecord,
@@ -64,6 +68,8 @@ __all__ = [
     "DocumentRecord",
     "DocumentWarningRecord",
     "DuplicateCandidateRecord",
+    "ExtractionSchemaRecord",
+    "ExtractionSchemaVersionRecord",
     "FullTextCriterionJudgmentRecord",
     "FullTextScreeningRecord",
     "HumanCheckpointRecord",
@@ -85,9 +91,9 @@ __all__ = [
     "ScreeningRoundRecord",
     "SearchStrategyVersionRecord",
     "SearchTranslationRecord",
+    "StudyArticleLinkRecord",
+    "StudyRecord",
     "UserRecord",
     "WorkflowJobRecord",
     "WorkflowRunRecord",
-    "StudyRecord",
-    "StudyArticleLinkRecord",
 ]
