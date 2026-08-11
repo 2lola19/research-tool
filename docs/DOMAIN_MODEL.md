@@ -35,4 +35,12 @@ Cross-cutting records include Actor, Audit Event, Scientific Provenance, AI Run,
 
 `FullTextScreening` pins a document decision to an approved ProtocolVersion. `FullTextCriterionJudgment` stores independent PASS, FAIL, UNCLEAR, or NOT_APPLICABLE results with reasons and optional evidence locations. The final INCLUDE, EXCLUDE, or MAYBE decision is derived deterministically from criterion judgments and remains separately auditable and provenance-linked.
 
+`Study` is the stable identity for an underlying investigation within a Review. `StudyArticleLink` relates one Study to one Article with a role such as PRIMARY, PROTOCOL, FOLLOW_UP, SUBGROUP, or SECONDARY_ANALYSIS. Links retain method, actor, reason, confidence, and source evidence; unlinking is a timestamped soft change, so Article records and family history remain intact.
+
+`ExtractionSchema` owns reusable review-specific definitions. Each `ExtractionSchemaVersion` is immutable and stores ordered typed field metadata, allowed options, requiredness, units, and a content hash. Scientific missingness is explicit rather than represented only by SQL NULL.
+
+`ExtractionRun` pins one extractor's work to a Study and schema version. `ExtractionValue` stores typed columns, explicit missingness, linked source Article and/or Document evidence, selected evidence text, and audit/provenance references. A Study extraction may source different fields from different linked Articles.
+
+`ExtractionVerification` compares two runs deterministically. Equal canonical values become MATCHED; value or evidence disagreement creates an `ExtractionConflict` containing both original snapshots. Adjudication updates only the conflict/verification state and appends provenance; original extraction values are never overwritten.
+
 Tenant-owned aggregates carry organization ownership and review scope. Immutable versioned aggregates carry a logical identity plus monotonically increasing version and approval state.

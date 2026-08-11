@@ -18,3 +18,7 @@ Migration `20260810_0005` implements four separate append-only record families:
 ORM mutation guards reject updates and deletes for all four families. Application services expose append and tenant-scoped read operations only. Corrections therefore append a new record or audit event; they never rewrite the historical row.
 
 Actor constraints are explicit. Human provenance points to an active same-organization membership. AI provenance points to an AI run in the same organization and review. System provenance is reserved for internal services. Generic subject/source identifiers make the ledger usable across later scientific domains without collapsing those domains into the provenance schema.
+
+## Extraction provenance
+
+Study-family links record their method, actor, reason, confidence, and source evidence. Manual extraction values use the same scientific provenance ledger as documents and screening: each value records its Article or Document source, field locator, selected evidence text, manual method version, and extractor actor. Verification does not replace either run. It records canonical agreement or an explicit conflict, and adjudication appends a human-verified provenance record linked to the conflict while retaining both original evidence snapshots.

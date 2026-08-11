@@ -10,3 +10,12 @@
 | Durable orchestration | Retries, timers, checkpoints | Workflow | Temporal self-hosted/cloud | None locally; cloud credentials later | Local PostgreSQL-backed adapter | Contract created | Evaluate in Phase 4 |
 | Statistical service | Deterministic meta-analysis | Analysis | R service with metafor | None | Local R container | Interface planned | Deferred to Phase 20 |
 | Production identity | User authentication and enterprise federation | Production hardening | Standards-based OIDC provider | OIDC client credentials/metadata | Local scrypt + signed-token provider | `AuthenticationProvider` + local implementation | Provider selection deferred; local provider complete |
+
+## Implemented scientific endpoints
+
+- `/studies` creates and lists Review-scoped Studies; article links carry roles, methods, source evidence, and soft unlink state.
+- `/extraction/schemas` and `/extraction/schema-versions` create immutable typed schema definitions.
+- `/extraction/runs` creates and resumes Study-level manual extraction runs; `/values` validates typed values, explicit missingness, and source evidence before saving.
+- `/extraction/verifications/compare` performs deterministic dual-run comparison; `/extraction/conflicts/{id}/resolve` performs authorized human adjudication without overwriting original values.
+
+All endpoints resolve organization context from active membership and enforce Review access server-side. AI extraction providers and external scholarly APIs remain deferred.

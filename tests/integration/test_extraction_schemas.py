@@ -8,7 +8,12 @@ pytest_plugins = ("tests.integration.test_tenant_isolation",)
 def _fields() -> list[dict[str, object]]:
     return [
         {"key": "sample_size", "label": "Sample size", "field_type": "INTEGER", "required": True},
-        {"key": "design", "label": "Design", "field_type": "CATEGORICAL", "allowed_options": ["RCT", "COHORT"]},
+        {
+            "key": "design",
+            "label": "Design",
+            "field_type": "CATEGORICAL",
+            "allowed_options": ["RCT", "COHORT"],
+        },
     ]
 
 
@@ -27,8 +32,12 @@ def test_schema_versions_are_deterministic_and_prior_versions_remain_readable(
         "schema_id": schema.json()["id"],
         "fields": _fields(),
     }
-    first = tenant_api.client.post("/api/v1/extraction/schema-versions", headers=headers, json=payload)
-    second = tenant_api.client.post("/api/v1/extraction/schema-versions", headers=headers, json=payload)
+    first = tenant_api.client.post(
+        "/api/v1/extraction/schema-versions", headers=headers, json=payload
+    )
+    second = tenant_api.client.post(
+        "/api/v1/extraction/schema-versions", headers=headers, json=payload
+    )
     assert first.status_code == 201, first.text
     assert second.status_code == 201, second.text
     assert first.json()["version"] == 1
@@ -65,7 +74,9 @@ def test_schema_rejects_duplicate_keys_invalid_options_and_foreign_access(
         json={
             "review_id": str(tenant_api.ids.assigned_review),
             "schema_id": schema.json()["id"],
-            "fields": [{"key": "kind", "label": "Kind", "field_type": "ENUM", "allowed_options": []}],
+            "fields": [
+                {"key": "kind", "label": "Kind", "field_type": "ENUM", "allowed_options": []}
+            ],
         },
     )
     assert options.status_code == 409

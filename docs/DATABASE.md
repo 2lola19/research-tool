@@ -35,3 +35,11 @@ Migration `20260810_0009` adds immutable `deduplication_runs`, `duplicate_candid
 Migration `20260810_0010` adds `screening_rounds`, `screening_assignments`, immutable `screening_decisions`, derived `screening_outcomes`, immutable `screening_adjudications`, and idempotent `screening_progressions`. Composite keys carry organization and review scope through every Article, round, assignment, reviewer, and outcome reference. Decision rows repeat and constrain their complete assignment boundary, while check constraints enforce final decision/reason and round closure metadata invariants.
 
 Migration `20260810_0011` adds tenant-scoped `documents`, processing runs, canonical document blocks, evidence locations, document warnings, and protocol-pinned full-text criterion judgments. Documents preserve source metadata, opaque storage keys, original filename, media type, size, SHA-256, retrieval state, and uploader. Multiple files per Article are supported; exact uploaded-file duplicates are rejected by a scoped checksum constraint. Full-text judgments retain criterion decisions, reasons, optional evidence locations, reviewer, protocol version, and timestamps. Original bytes remain in object storage and parser output is stored separately.
+
+Migration `20260811_0012` adds stable `studies` and non-destructive `study_article_links`. Link rows retain role, method, confidence, source evidence, actor, and soft-unlink metadata. Composite tenant/review foreign keys prevent Articles from another Review or Organization from entering a family.
+
+Migration `20260811_0013` adds `extraction_schemas` and immutable `extraction_schema_versions`. Version payloads are canonicalized and hashed; version numbers are unique per schema and prior versions are never updated.
+
+Migration `20260811_0014` adds `extraction_runs` and typed `extraction_values`. Values use typed columns plus explicit missingness and require a same-tenant Article or Document evidence source. Composite keys bind runs and values to their Review and Organization.
+
+Migration `20260811_0015` adds `extraction_conflicts` and `extraction_verifications`. Both original value snapshots and evidence snapshots remain available for adjudication; resolution updates verification state and retains adjudicator, reason, and timestamp.
