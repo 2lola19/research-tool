@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getReviewProjects } from "@/lib/api";
@@ -97,6 +98,12 @@ export default async function ReviewsPage() {
                         {project.owner_user_id.slice(0, 8)}
                       </span>
                     </div>
+                    <Link
+                      className="mt-5 inline-flex text-sm font-semibold text-[var(--brand)] hover:underline"
+                      href={`/reviews/${project.id}/reports`}
+                    >
+                      Reports &amp; exports
+                    </Link>
                   </article>
                 ))}
               </div>
