@@ -5,10 +5,10 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    JSON,
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
-    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -83,11 +83,14 @@ class StudyArticleLinkRecord(Base):
             name="ck_study_links_confidence",
         ),
         CheckConstraint(
-            "role IN ('PRIMARY','PROTOCOL','FOLLOW_UP','SUBGROUP','SECONDARY_ANALYSIS','CONFERENCE_ABSTRACT','CORRECTION','SUPPLEMENT','OTHER')",
+            "role IN ('PRIMARY','PROTOCOL','FOLLOW_UP','SUBGROUP',"
+            "'SECONDARY_ANALYSIS','CONFERENCE_ABSTRACT','CORRECTION',"
+            "'SUPPLEMENT','OTHER')",
             name="ck_study_links_role",
         ),
         CheckConstraint(
-            "method IN ('MANUAL','EXACT_REGISTRY_MATCH','METADATA_MATCH','AI_SUGGESTED','IMPORTED')",
+            "method IN ('MANUAL','EXACT_REGISTRY_MATCH','METADATA_MATCH',"
+            "'AI_SUGGESTED','IMPORTED')",
             name="ck_study_links_method",
         ),
     )
