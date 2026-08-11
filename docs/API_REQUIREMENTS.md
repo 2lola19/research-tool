@@ -17,5 +17,10 @@
 - `/extraction/schemas` and `/extraction/schema-versions` create immutable typed schema definitions.
 - `/extraction/runs` creates and resumes Study-level manual extraction runs; `/values` validates typed values, explicit missingness, and source evidence before saving.
 - `/extraction/verifications/compare` performs deterministic dual-run comparison; `/extraction/conflicts/{id}/resolve` performs authorized human adjudication without overwriting original values.
+- `/prisma/reviews/{review_id}/summary` derives live record/report/study flow counts and explicit
+  final-readiness blockers; `/snapshots` preserves immutable algorithm-versioned summaries.
+- `/exports/reviews/{review_id}` creates and lists authorized CSV, XLSX, JSON, and RIS artifacts;
+  export metadata exposes manifests and SHA-256 checksums, while tenant-scoped download verifies the
+  stored checksum before returning immutable bytes.
 
-All endpoints resolve organization context from active membership and enforce Review access server-side. AI extraction providers and external scholarly APIs remain deferred.
+All endpoints resolve organization context from active membership and enforce Review access server-side. AI extraction providers and external scholarly APIs remain deferred. Export generation is deterministic local application code and requires no external API or credential.

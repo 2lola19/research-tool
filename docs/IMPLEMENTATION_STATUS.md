@@ -22,13 +22,15 @@ Last updated: 2026-08-11
 | Versioned Extraction Schemas (Phase 13) | VERIFIED | Typed ordered field definitions, explicit allowed options, deterministic content hashes, immutable prior versions, review/tenant boundaries, and migration tests pass. |
 | Provenance-First Manual Extraction (Phase 14) | VERIFIED | Study/schema-version pinned runs, typed values, explicit missingness, linked Article/Document evidence, resumable saves, audit/provenance, and permission tests pass. |
 | Extraction Verification (Phase 15) | VERIFIED | Deterministic canonical comparison, evidence-aware conflicts, immutable original snapshots, authorized adjudication, verification state transitions, audit/provenance, and tenant tests pass. |
+| Deterministic PRISMA + Reproducible Export (Phase 16 foundation) | VERIFIED | Database-derived record/report/Study counts, readiness blockers, immutable snapshots, CSV/XLSX/JSON/RIS artifacts, manifests, SHA-256 verification, audit/provenance, tenant boundaries, and minimal Reports/Exports UI pass. |
 
 ## Validation evidence
 
-- Backend: Ruff lint and format checks, strict mypy, and pytest pass: 119 tests, 94.06% coverage (configured threshold: 85%).
-- Frontend: ESLint, TypeScript, Vitest (4 tests), and Next.js production build pass; no frontend code changed in Phase 11.
-- Alembic is linear through `20260811_0015`. A temporary SQLite database upgrades from foundation through extraction verification and downgrades to base.
-- Focused document tests cover valid/invalid uploads, size and filename checks, PDF signature validation, exact checksum duplicates, unchanged content retrieval, parser fixtures/malformed output, processing failure, warnings, structured full-text decisions, evidence linkage, and tenant boundaries.
+- Backend: Ruff lint and format checks, strict mypy, and pytest pass: 132 tests, 95.40% coverage (configured threshold: 85%).
+- Frontend: ESLint, TypeScript, Vitest (5 tests), and the Next.js 16 production build pass. Dynamic routes include the Reports/Exports page and authenticated artifact-download proxy.
+- Alembic is linear through `20260811_0017`. A temporary SQLite database upgrades from foundation through export artifacts and downgrades fully to base.
+- Focused PRISMA tests cover record/report/Study distinctions, confirmed-duplicate counting, title/full-text completeness, retrieval state, Study Family counting, structured exclusion reasons, stable source references, immutable snapshots, role restrictions, and tenant non-enumeration.
+- Focused export tests cover deterministic byte rendering, CSV formula neutralization, portable XLSX archive structure, JSON/RIS output, all download formats, manifests, checksums, preservation of prior artifacts, provenance/audit, and tenant authorization.
 
 ## Environment-blocked validation
 
@@ -40,6 +42,9 @@ Last updated: 2026-08-11
 
 - CRITICAL: none found.
 - HIGH: none found.
+- MEDIUM resolved: PRISMA readiness now blocks unassigned imported records, open/multiple screening rounds, unsettled retrieval, retrieved-but-unscreened reports, conflicting multi-Document eligibility decisions, and included reports without Study assignment.
+- MEDIUM resolved: snapshot source references and export queries use stable ordering; deduplication candidate/decision references retain correct IDs; confirmed duplicate source rows are counted once.
+- MEDIUM resolved: transactional database artifact storage, immutable ORM guards, download-time checksum verification, sanitized filenames, and spreadsheet formula neutralization prevent partial-file, mutation, integrity, and injection failures in the foundation.
 - MEDIUM resolved: all read-maximum-plus-one allocators now use scoped database uniqueness and bounded savepoint retries; PostgreSQL remains the production concurrency validation target.
 - LOW: worker dispatch remains a lifecycle shell. Phase 11 keeps processing synchronous behind a parser/service boundary; durable claiming and retries remain deferred.
 - Unblinded screening remains rejected until an explicit reveal policy exists.
@@ -47,7 +52,8 @@ Last updated: 2026-08-11
 
 ## Deferred and planned
 
-- Next phase: deterministic PRISMA/export foundations or a separately reviewed extraction-provider interface; do not add paid AI providers until the manual/verification foundation is reviewed.
+- Recommended next phase: model deterministic search-execution and identification-source provenance so the explicit `SEARCH_EXECUTION_NOT_RECORDED` PRISMA blocker can be resolved from canonical data. Review and approve that phase separately before implementation.
+- Risk of Bias, meta-analysis, GRADE/certainty, mature report authoring, paid AI providers, and real external scholarly APIs remain out of scope until separately authorized.
 - GROBID live deployment, ASReview, external scholarly APIs, R/metafor, paid AI providers, production identity, and cloud object storage remain deferred.
 
 ## Architecture decisions
@@ -56,6 +62,8 @@ Last updated: 2026-08-11
 - Workflow state, scientific data, provenance, audit, and human checkpoints remain physically distinct.
 - Documents remain distinct from Articles and Studies and preserve multiple source files per Article.
 - Original full-text bytes are immutable storage artifacts; parser output is separate, versioned by processing run, and referenced by evidence locations.
+- PRISMA counters are derived, not manually persisted; immutable snapshots retain algorithm version, readiness, and ordered source references.
+- Export artifacts are append-only exact bytes with manifests and SHA-256 checksums; CSV/XLSX/JSON/RIS generation is deterministic local code.
 - Tenant actor context is resolved from active database membership on every request; storage keys never substitute for authorization.
 
-See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).
+See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).

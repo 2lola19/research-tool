@@ -43,4 +43,13 @@ Cross-cutting records include Actor, Audit Event, Scientific Provenance, AI Run,
 
 `ExtractionVerification` compares two runs deterministically. Equal canonical values become MATCHED; value or evidence disagreement creates an `ExtractionConflict` containing both original snapshots. Adjudication updates only the conflict/verification state and appends provenance; original extraction values are never overwritten.
 
+`PrismaSnapshot` is an immutable, algorithm-versioned derivation from citation records,
+deduplication decisions, screening outcomes, report retrieval/full-text decisions, and active Study
+links. Counts distinguish source records, Article reports, and Study investigations. Readiness
+blockers prevent incomplete workflow state from being presented as final.
+
+`ExportArtifact` preserves exact CSV, XLSX, JSON, or RIS bytes with a deterministic manifest,
+PRISMA snapshot reference, SHA-256 checksum, media metadata, creator, audit event, and scientific
+provenance. Artifacts are append-only; creating another export never rewrites an earlier file.
+
 Tenant-owned aggregates carry organization ownership and review scope. Immutable versioned aggregates carry a logical identity plus monotonically increasing version and approval state.

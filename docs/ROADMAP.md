@@ -15,6 +15,7 @@
 13. **Versioned extraction schemas (verified):** typed, immutable schema versions with explicit missingness metadata.
 14. **Manual extraction (verified):** Study-level typed values with Article/Document evidence and provenance.
 15. **Extraction verification (verified):** deterministic comparison, explicit conflicts, and human adjudication history.
-16. **PRISMA, export, and scientific extensions:** database-derived flow counts, portable exports, risk of bias, deterministic R/metafor analysis, certainty, and reporting.
+16. **Deterministic PRISMA and reproducible export foundation (implemented):** database-derived flow counts, immutable snapshots, readiness blockers, portable CSV/XLSX/JSON/RIS artifacts, manifests, and checksums.
+17. **Later scientific engines (deferred):** risk of bias, deterministic R/metafor analysis, certainty, and mature reporting.
 
 Each milestone must meet the definition of done in the master specification before progression.

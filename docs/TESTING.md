@@ -24,6 +24,12 @@ Phase 2 includes negative tenant-isolation integration tests for cross-organizat
 
 Review Projects adds tests for organization-unique metadata, archive/restore, member listing/removal, immediate project-access revocation, ownership transfer, and cross-tenant transfer rejection. Frontend tests assert that server-side review fetches always send both bearer identity and organization context.
 
-Critical suites cover protocol immutability, audit append-only behavior, provenance completeness, workflow transitions, deterministic deduplication, and screening. Screening tests exercise blinded queues, immutable decisions, exclusion rationale, deterministic consensus/conflict outcomes, conflict adjudication, closure completeness, idempotent full-text progression, retained-versus-suppressed duplicate behavior, role restrictions, assignment ownership, and cross-tenant identifier non-enumeration. Future suites add PRISMA counts and deterministic effect calculations as those domains land.
+Critical suites cover protocol immutability, audit append-only behavior, provenance completeness, workflow transitions, deterministic deduplication, and screening. Screening tests exercise blinded queues, immutable decisions, exclusion rationale, deterministic consensus/conflict outcomes, conflict adjudication, closure completeness, idempotent full-text progression, retained-versus-suppressed duplicate behavior, role restrictions, assignment ownership, and cross-tenant identifier non-enumeration.
 
 Phase 10.5 tests exercise ordinary sequential allocation, scoped uniqueness, savepoint retry after a simulated concurrent winner, simulated concurrent workers, and rollback after exhausted retries. Phase 11 tests cover PDF signature and size validation, safe filenames, checksum duplicate rejection, unchanged object retrieval, tenant-scoped document access, parser fixture normalization and malformed output, processing failure state, warnings, evidence locations, approved-protocol full-text judgments, structured exclusion reasons, and viewer mutation denial. SQLite writer-lock limitations are not treated as PostgreSQL concurrency validation; the contention test uses a deterministic database-behavior simulation.
+
+The PRISMA/export foundation tests database-derived record/report/Study distinctions, readiness
+blockers, structured full-text exclusion reasons, immutable tenant-scoped snapshots, deterministic
+byte rendering, CSV formula neutralization, valid XLSX archives, all four download formats,
+manifests, checksums, prior-artifact preservation, role restrictions, tenant non-enumeration, and the
+complete Alembic upgrade/downgrade chain. Deterministic effect calculations remain deferred.

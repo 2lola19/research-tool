@@ -15,3 +15,7 @@ Evaluation snapshot: 2026-08-11. Versions are pinned only when integration begin
 No candidate code is copied into this repository. Direct integration requires a maintenance, license, security, and fit review at the relevant phase.
 
 Phase 2 adds no authentication dependency or SaaS. Its local-only provider uses Python standard-library scrypt and HMAC behind an application protocol; a production OIDC implementation remains deferred.
+
+The PRISMA/export foundation adds no external component. CSV, JSON, RIS, SHA-256, and deterministic
+OOXML/XLSX generation use Python standard-library modules; no paid reporting provider or spreadsheet
+SDK is introduced.

@@ -11,3 +11,10 @@ Tenant-owned repository calls require organization scope. Cross-organization and
 The local Next.js sign-in route exchanges credentials server-to-server, verifies organization context before establishing a session, and stores the bearer token and organization ID in HTTP-only, SameSite=Lax cookies. Browser code never receives or persists the token. Production sets Secure cookies. Review ownership transfer, archive/restore, and member changes repeat backend authorization and same-tenant membership checks.
 
 Production hardening will add secure headers, rate limiting, signed object access, TLS termination, secret management, dependency scanning, backup/restore tests, and security-event monitoring. Authentication must never be weakened to make tests pass.
+
+Export creation is restricted to Owner, Administrator, and assigned Lead Reviewer roles; metadata
+and downloads still require active Review access and tenant scope. Artifact downloads recompute the
+SHA-256 checksum before returning bytes. CSV cells beginning with spreadsheet formula prefixes are
+neutralized, XLSX text is emitted as inline strings rather than formulas, filenames are generated
+from sanitized project slugs, and export responses are served through an authenticated server-side
+proxy in the UI.

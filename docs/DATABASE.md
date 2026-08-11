@@ -43,3 +43,13 @@ Migration `20260811_0013` adds `extraction_schemas` and immutable `extraction_sc
 Migration `20260811_0014` adds `extraction_runs` and typed `extraction_values`. Values use typed columns plus explicit missingness and require a same-tenant Article or Document evidence source. Composite keys bind runs and values to their Review and Organization.
 
 Migration `20260811_0015` adds `extraction_conflicts` and `extraction_verifications`. Both original value snapshots and evidence snapshots remain available for adjudication; resolution updates verification state and retains adjudicator, reason, and timestamp.
+
+Migration `20260811_0016` adds immutable `prisma_snapshots`. Each snapshot stores deterministic
+counts, readiness blockers, source references, algorithm version, creator, and tenant/review scope.
+Counters are derived from canonical scientific records and are never manually persisted as mutable
+workflow state.
+
+Migration `20260811_0017` adds immutable `export_artifacts`. Each row is bound to a same-tenant
+PRISMA snapshot and stores exact artifact bytes, format, schema version, filename, media type,
+manifest, byte size, SHA-256 checksum, creator, and timestamp. Transactional blob storage prevents
+half-written repository-local export files in this foundation.
