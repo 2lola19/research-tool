@@ -21,6 +21,7 @@ class StudyRequest(BaseModel):
     review_id: UUID
     study_key: str = Field(min_length=1, max_length=100)
     label: str | None = Field(default=None, max_length=500)
+    study_design: str | None = Field(default=None, min_length=1, max_length=100)
 
 
 class ArticleLinkRequest(BaseModel):
@@ -38,10 +39,17 @@ class StudyResponse(BaseModel):
     review_id: UUID
     study_key: str
     label: str | None
+    study_design: str | None
 
     @classmethod
     def from_domain(cls, item: Study) -> StudyResponse:
-        return cls(id=item.id, review_id=item.review_id, study_key=item.study_key, label=item.label)
+        return cls(
+            id=item.id,
+            review_id=item.review_id,
+            study_key=item.study_key,
+            label=item.label,
+            study_design=item.study_design,
+        )
 
 
 class LinkResponse(BaseModel):
@@ -84,7 +92,11 @@ async def create_study(
     payload: StudyRequest, actor: ActorContextDependency, session: DbSessionDependency
 ) -> StudyResponse:
     study = await _service(session).create(
-        actor, review_id=payload.review_id, study_key=payload.study_key, label=payload.label
+        actor,
+        review_id=payload.review_id,
+        study_key=payload.study_key,
+        label=payload.label,
+        study_design=payload.study_design,
     )
     await session.commit()
     return StudyResponse.from_domain(study)

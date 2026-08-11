@@ -34,6 +34,7 @@ class Study:
     review_id: UUID
     study_key: str
     label: str | None
+    study_design: str | None
     created_by_user_id: UUID
     created_at: datetime
 

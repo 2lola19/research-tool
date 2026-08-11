@@ -46,6 +46,7 @@ class StudyRecord(Base):
     review_id: Mapped[UUID] = mapped_column()
     study_key: Mapped[str] = mapped_column(String(100))
     label: Mapped[str | None] = mapped_column(String(500))
+    study_design: Mapped[str | None] = mapped_column(String(100))
     created_by_user_id: Mapped[UUID] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -117,6 +118,7 @@ def _study(record: StudyRecord) -> Study:
         record.review_id,
         record.study_key,
         record.label,
+        record.study_design,
         record.created_by_user_id,
         record.created_at or datetime.now(UTC),
     )
@@ -152,6 +154,7 @@ class SqlAlchemyStudyRepository:
         review_id: UUID,
         study_key: str,
         label: str | None,
+        study_design: str | None,
         created_by_user_id: UUID,
     ) -> Study:
         record = StudyRecord(
@@ -159,6 +162,7 @@ class SqlAlchemyStudyRepository:
             review_id=review_id,
             study_key=study_key,
             label=label,
+            study_design=study_design,
             created_by_user_id=created_by_user_id,
         )
         self._session.add(record)

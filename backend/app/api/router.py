@@ -11,6 +11,7 @@ from backend.app.api.routes.prisma import router as prisma_router
 from backend.app.api.routes.protocols import router as protocols_router
 from backend.app.api.routes.provenance import router as provenance_router
 from backend.app.api.routes.reviews import router as reviews_router
+from backend.app.api.routes.risk_of_bias import router as risk_of_bias_router
 from backend.app.api.routes.screening import router as screening_router
 from backend.app.api.routes.search import router as search_router
 from backend.app.api.routes.search_executions import router as search_executions_router
@@ -37,6 +38,7 @@ def build_api_router(api_prefix: str) -> APIRouter:
     router.include_router(workflow_router, prefix=api_prefix)
     router.include_router(studies_router, prefix=api_prefix)
     router.include_router(extraction_router, prefix=api_prefix)
+    router.include_router(risk_of_bias_router, prefix=api_prefix)
     router.include_router(prisma_router, prefix=api_prefix)
     router.include_router(exports_router, prefix=api_prefix)
     return router

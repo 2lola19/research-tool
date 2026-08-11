@@ -30,7 +30,13 @@ class StudyService:
         )
 
     async def create(
-        self, actor: ActorContext, *, review_id: UUID, study_key: str, label: str | None
+        self,
+        actor: ActorContext,
+        *,
+        review_id: UUID,
+        study_key: str,
+        label: str | None,
+        study_design: str | None,
     ) -> Study:
         AuthorizationService.require(actor, Permission.MANAGE_STUDIES)
         review = await self._review_service.get(actor, review_id)
@@ -39,6 +45,7 @@ class StudyService:
             review_id=review.id,
             study_key=study_key.strip(),
             label=label.strip() if label else None,
+            study_design=study_design.strip().upper() if study_design else None,
             created_by_user_id=actor.user_id,
         )
         await self._provenance.record_audit_event(

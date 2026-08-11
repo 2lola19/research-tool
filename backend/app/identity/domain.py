@@ -33,6 +33,9 @@ class Permission(StrEnum):
     MANAGE_EXTRACTION_SCHEMA = "manage_extraction_schema"
     PERFORM_EXTRACTION = "perform_extraction"
     ADJUDICATE_EXTRACTION = "adjudicate_extraction"
+    MANAGE_ROB_INSTRUMENT = "manage_rob_instrument"
+    PERFORM_ROB_ASSESSMENT = "perform_rob_assessment"
+    ADJUDICATE_ROB = "adjudicate_rob"
     EXPORT_REVIEW = "export_review"
 
 
@@ -56,6 +59,9 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_EXTRACTION_SCHEMA,
             Permission.PERFORM_EXTRACTION,
             Permission.ADJUDICATE_EXTRACTION,
+            Permission.MANAGE_ROB_INSTRUMENT,
+            Permission.PERFORM_ROB_ASSESSMENT,
+            Permission.ADJUDICATE_ROB,
             Permission.EXPORT_REVIEW,
         }
     ),
@@ -71,6 +77,7 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_EXTRACTION_SCHEMA,
             Permission.PERFORM_EXTRACTION,
             Permission.ADJUDICATE_EXTRACTION,
+            Permission.PERFORM_ROB_ASSESSMENT,
         }
     ),
     OrganizationRole.STATISTICIAN: frozenset({Permission.RECORD_PROVENANCE}),

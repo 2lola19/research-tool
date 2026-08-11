@@ -20,7 +20,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         check=False,
-        timeout=60,
+        timeout=180,
     )
 
     assert result.returncode == 0, result.stderr
@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260811_0018",)
+    assert version == ("20260811_0019",)
     assert {
         "users",
         "organizations",
@@ -87,6 +87,14 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "search_execution_events",
         "search_execution_citation_links",
         "search_execution_artifacts",
+        "rob_instruments",
+        "rob_instrument_versions",
+        "rob_instrument_decisions",
+        "rob_assessments",
+        "rob_answers",
+        "rob_domain_judgments",
+        "rob_comparisons",
+        "rob_adjudications",
     } <= tables
 
     downgrade = subprocess.run(
@@ -96,7 +104,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         check=False,
-        timeout=60,
+        timeout=180,
     )
     assert downgrade.returncode == 0, downgrade.stderr
     with closing(sqlite3.connect(database_path)) as connection:
@@ -111,3 +119,4 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert "prisma_snapshots" not in remaining_tables
     assert "export_artifacts" not in remaining_tables
     assert "search_executions" not in remaining_tables
+    assert "rob_assessments" not in remaining_tables

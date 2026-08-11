@@ -44,6 +44,16 @@ from backend.app.provenance.persistence import (
     ScientificProvenanceRecord,
 )
 from backend.app.reviews.persistence import ReviewMembershipRecord, ReviewRecord
+from backend.app.risk_of_bias.persistence import (
+    RiskOfBiasAdjudicationRecord,
+    RiskOfBiasAnswerRecord,
+    RiskOfBiasAssessmentRecord,
+    RiskOfBiasComparisonRecord,
+    RiskOfBiasDomainJudgmentRecord,
+    RiskOfBiasInstrumentDecisionRecord,
+    RiskOfBiasInstrumentRecord,
+    RiskOfBiasInstrumentVersionRecord,
+)
 from backend.app.screening.persistence import (
     ScreeningAdjudicationRecord,
     ScreeningAssignmentRecord,
@@ -103,6 +113,14 @@ __all__ = [
     "ProtocolVersionRecord",
     "ReviewMembershipRecord",
     "ReviewRecord",
+    "RiskOfBiasAdjudicationRecord",
+    "RiskOfBiasAnswerRecord",
+    "RiskOfBiasAssessmentRecord",
+    "RiskOfBiasComparisonRecord",
+    "RiskOfBiasDomainJudgmentRecord",
+    "RiskOfBiasInstrumentDecisionRecord",
+    "RiskOfBiasInstrumentRecord",
+    "RiskOfBiasInstrumentVersionRecord",
     "ScientificProvenanceRecord",
     "ScreeningAdjudicationRecord",
     "ScreeningAssignmentRecord",
