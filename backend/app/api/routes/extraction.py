@@ -8,14 +8,21 @@ from pydantic import BaseModel, Field
 
 from backend.app.api.dependencies import ActorContextDependency, DbSessionDependency
 from backend.app.extraction.domain import (
+    ExtractionRun,
+    ExtractionRunStatus,
     ExtractionSchema,
     ExtractionSchemaVersion,
+    ExtractionValue,
+    MissingnessState,
 )
+from backend.app.extraction.manual_persistence import SqlAlchemyManualExtractionRepository
+from backend.app.extraction.manual_service import ManualExtractionService
 from backend.app.extraction.schema_persistence import SqlAlchemyExtractionSchemaRepository
 from backend.app.extraction.schema_service import ExtractionSchemaService
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
 from backend.app.provenance.persistence import SqlAlchemyProvenanceRepository
 from backend.app.reviews.persistence import SqlAlchemyReviewRepository
+from backend.app.studies.persistence import SqlAlchemyStudyRepository
 
 router = APIRouter(prefix="/extraction", tags=["extraction"])
 
@@ -65,9 +72,99 @@ class SchemaVersionResponse(BaseModel):
         )
 
 
+class ExtractionRunRequest(BaseModel):
+    review_id: UUID
+    study_id: UUID
+    schema_version_id: UUID
+
+
+class ExtractionValueRequest(BaseModel):
+    field_key: str = Field(min_length=1, max_length=200)
+    value: Any = None
+    missingness: MissingnessState
+    unit: str | None = Field(default=None, max_length=100)
+    source_article_id: UUID | None = None
+    evidence_location_id: UUID | None = None
+    evidence_text: str | None = Field(default=None, max_length=20_000)
+
+
+class ExtractionValuesRequest(BaseModel):
+    review_id: UUID
+    status: ExtractionRunStatus = ExtractionRunStatus.IN_PROGRESS
+    values: list[ExtractionValueRequest] = Field(max_length=200)
+
+
+class ExtractionValueResponse(BaseModel):
+    id: UUID
+    field_key: str
+    missingness: MissingnessState
+    value: Any = None
+    unit: str | None
+    source_article_id: UUID | None
+    evidence_location_id: UUID | None
+    evidence_text: str | None
+
+    @classmethod
+    def from_domain(cls, item: ExtractionValue) -> ExtractionValueResponse:
+        value: Any = item.value_integer
+        if item.value_decimal is not None:
+            value = item.value_decimal
+        elif item.value_text is not None:
+            value = item.value_text
+        elif item.value_boolean is not None:
+            value = item.value_boolean
+        elif item.value_date is not None:
+            value = item.value_date
+        elif item.value_json is not None:
+            value = item.value_json
+        return cls(
+            id=item.id,
+            field_key=item.field_key,
+            missingness=item.missingness,
+            value=value,
+            unit=item.unit,
+            source_article_id=item.source_article_id,
+            evidence_location_id=item.evidence_location_id,
+            evidence_text=item.evidence_text,
+        )
+
+
+class ExtractionRunResponse(BaseModel):
+    id: UUID
+    review_id: UUID
+    study_id: UUID
+    schema_version_id: UUID
+    status: ExtractionRunStatus
+    values: list[ExtractionValueResponse]
+
+    @classmethod
+    def from_domain(
+        cls, run: ExtractionRun, values: list[ExtractionValue]
+    ) -> ExtractionRunResponse:
+        return cls(
+            id=run.id,
+            review_id=run.review_id,
+            study_id=run.study_id,
+            schema_version_id=run.schema_version_id,
+            status=run.status,
+            values=[ExtractionValueResponse.from_domain(item) for item in values],
+        )
+
+
 def _service(session: DbSessionDependency) -> ExtractionSchemaService:
     return ExtractionSchemaService(
         SqlAlchemyExtractionSchemaRepository(session),
+        SqlAlchemyReviewRepository(session),
+        SqlAlchemyIdentityRepository(session),
+        SqlAlchemyProvenanceRepository(session),
+    )
+
+
+def _manual_service(session: DbSessionDependency) -> ManualExtractionService:
+    return ManualExtractionService(
+        SqlAlchemyManualExtractionRepository(session),
+        SqlAlchemyExtractionSchemaRepository(session),
+        SqlAlchemyStudyRepository(session),
         SqlAlchemyReviewRepository(session),
         SqlAlchemyIdentityRepository(session),
         SqlAlchemyProvenanceRepository(session),
@@ -109,3 +206,48 @@ async def list_schema_versions(
         actor, review_id=review_id, schema_id=schema_id
     )
     return [SchemaVersionResponse.from_domain(item) for item in versions]
+
+
+@router.post("/runs", response_model=ExtractionRunResponse, status_code=status.HTTP_201_CREATED)
+async def create_extraction_run(
+    payload: ExtractionRunRequest,
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+) -> ExtractionRunResponse:
+    run = await _manual_service(session).create_run(
+        actor,
+        review_id=payload.review_id,
+        study_id=payload.study_id,
+        schema_version_id=payload.schema_version_id,
+    )
+    await session.commit()
+    return ExtractionRunResponse.from_domain(run, [])
+
+
+@router.get("/runs/{run_id}", response_model=ExtractionRunResponse)
+async def get_extraction_run(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    run_id: Annotated[UUID, Path()],
+    review_id: UUID,
+) -> ExtractionRunResponse:
+    run, values = await _manual_service(session).get_run(actor, review_id=review_id, run_id=run_id)
+    return ExtractionRunResponse.from_domain(run, values)
+
+
+@router.put("/runs/{run_id}/values", response_model=ExtractionRunResponse)
+async def save_extraction_values(
+    payload: ExtractionValuesRequest,
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    run_id: Annotated[UUID, Path()],
+) -> ExtractionRunResponse:
+    run, values = await _manual_service(session).save_values(
+        actor,
+        review_id=payload.review_id,
+        run_id=run_id,
+        values=[item.model_dump(mode="json") for item in payload.values],
+        status=payload.status,
+    )
+    await session.commit()
+    return ExtractionRunResponse.from_domain(run, values)

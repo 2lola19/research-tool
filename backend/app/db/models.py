@@ -19,6 +19,7 @@ from backend.app.documents.persistence import (
     FullTextCriterionJudgmentRecord,
     FullTextScreeningRecord,
 )
+from backend.app.extraction.manual_persistence import ExtractionRunRecord, ExtractionValueRecord
 from backend.app.extraction.schema_persistence import (
     ExtractionSchemaRecord,
     ExtractionSchemaVersionRecord,
@@ -68,8 +69,10 @@ __all__ = [
     "DocumentRecord",
     "DocumentWarningRecord",
     "DuplicateCandidateRecord",
+    "ExtractionRunRecord",
     "ExtractionSchemaRecord",
     "ExtractionSchemaVersionRecord",
+    "ExtractionValueRecord",
     "FullTextCriterionJudgmentRecord",
     "FullTextScreeningRecord",
     "HumanCheckpointRecord",
