@@ -25,3 +25,11 @@ reject cross-tenant sources, strategies, translations, citations, actors, and co
 Raw artifact reads authorize the Review before resolving the opaque storage key and verify size and
 SHA-256 before returning bytes. Completed execution fields and all discovery links are append-only;
 corrections preserve the original scientific record.
+
+Risk of Bias routes use centralized `MANAGE_ROB_INSTRUMENT`, `PERFORM_ROB_ASSESSMENT`, and
+`ADJUDICATE_ROB` permissions. Ordinary assessors can retrieve only their own assessment records;
+authorized comparison is the reveal boundary. Every instrument, version, assessment, evidence,
+comparison, and adjudication lookup repeats Organization and Review scope, and foreign direct IDs
+return not-found semantics. Evidence locations are accepted only when their Document's Article has
+an active link to the assessment Study. Viewers cannot mutate; reviewers cannot approve instruments
+or adjudicate; completed submissions cannot be silently edited.

@@ -53,6 +53,21 @@ create a superseding execution while ordinary updates remain independent histori
 
 `ExtractionVerification` compares two runs deterministically. Equal canonical values become MATCHED; value or evidence disagreement creates an `ExtractionConflict` containing both original snapshots. Adjudication updates only the conflict/verification state and appends provenance; original extraction values are never overwritten.
 
+`RiskOfBiasInstrument` is a Review-scoped logical method. Each immutable
+`RiskOfBiasInstrumentVersion` stores ordered domains and signalling questions, instrument-specific
+answer/domain/overall choices, compatible Study designs, optional guidance, declarative suggestion
+rules, and a content hash. A separate append-only decision approves or rejects a version; the
+bundled demonstration randomized-study definition validates the engine but is not complete RoB 2.
+
+`RiskOfBiasAssessment` pins one independent assessor, Study, approved instrument version, round, and
+revision. Structured `RiskOfBiasAnswer` and domain-judgment records retain rationale, deterministic
+suggestions, explicit final judgments, override reasons, and optional existing Document evidence
+locations. Evidence may span protocol, primary, follow-up, and supplementary Articles in the active
+Study Family. Submitted records are immutable; an explicit superseding revision preserves the
+original. `RiskOfBiasComparison` records deterministic signalling/domain/overall differences after
+authorized reveal, and append-only adjudication stores a final verified snapshot without overwriting
+either independent assessment.
+
 `PrismaSnapshot` is an immutable, algorithm-versioned derivation from eligible SearchExecutions and
 their citation-source links, citation records,
 deduplication decisions, screening outcomes, report retrieval/full-text decisions, and active Study

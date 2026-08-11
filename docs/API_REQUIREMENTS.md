@@ -31,5 +31,14 @@
 - `/exports/reviews/{review_id}` creates and lists authorized CSV, XLSX, JSON, and RIS artifacts;
   export metadata exposes manifests and SHA-256 checksums, while tenant-scoped download verifies the
   stored checksum before returning immutable bytes.
+- `/risk-of-bias/instruments` and `/instrument-versions` create review-scoped declarative methods;
+  immutable decisions approve or reject a version before use. The demonstration endpoint installs a
+  clearly labelled framework-validation RCT definition and does not claim complete RoB 2 support.
+- `/risk-of-bias/assessments` creates Study- and version-pinned independent records. Answer, domain,
+  and overall endpoints validate instrument choices and optional existing evidence locations;
+  submission locks the record and correction requires an explicit superseding revision.
+- `/risk-of-bias/comparisons` deterministically reveals and compares two submitted independent
+  assessments. Authorized adjudication appends a final verified snapshot and rationale without
+  overwriting either original assessment.
 
-All endpoints resolve organization context from active membership and enforce Review access server-side. AI extraction providers and live external scholarly APIs remain deferred. Export generation and search-execution recording are deterministic local application code and require no external API or credential.
+All endpoints resolve organization context from active membership and enforce Review access server-side. AI extraction/RoB proposals and live external scholarly APIs remain deferred. Export generation, search-execution recording, and RoB comparison are deterministic local application code and require no external API or credential.

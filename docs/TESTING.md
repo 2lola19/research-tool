@@ -40,3 +40,12 @@ provider/import reconciliation, file-import linkage, multiple discovery paths, p
 counts, database/register versus other-method separation, stable JSON/XLSX documentation, raw
 artifact checksum retrieval, cross-tenant/cross-review non-enumeration, role restrictions, and the
 `20260811_0018` upgrade/downgrade chain.
+
+Risk of Bias tests cover instrument normalization, domain/question order, instrument-defined choices,
+deterministic suggestions, Study-design compatibility, independent assessor ownership and blindness,
+agreement/conflict comparison, submitted-record immutability, current-revision comparison,
+authorized adjudication, audit/provenance, and cross-tenant/cross-review non-enumeration. Study Family
+tests cite protocol and results Documents in one Study and reject evidence linked only to another
+Study. Export tests verify stable JSON/XLSX RoB sections, instrument hashes/versions, sheet ordering,
+and `review-export-3`. Migration tests validate the complete `20260811_0019` SQLite upgrade and
+downgrade chain; PostgreSQL-specific execution remains environment-blocked.

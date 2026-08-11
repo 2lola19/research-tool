@@ -24,3 +24,9 @@ The Search Execution phase adds no external dependency. Its provider-neutral `Se
 protocol and fixture/manual/file-import acquisition methods preserve honest provenance without
 calling PubMed, Europe PMC, OpenAlex, Crossref, or any paid API. Raw artifacts reuse the existing
 local object-storage adapter.
+
+The Risk of Bias foundation adds no external dependency and embeds no copyrighted published
+instrument. Its declarative demonstration definition is intentionally incomplete and exists only to
+validate the generic engine. Adoption of RoB 2, ROBINS-I, QUADAS-2, QUIPS, JBI, or another instrument
+requires methodology, licensing, maintenance, and validation review at the time its complete
+definition is introduced.

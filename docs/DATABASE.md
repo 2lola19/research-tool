@@ -63,3 +63,13 @@ non-negative result counts, and completed-result-count presence. Scoped unique c
 one link per execution/source record and one raw artifact per execution/checksum. Supporting
 composite unique keys on citation source records and search translations enable tenant-safe foreign
 keys. The migration upgrades linearly from `20260811_0017` and reverses completely on SQLite.
+
+Migration `20260811_0019` adds canonical `study_design` metadata plus `rob_instruments`, immutable
+`rob_instrument_versions`, append-only version decisions, assessor-owned `rob_assessments`,
+structured signalling answers and domain judgments, deterministic `rob_comparisons`, and append-only
+`rob_adjudications`. Composite foreign keys repeat Organization and Review scope across Studies,
+instrument versions, assessor membership, correction history, comparisons, and existing Document
+evidence locations. Unique constraints preserve version numbers, assessor/round/revision identity,
+single explicit corrections, one comparison per canonical pair, and one adjudication per conflict.
+Allowed states, positive rounds/revisions, and 64-character definition hashes are constrained. The
+migration upgrades linearly from `20260811_0018` and fully downgrades on SQLite.
