@@ -7,6 +7,7 @@ import zipfile
 
 import pytest
 
+from tests.integration.test_search_executions import _record_completed_execution
 from tests.integration.test_tenant_isolation import TenantApi, _import_screening_fixture
 
 pytest_plugins = ("tests.integration.test_tenant_isolation",)
@@ -22,6 +23,7 @@ def test_export_artifacts_have_manifests_checksums_and_downloads(
     signature: bytes,
 ) -> None:
     _import_screening_fixture(tenant_api)
+    _record_completed_execution(tenant_api)
     headers = tenant_api.headers(tenant_api.ids.lead_a, tenant_api.ids.organization_a)
     created = tenant_api.client.post(
         f"/api/v1/exports/reviews/{tenant_api.ids.assigned_review}",
@@ -33,6 +35,7 @@ def test_export_artifacts_have_manifests_checksums_and_downloads(
     assert artifact["format"] == export_format
     assert artifact["manifest"]["prisma_ready_for_final"] is False
     assert artifact["manifest"]["row_counts"]["articles"] == 2
+    assert artifact["schema_version"] == "review-export-2"
     download = tenant_api.client.get(
         f"/api/v1/exports/{artifact['id']}/download",
         headers=headers,
@@ -45,9 +48,11 @@ def test_export_artifacts_have_manifests_checksums_and_downloads(
     if export_format == "XLSX":
         with zipfile.ZipFile(io.BytesIO(download.content)) as workbook:
             assert workbook.testzip() is None
+            assert b"Search Executions" in workbook.read("xl/workbook.xml")
     if export_format == "JSON":
         payload = json.loads(download.content)
         assert payload["prisma"]["readiness"]["ready_for_final"] is False
+        assert payload["search_executions"][0]["source_name"] == "Fixture Database"
 
 
 def test_new_export_does_not_mutate_prior_artifact(

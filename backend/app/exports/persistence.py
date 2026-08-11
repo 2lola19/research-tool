@@ -28,10 +28,12 @@ from backend.app.exports.domain import (
     ExportArtifact,
     ExportDataset,
     ExportFormat,
+    ExportSearchExecution,
     ExportStudy,
 )
 from backend.app.prisma.domain import PrismaSnapshot
 from backend.app.reviews.persistence import ReviewRecord
+from backend.app.search.execution_persistence import SqlAlchemySearchExecutionRepository
 from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
 
 
@@ -169,6 +171,9 @@ class SqlAlchemyExportRepository:
                 .order_by(StudyArticleLinkRecord.id)
             )
         )
+        executions = await SqlAlchemySearchExecutionRepository(self._session).list_executions(
+            snapshot.organization_id, snapshot.review_id
+        )
         source_ids: dict[UUID, list[UUID]] = defaultdict(list)
         for source in sources:
             source_ids[source.article_id].append(source.id)
@@ -211,6 +216,36 @@ class SqlAlchemyExportRepository:
                     article_ids=tuple(sorted(article_ids[study.id], key=str)),
                 )
                 for study in studies
+            ),
+            search_executions=tuple(
+                ExportSearchExecution(
+                    id=execution.id,
+                    source_name=execution.source.display_name,
+                    provider_name=execution.source.provider_name,
+                    platform_name=execution.source.platform_name,
+                    source_classification=execution.source.classification.value,
+                    method=execution.method.value,
+                    executed_at=execution.executed_at,
+                    search_strategy_version_id=execution.search_strategy_version_id,
+                    search_translation_id=execution.search_translation_id,
+                    exact_query=execution.exact_query,
+                    filters=tuple(sorted(execution.filters.items())),
+                    software_version=execution.software_version,
+                    status=execution.current_event.status.value,
+                    provider_result_count=execution.current_event.provider_result_count,
+                    imported_record_count=execution.imported_record_count,
+                    status_history=tuple(
+                        (
+                            event.sequence,
+                            event.status.value,
+                            event.occurred_at,
+                            event.provider_result_count,
+                            event.note,
+                        )
+                        for event in execution.events
+                    ),
+                )
+                for execution in executions
             ),
         )
 

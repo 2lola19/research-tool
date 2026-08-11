@@ -11,7 +11,7 @@ from typing import Any
 
 from backend.app.exports.domain import ExportArticle, ExportDataset, ExportFormat, RenderedExport
 
-EXPORT_SCHEMA_VERSION = "review-export-1"
+EXPORT_SCHEMA_VERSION = "review-export-2"
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
@@ -114,6 +114,46 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             }
             for study in dataset.studies
         ],
+        "search_executions": [
+            {
+                "id": str(execution.id),
+                "source_name": execution.source_name,
+                "provider_name": execution.provider_name,
+                "platform_name": execution.platform_name,
+                "source_classification": execution.source_classification,
+                "method": execution.method,
+                "executed_at": execution.executed_at.isoformat(),
+                "search_strategy_version_id": (
+                    str(execution.search_strategy_version_id)
+                    if execution.search_strategy_version_id
+                    else None
+                ),
+                "search_translation_id": (
+                    str(execution.search_translation_id)
+                    if execution.search_translation_id
+                    else None
+                ),
+                "exact_query": execution.exact_query,
+                "filters": dict(execution.filters),
+                "software_version": execution.software_version,
+                "status": execution.status,
+                "provider_result_count": execution.provider_result_count,
+                "imported_record_count": execution.imported_record_count,
+                "status_history": [
+                    {
+                        "sequence": sequence,
+                        "status": status,
+                        "occurred_at": occurred_at.isoformat(),
+                        "provider_result_count": result_count,
+                        "note": note,
+                    }
+                    for sequence, status, occurred_at, result_count, note in (
+                        execution.status_history
+                    )
+                ],
+            }
+            for execution in dataset.search_executions
+        ],
     }
     content = (
         json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -122,7 +162,11 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
         content,
         "application/json",
         "json",
-        {"articles": len(dataset.articles), "studies": len(dataset.studies)},
+        {
+            "articles": len(dataset.articles),
+            "studies": len(dataset.studies),
+            "search_executions": len(dataset.search_executions),
+        },
     )
 
 
@@ -211,6 +255,7 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ["prisma_blocker_count", len(blockers) if isinstance(blockers, list) else 0],
         ["article_count", len(dataset.articles)],
         ["study_count", len(dataset.studies)],
+        ["search_execution_count", len(dataset.search_executions)],
     ]
     prisma_rows: list[list[object]] = [["counter", "value"]]
     exclusion_rows: list[list[object]] = [["reason", "count"]]
@@ -231,12 +276,73 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ]
         for study in dataset.studies
     )
+    search_execution_rows: list[list[object]] = [
+        [
+            "search_execution_id",
+            "source_name",
+            "provider_name",
+            "platform_name",
+            "source_classification",
+            "method",
+            "executed_at",
+            "search_strategy_version_id",
+            "search_translation_id",
+            "exact_query",
+            "filters",
+            "software_version",
+            "status",
+            "provider_result_count",
+            "imported_record_count",
+            "status_history",
+        ]
+    ]
+    search_execution_rows.extend(
+        [
+            str(execution.id),
+            execution.source_name,
+            execution.provider_name,
+            execution.platform_name,
+            execution.source_classification,
+            execution.method,
+            execution.executed_at.isoformat(),
+            (
+                str(execution.search_strategy_version_id)
+                if execution.search_strategy_version_id
+                else None
+            ),
+            (str(execution.search_translation_id) if execution.search_translation_id else None),
+            execution.exact_query,
+            json.dumps(dict(execution.filters), sort_keys=True, separators=(",", ":")),
+            execution.software_version,
+            execution.status,
+            execution.provider_result_count,
+            execution.imported_record_count,
+            json.dumps(
+                [
+                    {
+                        "sequence": sequence,
+                        "status": status,
+                        "occurred_at": occurred_at.isoformat(),
+                        "provider_result_count": result_count,
+                        "note": note,
+                    }
+                    for sequence, status, occurred_at, result_count, note in (
+                        execution.status_history
+                    )
+                ],
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+        ]
+        for execution in dataset.search_executions
+    )
     sheets = [
         ("Manifest", manifest_rows),
         ("PRISMA", prisma_rows),
         ("Exclusion Reasons", exclusion_rows),
         ("Articles", article_rows),
         ("Studies", study_rows),
+        ("Search Executions", search_execution_rows),
     ]
     content_types = "".join(
         f'<Override PartName="/xl/worksheets/sheet{index}.xml" '
@@ -298,5 +404,9 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         stream.getvalue(),
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "xlsx",
-        {"articles": len(dataset.articles), "studies": len(dataset.studies)},
+        {
+            "articles": len(dataset.articles),
+            "studies": len(dataset.studies),
+            "search_executions": len(dataset.search_executions),
+        },
     )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from tests.integration.test_documents import _upload_document
+from tests.integration.test_search_executions import _record_completed_execution
 from tests.integration.test_tenant_isolation import (
     TenantApi,
     _approved_protocol,
@@ -55,6 +56,7 @@ def test_prisma_summary_distinguishes_records_reports_and_studies(
     tenant_api: TenantApi,
 ) -> None:
     articles = _import_screening_fixture(tenant_api)
+    _record_completed_execution(tenant_api)
     title_round = _complete_title_round(tenant_api, articles)
     full_round = _create_screening_round(tenant_api, name="PRISMA full text", stage="FULL_TEXT")
     progression = tenant_api.client.post(
@@ -89,13 +91,16 @@ def test_prisma_summary_distinguishes_records_reports_and_studies(
     assert counts["reports_assessed_for_eligibility"] == 0
     readiness = response.json()["readiness"]
     assert readiness["ready_for_final"] is False
-    assert any(item["code"] == "SEARCH_EXECUTION_NOT_RECORDED" for item in readiness["blockers"])
+    assert not any(
+        item["code"] == "NO_COMPLETED_SEARCH_EXECUTION" for item in readiness["blockers"]
+    )
 
 
 def test_prisma_counts_reports_studies_and_structured_exclusion_reasons(
     tenant_api: TenantApi,
 ) -> None:
     articles = _import_screening_fixture(tenant_api)
+    _record_completed_execution(tenant_api)
     title_round = _complete_title_round(tenant_api, articles, included_indexes=frozenset({0, 1}))
     full_round = _create_screening_round(
         tenant_api, name="PRISMA complete full text", stage="FULL_TEXT"
@@ -171,6 +176,7 @@ def test_prisma_counts_reports_studies_and_structured_exclusion_reasons(
 
 def test_prisma_snapshots_are_reproducible_and_tenant_scoped(tenant_api: TenantApi) -> None:
     _import_screening_fixture(tenant_api)
+    _record_completed_execution(tenant_api)
     lead_headers = tenant_api.headers(tenant_api.ids.lead_a, tenant_api.ids.organization_a)
     created = tenant_api.client.post(
         f"/api/v1/prisma/reviews/{tenant_api.ids.assigned_review}/snapshots",
@@ -201,6 +207,7 @@ def test_prisma_duplicate_removal_counts_suppressed_source_records_once(
     tenant_api: TenantApi,
 ) -> None:
     _import_dedup_fixture(tenant_api)
+    _record_completed_execution(tenant_api)
     headers = tenant_api.headers(tenant_api.ids.reviewer_a, tenant_api.ids.organization_a)
     run = tenant_api.client.post(
         f"/api/v1/deduplication/reviews/{tenant_api.ids.assigned_review}/runs",

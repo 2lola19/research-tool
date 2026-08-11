@@ -37,6 +37,26 @@ class ExportStudy:
 
 
 @dataclass(frozen=True, slots=True)
+class ExportSearchExecution:
+    id: UUID
+    source_name: str
+    provider_name: str
+    platform_name: str | None
+    source_classification: str
+    method: str
+    executed_at: datetime
+    search_strategy_version_id: UUID | None
+    search_translation_id: UUID | None
+    exact_query: str | None
+    filters: tuple[tuple[str, str], ...]
+    software_version: str | None
+    status: str
+    provider_result_count: int | None
+    imported_record_count: int
+    status_history: tuple[tuple[int, str, datetime, int | None, str | None], ...]
+
+
+@dataclass(frozen=True, slots=True)
 class ExportDataset:
     organization_id: UUID
     review_id: UUID
@@ -48,6 +68,7 @@ class ExportDataset:
     prisma_source_references: dict[str, Any]
     articles: tuple[ExportArticle, ...]
     studies: tuple[ExportStudy, ...]
+    search_executions: tuple[ExportSearchExecution, ...]
 
 
 @dataclass(frozen=True, slots=True)

@@ -2,10 +2,18 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import zipfile
+from datetime import UTC, datetime
 from uuid import UUID
 
-from backend.app.exports.domain import ExportArticle, ExportDataset, ExportFormat, ExportStudy
+from backend.app.exports.domain import (
+    ExportArticle,
+    ExportDataset,
+    ExportFormat,
+    ExportSearchExecution,
+    ExportStudy,
+)
 from backend.app.exports.renderers import render_export
 
 
@@ -16,7 +24,7 @@ def _dataset() -> ExportDataset:
         review_id=UUID("00000000-0000-0000-0000-000000000002"),
         review_title="Deterministic review",
         prisma_snapshot_id=UUID("00000000-0000-0000-0000-000000000003"),
-        prisma_algorithm_version="prisma-2020-deterministic-1",
+        prisma_algorithm_version="prisma-2020-deterministic-2",
         prisma_counts={
             "records_identified_databases": 1,
             "full_text_exclusion_reasons": {"population": 1},
@@ -43,6 +51,26 @@ def _dataset() -> ExportDataset:
                 study_key="study-1",
                 label="Study one",
                 article_ids=(article_id,),
+            ),
+        ),
+        search_executions=(
+            ExportSearchExecution(
+                id=UUID("00000000-0000-0000-0000-000000000007"),
+                source_name="PubMed",
+                provider_name="NCBI",
+                platform_name="PubMed",
+                source_classification="BIBLIOGRAPHIC_DATABASE",
+                method="FILE_IMPORT",
+                executed_at=datetime(2026, 8, 11, 10, tzinfo=UTC),
+                search_strategy_version_id=UUID("00000000-0000-0000-0000-000000000008"),
+                search_translation_id=None,
+                exact_query="review[Title]",
+                filters=(("language", "all"),),
+                software_version="fixture/1",
+                status="COMPLETED",
+                provider_result_count=1,
+                imported_record_count=1,
+                status_history=((1, "COMPLETED", datetime(2026, 8, 11, 10, tzinfo=UTC), 1, None),),
             ),
         ),
     )
@@ -73,7 +101,18 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
             "xl/worksheets/sheet3.xml",
             "xl/worksheets/sheet4.xml",
             "xl/worksheets/sheet5.xml",
+            "xl/worksheets/sheet6.xml",
         } <= set(workbook.namelist())
         articles_xml = workbook.read("xl/worksheets/sheet4.xml").decode()
+        executions_xml = workbook.read("xl/worksheets/sheet6.xml").decode()
     assert "=unsafe spreadsheet title" in articles_xml
     assert "<f>" not in articles_xml
+    assert "review[Title]" in executions_xml
+
+
+def test_json_contains_versioned_search_documentation() -> None:
+    rendered = render_export(ExportFormat.JSON, _dataset())
+    payload = json.loads(rendered.content)
+    assert payload["schema_version"] == "review-export-2"
+    assert payload["search_executions"][0]["source_classification"] == ("BIBLIOGRAPHIC_DATABASE")
+    assert payload["search_executions"][0]["filters"] == {"language": "all"}

@@ -38,6 +38,18 @@ from backend.app.screening.persistence import (
     ScreeningProgressionRecord,
     ScreeningRoundRecord,
 )
+from backend.app.search.execution_domain import (
+    IdentificationContribution,
+    IdentificationSourceClassification,
+    SearchExecutionStatus,
+    group_identification_records,
+)
+from backend.app.search.execution_persistence import (
+    IdentificationSourceRecord,
+    SearchExecutionCitationLinkRecord,
+    SearchExecutionEventRecord,
+    SearchExecutionRecord,
+)
 from backend.app.studies.persistence import StudyArticleLinkRecord
 
 
@@ -95,7 +107,7 @@ def _snapshot(row: PrismaSnapshotRecord) -> PrismaSnapshot:
 
 
 class SqlAlchemyPrismaRepository:
-    algorithm_version = "prisma-2020-deterministic-1"
+    algorithm_version = "prisma-2020-deterministic-2"
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -128,6 +140,88 @@ class SqlAlchemyPrismaRepository:
             )
         )
         source_counts = Counter(row.article_id for row in source_rows)
+
+        execution_rows = list(
+            await self._session.scalars(
+                select(SearchExecutionRecord)
+                .where(
+                    SearchExecutionRecord.organization_id == organization_id,
+                    SearchExecutionRecord.review_id == review_id,
+                )
+                .order_by(SearchExecutionRecord.executed_at, SearchExecutionRecord.id)
+            )
+        )
+        execution_ids = [row.id for row in execution_rows]
+        source_by_id = {
+            row.id: row
+            for row in await self._session.scalars(
+                select(IdentificationSourceRecord).where(
+                    IdentificationSourceRecord.organization_id == organization_id,
+                    IdentificationSourceRecord.review_id == review_id,
+                )
+            )
+        }
+        execution_event_rows = (
+            list(
+                await self._session.scalars(
+                    select(SearchExecutionEventRecord)
+                    .where(SearchExecutionEventRecord.search_execution_id.in_(execution_ids))
+                    .order_by(
+                        SearchExecutionEventRecord.search_execution_id,
+                        SearchExecutionEventRecord.sequence,
+                    )
+                )
+            )
+            if execution_ids
+            else []
+        )
+        latest_execution_events: dict[UUID, SearchExecutionEventRecord] = {}
+        for event_row in execution_event_rows:
+            latest_execution_events[event_row.search_execution_id] = event_row
+        execution_link_rows = (
+            list(
+                await self._session.scalars(
+                    select(SearchExecutionCitationLinkRecord)
+                    .where(
+                        SearchExecutionCitationLinkRecord.organization_id == organization_id,
+                        SearchExecutionCitationLinkRecord.review_id == review_id,
+                    )
+                    .order_by(
+                        SearchExecutionCitationLinkRecord.search_execution_id,
+                        SearchExecutionCitationLinkRecord.citation_source_record_id,
+                    )
+                )
+            )
+            if execution_ids
+            else []
+        )
+        links_by_execution: dict[UUID, set[UUID]] = defaultdict(set)
+        for link_row in execution_link_rows:
+            links_by_execution[link_row.search_execution_id].add(link_row.citation_source_record_id)
+        superseded_execution_ids = {
+            row.supersedes_execution_id
+            for row in execution_rows
+            if row.supersedes_execution_id is not None
+        }
+        active_execution_rows = [
+            row for row in execution_rows if row.id not in superseded_execution_ids
+        ]
+        completed_execution_rows = [
+            row
+            for row in active_execution_rows
+            if SearchExecutionStatus(latest_execution_events[row.id].status)
+            is SearchExecutionStatus.COMPLETED
+        ]
+        identification_groups = group_identification_records(
+            IdentificationContribution(
+                execution_id=row.id,
+                classification=IdentificationSourceClassification(
+                    source_by_id[row.source_id].classification
+                ),
+                citation_source_record_ids=frozenset(links_by_execution[row.id]),
+            )
+            for row in completed_execution_rows
+        )
 
         candidate_ids = list(
             await self._session.scalars(
@@ -383,12 +477,98 @@ class SqlAlchemyPrismaRepository:
             row.article_id for row in included_links
         }
 
-        blockers: list[PrismaBlocker] = [
-            PrismaBlocker(
-                "SEARCH_EXECUTION_NOT_RECORDED",
-                "Search execution records are not yet represented by the current domain.",
+        blockers: list[PrismaBlocker] = []
+        if not completed_execution_rows:
+            blockers.append(
+                PrismaBlocker(
+                    "NO_COMPLETED_SEARCH_EXECUTION",
+                    "No eligible completed SearchExecution is recorded.",
+                )
             )
-        ]
+        active_status_counts = Counter(
+            SearchExecutionStatus(latest_execution_events[row.id].status)
+            for row in active_execution_rows
+        )
+        if active_status_counts[SearchExecutionStatus.PARTIAL]:
+            blockers.append(
+                PrismaBlocker(
+                    "SEARCH_EXECUTION_PARTIAL",
+                    "One or more active search executions ended with partial results.",
+                    active_status_counts[SearchExecutionStatus.PARTIAL],
+                )
+            )
+        if active_status_counts[SearchExecutionStatus.FAILED]:
+            blockers.append(
+                PrismaBlocker(
+                    "SEARCH_EXECUTION_FAILED",
+                    "One or more active search executions failed.",
+                    active_status_counts[SearchExecutionStatus.FAILED],
+                )
+            )
+        incomplete_executions = sum(
+            active_status_counts[status]
+            for status in (SearchExecutionStatus.PLANNED, SearchExecutionStatus.RUNNING)
+        )
+        if incomplete_executions:
+            blockers.append(
+                PrismaBlocker(
+                    "SEARCH_EXECUTION_INCOMPLETE",
+                    "One or more search executions remain planned or running.",
+                    incomplete_executions,
+                )
+            )
+        missing_query_count = sum(
+            1
+            for row in completed_execution_rows
+            if IdentificationSourceClassification(
+                source_by_id[row.source_id].classification
+            ).requires_reproducible_query
+            and not (row.exact_query or "").strip()
+        )
+        if missing_query_count:
+            blockers.append(
+                PrismaBlocker(
+                    "SEARCH_EXECUTION_QUERY_NOT_RECORDED",
+                    "Completed database/register executions require the exact executed query.",
+                    missing_query_count,
+                )
+            )
+        result_count_mismatches = sum(
+            1
+            for row in completed_execution_rows
+            if latest_execution_events[row.id].provider_result_count
+            != len(links_by_execution[row.id])
+        )
+        if result_count_mismatches:
+            blockers.append(
+                PrismaBlocker(
+                    "SEARCH_EXECUTION_RESULT_IMPORT_MISMATCH",
+                    "Provider result counts do not match linked imported source records.",
+                    result_count_mismatches,
+                )
+            )
+        completed_link_ids = (
+            set().union(*(links_by_execution[row.id] for row in completed_execution_rows))
+            if completed_execution_rows
+            else set()
+        )
+        unlinked_import_ids = {row.id for row in source_rows} - completed_link_ids
+        if unlinked_import_ids:
+            blockers.append(
+                PrismaBlocker(
+                    "IMPORT_NOT_LINKED_TO_EXECUTION",
+                    "Imported citation records lack an eligible completed execution link.",
+                    len(unlinked_import_ids),
+                )
+            )
+        if identification_groups.conflicting_records:
+            blockers.append(
+                PrismaBlocker(
+                    "IMPORT_LINKED_TO_CONFLICTING_SOURCE_CLASSES",
+                    "Imported records are linked to both PRISMA identification groups.",
+                    len(identification_groups.conflicting_records),
+                )
+            )
         if unresolved_duplicates:
             blockers.append(
                 PrismaBlocker(
@@ -506,8 +686,8 @@ class SqlAlchemyPrismaRepository:
             )
 
         summary = PrismaSummary(
-            records_identified_databases=len(source_rows),
-            records_identified_other_sources=0,
+            records_identified_databases=len(identification_groups.databases_and_registers),
+            records_identified_other_sources=len(identification_groups.other_methods),
             records_removed_duplicates=sum(
                 source_counts.get(article_id, 0) for article_id in suppressed_articles
             ),
@@ -533,6 +713,12 @@ class SqlAlchemyPrismaRepository:
         )
         references = {
             "citation_source_ids": [str(row.id) for row in source_rows],
+            "search_execution_ids": [str(row.id) for row in execution_rows],
+            "eligible_completed_search_execution_ids": [
+                str(row.id) for row in completed_execution_rows
+            ],
+            "search_execution_event_ids": [str(row.id) for row in execution_event_rows],
+            "search_execution_citation_link_ids": [str(row.id) for row in execution_link_rows],
             "article_ids": [str(row.id) for row in article_rows],
             "deduplication_candidate_ids": [str(item) for item in candidate_ids],
             "deduplication_decision_ids": [str(item) for item in duplicate_decision_ids],
