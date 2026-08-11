@@ -33,3 +33,10 @@ blockers, structured full-text exclusion reasons, immutable tenant-scoped snapsh
 byte rendering, CSV formula neutralization, valid XLSX archives, all four download formats,
 manifests, checksums, prior-artifact preservation, role restrictions, tenant non-enumeration, and the
 complete Alembic upgrade/downgrade chain. Deterministic effect calculations remain deferred.
+
+Search Execution tests cover all structured source groups, strategy/translation and exact-query
+retention, repeated execution history, terminal immutability, completed/partial/failed readiness,
+provider/import reconciliation, file-import linkage, multiple discovery paths, pre-dedup PRISMA
+counts, database/register versus other-method separation, stable JSON/XLSX documentation, raw
+artifact checksum retrieval, cross-tenant/cross-review non-enumeration, role restrictions, and the
+`20260811_0018` upgrade/downgrade chain.

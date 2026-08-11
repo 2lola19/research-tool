@@ -53,3 +53,13 @@ Migration `20260811_0017` adds immutable `export_artifacts`. Each row is bound t
 PRISMA snapshot and stores exact artifact bytes, format, schema version, filename, media type,
 manifest, byte size, SHA-256 checksum, creator, and timestamp. Transactional blob storage prevents
 half-written repository-local export files in this foundation.
+
+Migration `20260811_0018` adds `identification_sources`, immutable `search_executions`, append-only
+`search_execution_events`, `search_execution_citation_links`, and immutable
+`search_execution_artifacts`. Composite foreign keys bind sources, strategies, translations,
+superseded executions, citation source records, artifacts, and actors to one Organization and
+Review. Structured check constraints enforce source classifications, acquisition methods, states,
+non-negative result counts, and completed-result-count presence. Scoped unique constraints retain
+one link per execution/source record and one raw artifact per execution/checksum. Supporting
+composite unique keys on citation source records and search translations enable tenant-safe foreign
+keys. The migration upgrades linearly from `20260811_0017` and reverses completely on SQLite.

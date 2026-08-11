@@ -16,6 +16,8 @@
 14. **Manual extraction (verified):** Study-level typed values with Article/Document evidence and provenance.
 15. **Extraction verification (verified):** deterministic comparison, explicit conflicts, and human adjudication history.
 16. **Deterministic PRISMA and reproducible export foundation (implemented):** database-derived flow counts, immutable snapshots, readiness blockers, portable CSV/XLSX/JSON/RIS artifacts, manifests, and checksums.
-17. **Later scientific engines (deferred):** risk of bias, deterministic R/metafor analysis, certainty, and mature reporting.
+17. **Search execution and identification-source provenance (implemented):** structured source classes, immutable repeated executions, exact query/provider/method/status history, import discovery links, raw artifacts, deterministic PRISMA grouping, and search documentation exports/UI.
+18. **Risk of Bias foundation (recommended; not started):** select separately approved instruments, immutable assessments, evidence locations, independent judgments, conflicts, and adjudication before any synthesis use.
+19. **Later scientific engines (deferred):** deterministic R/metafor analysis, certainty/GRADE, and mature reporting.
 
 Each milestone must meet the definition of done in the master specification before progression.

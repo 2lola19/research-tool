@@ -23,14 +23,16 @@ Last updated: 2026-08-11
 | Provenance-First Manual Extraction (Phase 14) | VERIFIED | Study/schema-version pinned runs, typed values, explicit missingness, linked Article/Document evidence, resumable saves, audit/provenance, and permission tests pass. |
 | Extraction Verification (Phase 15) | VERIFIED | Deterministic canonical comparison, evidence-aware conflicts, immutable original snapshots, authorized adjudication, verification state transitions, audit/provenance, and tenant tests pass. |
 | Deterministic PRISMA + Reproducible Export (Phase 16 foundation) | VERIFIED | Database-derived record/report/Study counts, readiness blockers, immutable snapshots, CSV/XLSX/JSON/RIS artifacts, manifests, SHA-256 verification, audit/provenance, tenant boundaries, and minimal Reports/Exports UI pass. |
+| Search Execution + Identification-Source Provenance (Phase 17) | VERIFIED | Structured source classes, immutable repeated/corrected executions, exact query/provider/method/status history, citation-import discovery links, raw artifact integrity, deterministic PRISMA grouping, versioned export documentation, and minimal Search UI pass. |
 
 ## Validation evidence
 
-- Backend: Ruff lint and format checks, strict mypy, and pytest pass: 132 tests, 95.40% coverage (configured threshold: 85%).
-- Frontend: ESLint, TypeScript, Vitest (5 tests), and the Next.js 16 production build pass. Dynamic routes include the Reports/Exports page and authenticated artifact-download proxy.
-- Alembic is linear through `20260811_0017`. A temporary SQLite database upgrades from foundation through export artifacts and downgrades fully to base.
+- Backend: Ruff lint and format checks, strict mypy, and pytest pass: 139 tests, 95.06% coverage (configured threshold: 85%).
+- Frontend: ESLint, TypeScript, Vitest (6 tests), and the Next.js 16 production build pass. Dynamic routes include Search, Reports/Exports, and the authenticated artifact-download proxy.
+- Alembic is linear through `20260811_0018`. A temporary SQLite database upgrades from foundation through Search Execution provenance and downgrades fully to base.
 - Focused PRISMA tests cover record/report/Study distinctions, confirmed-duplicate counting, title/full-text completeness, retrieval state, Study Family counting, structured exclusion reasons, stable source references, immutable snapshots, role restrictions, and tenant non-enumeration.
 - Focused export tests cover deterministic byte rendering, CSV formula neutralization, portable XLSX archive structure, JSON/RIS output, all download formats, manifests, checksums, preservation of prior artifacts, provenance/audit, and tenant authorization.
+- Focused Search Execution tests cover structured PRISMA source groups, exact query and strategy/translation retention, repeated searches and corrections, status events, provider/import reconciliation, multi-source discovery, citation-source linkage, raw artifact integrity, stable exports, role restrictions, cross-review linking, and cross-tenant non-enumeration.
 
 ## Environment-blocked validation
 
@@ -45,6 +47,9 @@ Last updated: 2026-08-11
 - MEDIUM resolved: PRISMA readiness now blocks unassigned imported records, open/multiple screening rounds, unsettled retrieval, retrieved-but-unscreened reports, conflicting multi-Document eligibility decisions, and included reports without Study assignment.
 - MEDIUM resolved: snapshot source references and export queries use stable ordering; deduplication candidate/decision references retain correct IDs; confirmed duplicate source rows are counted once.
 - MEDIUM resolved: transactional database artifact storage, immutable ORM guards, download-time checksum verification, sanitized filenames, and spreadsheet formula neutralization prevent partial-file, mutation, integrity, and injection failures in the foundation.
+- MEDIUM resolved: completed SearchExecution identity fields and event history are append-only; one explicit correction may supersede a terminal execution, while routine living-review updates remain independent history.
+- MEDIUM resolved: PRISMA identification uses distinct execution-linked source records and structured source classes, never source-name inference or deduplicated Article counts; mismatched provider/import totals and cross-group links block final readiness.
+- MEDIUM resolved: raw search artifacts use opaque tenant/review keys, immutable checksum metadata, upload-failure cleanup, authorization before key resolution, and download-time size/SHA-256 verification.
 - MEDIUM resolved: all read-maximum-plus-one allocators now use scoped database uniqueness and bounded savepoint retries; PostgreSQL remains the production concurrency validation target.
 - LOW: worker dispatch remains a lifecycle shell. Phase 11 keeps processing synchronous behind a parser/service boundary; durable claiming and retries remain deferred.
 - Unblinded screening remains rejected until an explicit reveal policy exists.
@@ -52,7 +57,7 @@ Last updated: 2026-08-11
 
 ## Deferred and planned
 
-- Recommended next phase: model deterministic search-execution and identification-source provenance so the explicit `SEARCH_EXECUTION_NOT_RECORDED` PRISMA blocker can be resolved from canonical data. Review and approve that phase separately before implementation.
+- Recommended next phase: Phase 18 Risk of Bias foundation, separately scoped and explicitly approved before implementation. It should begin with instrument/version selection, evidence-linked independent judgments, deterministic conflict detection, and auditable adjudication; no Risk of Bias implementation has begun.
 - Risk of Bias, meta-analysis, GRADE/certainty, mature report authoring, paid AI providers, and real external scholarly APIs remain out of scope until separately authorized.
 - GROBID live deployment, ASReview, external scholarly APIs, R/metafor, paid AI providers, production identity, and cloud object storage remain deferred.
 
@@ -64,6 +69,7 @@ Last updated: 2026-08-11
 - Original full-text bytes are immutable storage artifacts; parser output is separate, versioned by processing run, and referenced by evidence locations.
 - PRISMA counters are derived, not manually persisted; immutable snapshots retain algorithm version, readiness, and ordered source references.
 - Export artifacts are append-only exact bytes with manifests and SHA-256 checksums; CSV/XLSX/JSON/RIS generation is deterministic local code.
+- Search design remains separate from append-only SearchExecution history; source classifications are structured, citation discovery links survive deduplication, and PRISMA identification counts derive only from eligible completed execution links.
 - Tenant actor context is resolved from active database membership on every request; storage keys never substitute for authorization.
 
-See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).
+See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [ADR-016](adr/ADR-016-search-execution-identification-provenance.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).

@@ -18,3 +18,10 @@ SHA-256 checksum before returning bytes. CSV cells beginning with spreadsheet fo
 neutralized, XLSX text is emitted as inline strings rather than formulas, filenames are generated
 from sanitized project slugs, and export responses are served through an authenticated server-side
 proxy in the UI.
+
+Identification sources, executions, event histories, citation links, and raw artifacts repeat
+Organization and Review scope in persistence and repository predicates. Composite foreign keys
+reject cross-tenant sources, strategies, translations, citations, actors, and correction links.
+Raw artifact reads authorize the Review before resolving the opaque storage key and verify size and
+SHA-256 before returning bytes. Completed execution fields and all discovery links are append-only;
+corrections preserve the original scientific record.

@@ -25,6 +25,16 @@ Cross-cutting records include Actor, Audit Event, Scientific Provenance, AI Run,
 
 `SearchStrategyVersion` captures provider-neutral concept groups and typed terms, pinned to an approved ProtocolVersion. `SearchTranslation` is the exact output of one deterministic provider translator version. Provider query syntax never replaces canonical search intent.
 
+`IdentificationSource` is the structured identity and PRISMA classification of a database,
+register, website, organization, citation-searching method, reference list, author contact, manual
+import, or other source. `SearchExecution` records what was actually run: source/provider, optional
+strategy and translation, exact query, restrictions, acquisition method, execution date, software
+version, actor, and append-only status events. `SearchExecutionCitationLink` retains every imported
+source-record discovery path, including multiple providers for the same eventual Article.
+`SearchExecutionArtifact` preserves optional raw provider/file bytes through tenant-scoped object
+storage with SHA-256 integrity metadata. Terminal executions are immutable; explicit corrections
+create a superseding execution while ordinary updates remain independent historical executions.
+
 `CitationImportBatch` is one losslessly retained RIS, BibTeX, or CSV input. `CitationSourceRecord` is the provider/export row and raw metadata. `Article` is the normalized publication record created from that row. Similar Articles may coexist until a separate deduplication decision; Article is never collapsed into Study.
 
 `DeduplicationRun` records the exact algorithm and Article snapshot. `DuplicateCandidate` is a system-generated pair, score, and reason. `DeduplicationDecision` is the human confirmation or rejection and names the retained Article when confirmed. Confirmation is a relationship, not a destructive merge.
@@ -43,7 +53,8 @@ Cross-cutting records include Actor, Audit Event, Scientific Provenance, AI Run,
 
 `ExtractionVerification` compares two runs deterministically. Equal canonical values become MATCHED; value or evidence disagreement creates an `ExtractionConflict` containing both original snapshots. Adjudication updates only the conflict/verification state and appends provenance; original extraction values are never overwritten.
 
-`PrismaSnapshot` is an immutable, algorithm-versioned derivation from citation records,
+`PrismaSnapshot` is an immutable, algorithm-versioned derivation from eligible SearchExecutions and
+their citation-source links, citation records,
 deduplication decisions, screening outcomes, report retrieval/full-text decisions, and active Study
 links. Counts distinguish source records, Article reports, and Study investigations. Readiness
 blockers prevent incomplete workflow state from being presented as final.

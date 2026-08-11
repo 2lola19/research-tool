@@ -13,6 +13,15 @@
 
 ## Implemented scientific endpoints
 
+- `/search-executions/sources` records structured Review-scoped identification sources;
+  `/search-executions` creates immutable executions and appends explicit status events.
+- `/search-executions/{id}/imports` links lossless citation-import source records without collapsing
+  multiple discovery paths. Raw artifacts are stored and downloaded through checksum-verifying,
+  tenant-scoped endpoints.
+- Review search-documentation reads return deterministic execution order, exact query, filters,
+  source/provider identity, strategy/translation linkage, status history, result count, and import
+  count. No live scholarly provider or credential is required.
+
 - `/studies` creates and lists Review-scoped Studies; article links carry roles, methods, source evidence, and soft unlink state.
 - `/extraction/schemas` and `/extraction/schema-versions` create immutable typed schema definitions.
 - `/extraction/runs` creates and resumes Study-level manual extraction runs; `/values` validates typed values, explicit missingness, and source evidence before saving.
@@ -23,4 +32,4 @@
   export metadata exposes manifests and SHA-256 checksums, while tenant-scoped download verifies the
   stored checksum before returning immutable bytes.
 
-All endpoints resolve organization context from active membership and enforce Review access server-side. AI extraction providers and external scholarly APIs remain deferred. Export generation is deterministic local application code and requires no external API or credential.
+All endpoints resolve organization context from active membership and enforce Review access server-side. AI extraction providers and live external scholarly APIs remain deferred. Export generation and search-execution recording are deterministic local application code and require no external API or credential.

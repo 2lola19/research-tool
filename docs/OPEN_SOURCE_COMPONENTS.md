@@ -19,3 +19,8 @@ Phase 2 adds no authentication dependency or SaaS. Its local-only provider uses 
 The PRISMA/export foundation adds no external component. CSV, JSON, RIS, SHA-256, and deterministic
 OOXML/XLSX generation use Python standard-library modules; no paid reporting provider or spreadsheet
 SDK is introduced.
+
+The Search Execution phase adds no external dependency. Its provider-neutral `SearchProvider`
+protocol and fixture/manual/file-import acquisition methods preserve honest provenance without
+calling PubMed, Europe PMC, OpenAlex, Crossref, or any paid API. Raw artifacts reuse the existing
+local object-storage adapter.
