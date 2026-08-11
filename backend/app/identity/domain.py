@@ -29,6 +29,10 @@ class Permission(StrEnum):
     MANAGE_SCREENING = "manage_screening"
     SCREEN_ARTICLES = "screen_articles"
     MANAGE_DOCUMENTS = "manage_documents"
+    MANAGE_STUDIES = "manage_studies"
+    MANAGE_EXTRACTION_SCHEMA = "manage_extraction_schema"
+    PERFORM_EXTRACTION = "perform_extraction"
+    ADJUDICATE_EXTRACTION = "adjudicate_extraction"
 
 
 ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
@@ -47,6 +51,10 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_SCREENING,
             Permission.SCREEN_ARTICLES,
             Permission.MANAGE_DOCUMENTS,
+            Permission.MANAGE_STUDIES,
+            Permission.MANAGE_EXTRACTION_SCHEMA,
+            Permission.PERFORM_EXTRACTION,
+            Permission.ADJUDICATE_EXTRACTION,
         }
     ),
     OrganizationRole.REVIEWER: frozenset(
@@ -57,6 +65,10 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_DEDUPLICATION,
             Permission.SCREEN_ARTICLES,
             Permission.MANAGE_DOCUMENTS,
+            Permission.MANAGE_STUDIES,
+            Permission.MANAGE_EXTRACTION_SCHEMA,
+            Permission.PERFORM_EXTRACTION,
+            Permission.ADJUDICATE_EXTRACTION,
         }
     ),
     OrganizationRole.STATISTICIAN: frozenset({Permission.RECORD_PROVENANCE}),

@@ -41,6 +41,7 @@ from backend.app.screening.persistence import (
     ScreeningProgressionRecord,
     ScreeningRoundRecord,
 )
+from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
 from backend.app.search.persistence import SearchStrategyVersionRecord, SearchTranslationRecord
 from backend.app.workflow.persistence import (
     HumanCheckpointRecord,
@@ -87,4 +88,6 @@ __all__ = [
     "UserRecord",
     "WorkflowJobRecord",
     "WorkflowRunRecord",
+    "StudyRecord",
+    "StudyArticleLinkRecord",
 ]

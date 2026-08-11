@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260810_0011",)
+    assert version == ("20260811_0012",)
     assert {
         "users",
         "organizations",
@@ -72,4 +72,6 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "document_warnings",
         "full_text_screenings",
         "full_text_criterion_judgments",
+        "studies",
+        "study_article_links",
     } <= tables
