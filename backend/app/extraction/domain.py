@@ -37,6 +37,23 @@ class ExtractionRunStatus(StrEnum):
     CONFLICT = "CONFLICT"
 
 
+class VerificationStatus(StrEnum):
+    MATCHED = "MATCHED"
+    NEEDS_ADJUDICATION = "NEEDS_ADJUDICATION"
+    ADJUDICATED = "ADJUDICATED"
+
+
+class ConflictStatus(StrEnum):
+    OPEN = "OPEN"
+    RESOLVED = "RESOLVED"
+
+
+class ConflictResolution(StrEnum):
+    ACCEPT_A = "ACCEPT_A"
+    ACCEPT_B = "ACCEPT_B"
+    REPLACED_WITH_ADJUDICATED_VALUE = "REPLACED_WITH_ADJUDICATED_VALUE"
+
+
 @dataclass(frozen=True, slots=True)
 class ExtractionSchema:
     id: UUID
@@ -92,3 +109,39 @@ class ExtractionValue:
     evidence_location_id: UUID | None
     evidence_text: str | None
     updated_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ExtractionVerification:
+    id: UUID
+    organization_id: UUID
+    review_id: UUID
+    study_id: UUID
+    schema_version_id: UUID
+    field_key: str
+    run_a_id: UUID
+    run_b_id: UUID
+    status: VerificationStatus
+    conflict_id: UUID | None
+
+
+@dataclass(frozen=True, slots=True)
+class ExtractionConflict:
+    id: UUID
+    organization_id: UUID
+    review_id: UUID
+    study_id: UUID
+    schema_version_id: UUID
+    field_key: str
+    run_a_id: UUID
+    run_b_id: UUID
+    value_a: dict[str, Any] | None
+    value_b: dict[str, Any] | None
+    evidence_a: dict[str, Any] | None
+    evidence_b: dict[str, Any] | None
+    status: ConflictStatus
+    resolution: ConflictResolution | None
+    adjudicated_value: dict[str, Any] | None
+    adjudicated_by_user_id: UUID | None
+    reason: str | None
+    resolved_at: datetime | None

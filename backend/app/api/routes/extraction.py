@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 from backend.app.api.dependencies import ActorContextDependency, DbSessionDependency
 from backend.app.extraction.domain import (
+    ConflictResolution,
+    ExtractionConflict,
     ExtractionRun,
     ExtractionRunStatus,
     ExtractionSchema,
@@ -19,6 +21,10 @@ from backend.app.extraction.manual_persistence import SqlAlchemyManualExtraction
 from backend.app.extraction.manual_service import ManualExtractionService
 from backend.app.extraction.schema_persistence import SqlAlchemyExtractionSchemaRepository
 from backend.app.extraction.schema_service import ExtractionSchemaService
+from backend.app.extraction.verification_persistence import (
+    SqlAlchemyExtractionVerificationRepository,
+)
+from backend.app.extraction.verification_service import ExtractionVerificationService
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
 from backend.app.provenance.persistence import SqlAlchemyProvenanceRepository
 from backend.app.reviews.persistence import SqlAlchemyReviewRepository
@@ -151,6 +157,43 @@ class ExtractionRunResponse(BaseModel):
         )
 
 
+class CompareRequest(BaseModel):
+    review_id: UUID
+    run_a_id: UUID
+    run_b_id: UUID
+
+
+class ConflictResolutionRequest(BaseModel):
+    review_id: UUID
+    resolution: ConflictResolution
+    adjudicated_value: dict[str, Any] | None = None
+    reason: str = Field(min_length=1, max_length=4000)
+
+
+class ConflictResponse(BaseModel):
+    id: UUID
+    field_key: str
+    status: str
+    resolution: ConflictResolution | None
+    value_a: dict[str, Any] | None
+    value_b: dict[str, Any] | None
+    adjudicated_value: dict[str, Any] | None
+    reason: str | None
+
+    @classmethod
+    def from_domain(cls, item: ExtractionConflict) -> ConflictResponse:
+        return cls(
+            id=item.id,
+            field_key=item.field_key,
+            status=item.status.value,
+            resolution=item.resolution,
+            value_a=item.value_a,
+            value_b=item.value_b,
+            adjudicated_value=item.adjudicated_value,
+            reason=item.reason,
+        )
+
+
 def _service(session: DbSessionDependency) -> ExtractionSchemaService:
     return ExtractionSchemaService(
         SqlAlchemyExtractionSchemaRepository(session),
@@ -165,6 +208,16 @@ def _manual_service(session: DbSessionDependency) -> ManualExtractionService:
         SqlAlchemyManualExtractionRepository(session),
         SqlAlchemyExtractionSchemaRepository(session),
         SqlAlchemyStudyRepository(session),
+        SqlAlchemyReviewRepository(session),
+        SqlAlchemyIdentityRepository(session),
+        SqlAlchemyProvenanceRepository(session),
+    )
+
+
+def _verification_service(session: DbSessionDependency) -> ExtractionVerificationService:
+    return ExtractionVerificationService(
+        SqlAlchemyExtractionVerificationRepository(session),
+        SqlAlchemyManualExtractionRepository(session),
         SqlAlchemyReviewRepository(session),
         SqlAlchemyIdentityRepository(session),
         SqlAlchemyProvenanceRepository(session),
@@ -251,3 +304,38 @@ async def save_extraction_values(
     )
     await session.commit()
     return ExtractionRunResponse.from_domain(run, values)
+
+
+@router.post("/verifications/compare")
+async def compare_extractions(
+    payload: CompareRequest,
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+) -> list[dict[str, Any]]:
+    result = await _verification_service(session).compare(
+        actor,
+        review_id=payload.review_id,
+        run_a_id=payload.run_a_id,
+        run_b_id=payload.run_b_id,
+    )
+    await session.commit()
+    return result
+
+
+@router.post("/conflicts/{conflict_id}/resolve", response_model=ConflictResponse)
+async def resolve_extraction_conflict(
+    payload: ConflictResolutionRequest,
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    conflict_id: Annotated[UUID, Path()],
+) -> ConflictResponse:
+    conflict = await _verification_service(session).resolve(
+        actor,
+        review_id=payload.review_id,
+        conflict_id=conflict_id,
+        resolution=payload.resolution,
+        adjudicated_value=payload.adjudicated_value,
+        reason=payload.reason,
+    )
+    await session.commit()
+    return ConflictResponse.from_domain(conflict)

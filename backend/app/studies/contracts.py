@@ -34,6 +34,9 @@ class StudyRepository(Protocol):
         article_id: UUID,
         role: StudyArticleRole,
     ) -> bool: ...
+    async def article_linked(
+        self, organization_id: UUID, review_id: UUID, study_id: UUID, article_id: UUID
+    ) -> bool: ...
     async def link_article(
         self,
         *,

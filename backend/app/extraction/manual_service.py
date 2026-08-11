@@ -109,7 +109,11 @@ class ManualExtractionService:
         if schema is None:
             raise ConflictError("the extraction schema version is unavailable")
         normalized = await self._validate_values(
-            actor, review_id=review_id, schema=schema, values=values
+            actor,
+            review_id=review_id,
+            study_id=run.study_id,
+            schema=schema,
+            values=values,
         )
         if status == ExtractionRunStatus.COMPLETED:
             field_keys = {item["key"] for item in schema.fields}
@@ -160,6 +164,7 @@ class ManualExtractionService:
         actor: ActorContext,
         *,
         review_id: UUID,
+        study_id: UUID,
         schema: ExtractionSchemaVersion,
         values: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
@@ -196,6 +201,10 @@ class ManualExtractionService:
                 source_article_id = evidence[1]
             if source_article_id is None:
                 raise ConflictError(f"field {key} requires Article or Document evidence")
+            if not await self._studies.article_linked(
+                actor.organization_id, review_id, study_id, source_article_id
+            ):
+                raise ConflictError("source Article is not linked to the extraction Study")
             normalized.append(
                 {
                     "field_key": key,

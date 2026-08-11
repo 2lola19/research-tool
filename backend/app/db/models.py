@@ -24,6 +24,10 @@ from backend.app.extraction.schema_persistence import (
     ExtractionSchemaRecord,
     ExtractionSchemaVersionRecord,
 )
+from backend.app.extraction.verification_persistence import (
+    ExtractionConflictRecord,
+    ExtractionVerificationRecord,
+)
 from backend.app.identity.persistence import (
     LocalCredentialRecord,
     MembershipRecord,
@@ -69,10 +73,12 @@ __all__ = [
     "DocumentRecord",
     "DocumentWarningRecord",
     "DuplicateCandidateRecord",
+    "ExtractionConflictRecord",
     "ExtractionRunRecord",
     "ExtractionSchemaRecord",
     "ExtractionSchemaVersionRecord",
     "ExtractionValueRecord",
+    "ExtractionVerificationRecord",
     "FullTextCriterionJudgmentRecord",
     "FullTextScreeningRecord",
     "HumanCheckpointRecord",

@@ -241,6 +241,22 @@ class SqlAlchemyStudyRepository:
         )
         return result.scalar_one_or_none() is not None
 
+    async def article_linked(
+        self, organization_id: UUID, review_id: UUID, study_id: UUID, article_id: UUID
+    ) -> bool:
+        result = await self._session.execute(
+            select(StudyArticleLinkRecord.id)
+            .where(
+                StudyArticleLinkRecord.organization_id == organization_id,
+                StudyArticleLinkRecord.review_id == review_id,
+                StudyArticleLinkRecord.study_id == study_id,
+                StudyArticleLinkRecord.article_id == article_id,
+                StudyArticleLinkRecord.unlinked_at.is_(None),
+            )
+            .limit(1)
+        )
+        return result.scalar_one_or_none() is not None
+
     async def link_article(
         self,
         *,
