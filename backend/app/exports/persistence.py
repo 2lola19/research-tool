@@ -29,6 +29,14 @@ from backend.app.analysis.persistence import (
     MetaAnalysisSensitivityRecord,
     MetaAnalysisStudyWeightRecord,
 )
+from backend.app.certainty.persistence import (
+    CertaintyAssessmentRecord,
+    CertaintyComparisonRecord,
+    CertaintyDomainJudgmentRecord,
+    CertaintyFrameworkVersionRecord,
+    DecisionThresholdVersionRecord,
+    SummaryOfFindingsSnapshotRecord,
+)
 from backend.app.citations.persistence import ArticleRecord, CitationSourceRecordRow
 from backend.app.db.base import Base
 from backend.app.exports.domain import (
@@ -282,6 +290,94 @@ class SqlAlchemyExportRepository:
                 .order_by(AnalysisArtifactRecord.created_at, AnalysisArtifactRecord.id)
             )
         )
+        framework_versions = list(
+            await self._session.scalars(
+                select(CertaintyFrameworkVersionRecord)
+                .where(
+                    CertaintyFrameworkVersionRecord.organization_id == snapshot.organization_id,
+                    CertaintyFrameworkVersionRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    CertaintyFrameworkVersionRecord.framework_id,
+                    CertaintyFrameworkVersionRecord.version,
+                )
+            )
+        )
+        threshold_versions = list(
+            await self._session.scalars(
+                select(DecisionThresholdVersionRecord)
+                .where(
+                    DecisionThresholdVersionRecord.organization_id == snapshot.organization_id,
+                    DecisionThresholdVersionRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    DecisionThresholdVersionRecord.outcome_version_id,
+                    DecisionThresholdVersionRecord.version,
+                )
+            )
+        )
+        certainty_assessments = list(
+            await self._session.scalars(
+                select(CertaintyAssessmentRecord)
+                .where(
+                    CertaintyAssessmentRecord.organization_id == snapshot.organization_id,
+                    CertaintyAssessmentRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    CertaintyAssessmentRecord.outcome_version_id,
+                    CertaintyAssessmentRecord.round_number,
+                    CertaintyAssessmentRecord.assessor_user_id,
+                    CertaintyAssessmentRecord.revision,
+                )
+            )
+        )
+        certainty_domains = list(
+            await self._session.scalars(
+                select(CertaintyDomainJudgmentRecord)
+                .where(
+                    CertaintyDomainJudgmentRecord.organization_id == snapshot.organization_id,
+                    CertaintyDomainJudgmentRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    CertaintyDomainJudgmentRecord.assessment_id,
+                    CertaintyDomainJudgmentRecord.domain_key,
+                    CertaintyDomainJudgmentRecord.id,
+                )
+            )
+        )
+        certainty_comparisons = list(
+            await self._session.scalars(
+                select(CertaintyComparisonRecord)
+                .where(
+                    CertaintyComparisonRecord.organization_id == snapshot.organization_id,
+                    CertaintyComparisonRecord.review_id == snapshot.review_id,
+                )
+                .order_by(CertaintyComparisonRecord.compared_at, CertaintyComparisonRecord.id)
+            )
+        )
+        revealed_assessment_ids = {
+            assessment_id
+            for comparison in certainty_comparisons
+            for assessment_id in (comparison.assessment_a_id, comparison.assessment_b_id)
+        }
+        sof_snapshots = list(
+            await self._session.scalars(
+                select(SummaryOfFindingsSnapshotRecord)
+                .where(
+                    SummaryOfFindingsSnapshotRecord.organization_id == snapshot.organization_id,
+                    SummaryOfFindingsSnapshotRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    SummaryOfFindingsSnapshotRecord.created_at,
+                    SummaryOfFindingsSnapshotRecord.id,
+                )
+            )
+        )
+        certainty_domains_by_assessment: dict[UUID, list[CertaintyDomainJudgmentRecord]] = (
+            defaultdict(list)
+        )
+        for domain in certainty_domains:
+            certainty_domains_by_assessment[domain.assessment_id].append(domain)
         outcome_keys = {item.id: item.key for item in outcome_definitions}
         risk_versions = {
             item.instrument_version_id: cast(
@@ -611,6 +707,106 @@ class SqlAlchemyExportRepository:
                     "byte_size": item.byte_size,
                 }
                 for item in analysis_artifacts
+            ),
+            certainty_framework_versions=tuple(
+                {
+                    "id": str(item.id),
+                    "framework_id": str(item.framework_id),
+                    "version": item.version,
+                    "definition": item.definition,
+                    "content_hash": item.content_hash,
+                }
+                for item in framework_versions
+            ),
+            certainty_threshold_versions=tuple(
+                {
+                    "id": str(item.id),
+                    "outcome_version_id": str(item.outcome_version_id),
+                    "version": item.version,
+                    "definition": item.definition,
+                    "content_hash": item.content_hash,
+                }
+                for item in threshold_versions
+            ),
+            certainty_assessments=tuple(
+                {
+                    "id": str(item.id),
+                    "outcome_version_id": str(item.outcome_version_id),
+                    "timepoint_window_id": str(item.timepoint_window_id)
+                    if item.timepoint_window_id
+                    else None,
+                    "analysis_specification_version_id": str(item.analysis_specification_version_id)
+                    if item.analysis_specification_version_id
+                    else None,
+                    "meta_analysis_run_id": str(item.meta_analysis_run_id)
+                    if item.meta_analysis_run_id
+                    else None,
+                    "framework_version_id": str(item.framework_version_id),
+                    "threshold_version_id": str(item.threshold_version_id)
+                    if item.threshold_version_id
+                    else None,
+                    "assessor_user_id": str(item.assessor_user_id),
+                    "round_number": item.round_number,
+                    "revision": item.revision,
+                    "supersedes_assessment_id": str(item.supersedes_assessment_id)
+                    if item.supersedes_assessment_id
+                    else None,
+                    "evidence_body_type": item.evidence_body_type,
+                    "evidence_body": item.evidence_body,
+                    "starting_certainty": item.starting_certainty,
+                    "starting_rationale": item.starting_rationale,
+                    "candidate_certainty": item.candidate_certainty,
+                    "final_certainty": item.final_certainty,
+                    "final_rationale": item.final_rationale,
+                    "override_reason": item.override_reason,
+                    "status": item.status,
+                    "evidence_hash": item.evidence_hash,
+                    "evidence_snapshot": item.evidence_snapshot,
+                    "domains": [
+                        {
+                            "domain_key": domain.domain_key,
+                            "direction": domain.direction,
+                            "judgment": domain.judgment,
+                            "magnitude": domain.magnitude,
+                            "rationale": domain.rationale,
+                            "evidence": domain.evidence,
+                            "evidence_location_id": str(domain.evidence_location_id)
+                            if domain.evidence_location_id
+                            else None,
+                        }
+                        for domain in certainty_domains_by_assessment[item.id]
+                    ],
+                }
+                for item in certainty_assessments
+                if item.id in revealed_assessment_ids
+            ),
+            certainty_comparisons=tuple(
+                {
+                    "id": str(item.id),
+                    "outcome_version_id": str(item.outcome_version_id),
+                    "framework_version_id": str(item.framework_version_id),
+                    "round_number": item.round_number,
+                    "assessment_a_id": str(item.assessment_a_id),
+                    "assessment_b_id": str(item.assessment_b_id),
+                    "status": item.status,
+                    "differences": item.differences,
+                    "adjudicated_snapshot": item.adjudicated_snapshot,
+                    "adjudicated_by_user_id": str(item.adjudicated_by_user_id)
+                    if item.adjudicated_by_user_id
+                    else None,
+                    "adjudication_reason": item.adjudication_reason,
+                }
+                for item in certainty_comparisons
+            ),
+            summary_of_findings=tuple(
+                {
+                    "id": str(item.id),
+                    "assessment_id": str(item.assessment_id),
+                    "model_version": item.model_version,
+                    "row": item.row,
+                    "content_hash": item.content_hash,
+                }
+                for item in sof_snapshots
             ),
         )
 

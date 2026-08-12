@@ -11,7 +11,7 @@ from typing import Any
 
 from backend.app.exports.domain import ExportArticle, ExportDataset, ExportFormat, RenderedExport
 
-EXPORT_SCHEMA_VERSION = "review-export-5"
+EXPORT_SCHEMA_VERSION = "review-export-6"
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
@@ -235,6 +235,13 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             "leave_one_out_sensitivity": list(dataset.analysis_sensitivities),
             "artifacts": list(dataset.analysis_artifacts),
         },
+        "certainty": {
+            "framework_versions": list(dataset.certainty_framework_versions),
+            "decision_threshold_versions": list(dataset.certainty_threshold_versions),
+            "assessments": list(dataset.certainty_assessments),
+            "comparisons": list(dataset.certainty_comparisons),
+            "summary_of_findings": list(dataset.summary_of_findings),
+        },
     }
     content = (
         json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -260,6 +267,11 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             "analysis_study_weights": len(dataset.analysis_study_weights),
             "analysis_sensitivities": len(dataset.analysis_sensitivities),
             "analysis_artifacts": len(dataset.analysis_artifacts),
+            "certainty_framework_versions": len(dataset.certainty_framework_versions),
+            "certainty_threshold_versions": len(dataset.certainty_threshold_versions),
+            "certainty_assessments": len(dataset.certainty_assessments),
+            "certainty_comparisons": len(dataset.certainty_comparisons),
+            "summary_of_findings": len(dataset.summary_of_findings),
         },
     )
 
@@ -361,6 +373,9 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ["analysis_set_count", len(dataset.analysis_sets)],
         ["meta_analysis_run_count", len(dataset.meta_analysis_runs)],
         ["analysis_artifact_count", len(dataset.analysis_artifacts)],
+        ["certainty_assessment_count", len(dataset.certainty_assessments)],
+        ["certainty_comparison_count", len(dataset.certainty_comparisons)],
+        ["summary_of_findings_count", len(dataset.summary_of_findings)],
     ]
     prisma_rows: list[list[object]] = [["counter", "value"]]
     exclusion_rows: list[list[object]] = [["reason", "count"]]
@@ -700,6 +715,77 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
             "byte_size",
         ],
     )
+    certainty_assessment_rows = _structured_rows(
+        dataset.certainty_assessments,
+        [
+            "id",
+            "outcome_version_id",
+            "timepoint_window_id",
+            "analysis_specification_version_id",
+            "meta_analysis_run_id",
+            "framework_version_id",
+            "threshold_version_id",
+            "assessor_user_id",
+            "round_number",
+            "revision",
+            "supersedes_assessment_id",
+            "evidence_body_type",
+            "starting_certainty",
+            "candidate_certainty",
+            "final_certainty",
+            "status",
+            "evidence_hash",
+        ],
+    )
+    certainty_domain_rows = _structured_rows(
+        tuple(
+            {"assessment_id": item["id"], **domain}
+            for item in dataset.certainty_assessments
+            for domain in item["domains"]
+        ),
+        [
+            "assessment_id",
+            "domain_key",
+            "direction",
+            "judgment",
+            "magnitude",
+            "rationale",
+            "evidence",
+            "evidence_location_id",
+        ],
+    )
+    certainty_conflict_rows = _structured_rows(
+        dataset.certainty_comparisons,
+        [
+            "id",
+            "outcome_version_id",
+            "framework_version_id",
+            "round_number",
+            "assessment_a_id",
+            "assessment_b_id",
+            "status",
+            "differences",
+            "adjudicated_snapshot",
+            "adjudicated_by_user_id",
+            "adjudication_reason",
+        ],
+    )
+    evidence_profile_rows = _structured_rows(
+        tuple(
+            {
+                "assessment_id": item["id"],
+                "evidence_hash": item["evidence_hash"],
+                "evidence_snapshot": item["evidence_snapshot"],
+            }
+            for item in dataset.certainty_assessments
+            if item["status"] == "SUBMITTED"
+        ),
+        ["assessment_id", "evidence_hash", "evidence_snapshot"],
+    )
+    sof_rows = _structured_rows(
+        dataset.summary_of_findings,
+        ["id", "assessment_id", "model_version", "row", "content_hash"],
+    )
     sheets = [
         ("Manifest", manifest_rows),
         ("PRISMA", prisma_rows),
@@ -721,6 +807,11 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ("Study Weights", weight_rows),
         ("Sensitivity Analyses", sensitivity_rows),
         ("Analysis Artifacts", analysis_artifact_rows),
+        ("Certainty Assessments", certainty_assessment_rows),
+        ("Certainty Domains", certainty_domain_rows),
+        ("Certainty Conflicts", certainty_conflict_rows),
+        ("Evidence Profiles", evidence_profile_rows),
+        ("Summary of Findings", sof_rows),
     ]
     content_types = "".join(
         f'<Override PartName="/xl/worksheets/sheet{index}.xml" '

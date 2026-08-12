@@ -41,6 +41,9 @@ class Permission(StrEnum):
     PREPARE_SYNTHESIS = "prepare_synthesis"
     MANAGE_ANALYSIS = "manage_analysis"
     RUN_ANALYSIS = "run_analysis"
+    MANAGE_CERTAINTY_FRAMEWORK = "manage_certainty_framework"
+    ASSESS_CERTAINTY = "assess_certainty"
+    ADJUDICATE_CERTAINTY = "adjudicate_certainty"
     EXPORT_REVIEW = "export_review"
 
 
@@ -72,6 +75,9 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.PREPARE_SYNTHESIS,
             Permission.MANAGE_ANALYSIS,
             Permission.RUN_ANALYSIS,
+            Permission.MANAGE_CERTAINTY_FRAMEWORK,
+            Permission.ASSESS_CERTAINTY,
+            Permission.ADJUDICATE_CERTAINTY,
             Permission.EXPORT_REVIEW,
         }
     ),
@@ -89,6 +95,7 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.ADJUDICATE_EXTRACTION,
             Permission.PERFORM_ROB_ASSESSMENT,
             Permission.HARMONIZE_OUTCOMES,
+            Permission.ASSESS_CERTAINTY,
         }
     ),
     OrganizationRole.STATISTICIAN: frozenset(
@@ -99,6 +106,7 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.PREPARE_SYNTHESIS,
             Permission.MANAGE_ANALYSIS,
             Permission.RUN_ANALYSIS,
+            Permission.ASSESS_CERTAINTY,
         }
     ),
     OrganizationRole.VIEWER: frozenset(),

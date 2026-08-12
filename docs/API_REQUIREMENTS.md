@@ -12,6 +12,18 @@ RR/OR/RD/MD calculations never accept an arbitrary continuity correction. Reads 
 ordering. Mutations require centralized outcome/harmonization/synthesis permissions and use the
 existing provenance/audit ledgers. No endpoint performs pooled analysis.
 
+
+## Certainty-of-evidence foundation
+
+Authenticated Review-scoped /api/v1/certainty endpoints create logical frameworks and immutable
+content-hashed versions, optional outcome-pinned decision-threshold versions, independent
+outcome/evidence-body assessments, explicit domain and final judgments, immutable submission and
+correction chains, deterministic comparison/reveal, human adjudication, Evidence Profiles, and
+Summary-of-Findings row snapshots. Quantitative assessments must pin a completed current Phase 20
+run and its exact specification; narrative assessments name Review-scoped Studies. Workspace reads
+preserve blindness until an explicit comparison record. No endpoint recalculates meta-analysis,
+duplicates RoB, invents thresholds, infers publication bias, or generates a certainty decision by AI.
+
 ## Deterministic statistical synthesis
 
 Authenticated Review-scoped `/api/v1/analysis` endpoints create logical specifications and immutable

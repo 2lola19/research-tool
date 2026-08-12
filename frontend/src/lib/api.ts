@@ -722,3 +722,166 @@ export async function getAnalysisWorkspace(
     return { status: "unavailable", specifications: [], analysisSets: [], runs: [], artifacts: [] };
   }
 }
+
+export type CertaintyFrameworkVersion = {
+  id: string;
+  framework_id: string;
+  version: number;
+  definition: {
+    name: string;
+    version_label: string;
+    starting_rules: Record<string, string>;
+    domains: Array<{
+      key: string;
+      label: string;
+      direction: "DOWNGRADE" | "UPGRADE";
+      choices: Array<{ value: string; label: string; magnitude: number }>;
+    }>;
+  };
+  content_hash: string;
+};
+
+export type CertaintyFramework = {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  versions: CertaintyFrameworkVersion[];
+};
+
+export type CertaintyAssessment = {
+  id: string;
+  outcome_version_id: string;
+  timepoint_window_id: string | null;
+  analysis_specification_version_id: string | null;
+  meta_analysis_run_id: string | null;
+  framework_version_id: string;
+  threshold_version_id: string | null;
+  assessor_user_id: string;
+  round_number: number;
+  revision: number;
+  supersedes_assessment_id: string | null;
+  evidence_body_type: "RANDOMIZED" | "OBSERVATIONAL" | "MIXED" | "OTHER";
+  evidence_body: Record<string, unknown>;
+  starting_certainty: "HIGH" | "MODERATE" | "LOW" | "VERY_LOW";
+  starting_rationale: string;
+  status: "IN_PROGRESS" | "SUBMITTED";
+  candidate_certainty: string | null;
+  final_certainty: string | null;
+  final_rationale: string | null;
+  override_reason: string | null;
+  evidence_hash: string | null;
+  stale: boolean;
+  domain_judgments: Array<{
+    id: string;
+    domain_key: string;
+    direction: "DOWNGRADE" | "UPGRADE";
+    magnitude: number;
+    judgment: string;
+    rationale: string;
+    evidence_location_id: string | null;
+    evidence: Record<string, unknown>;
+  }>;
+};
+
+export type CertaintyComparison = {
+  id: string;
+  outcome_version_id: string;
+  framework_version_id: string;
+  round_number: number;
+  assessment_a_id: string;
+  assessment_b_id: string;
+  status: "AGREEMENT" | "CONFLICT" | "ADJUDICATED";
+  differences: Array<Record<string, unknown>>;
+  adjudicated_snapshot: Record<string, unknown> | null;
+  adjudication_reason: string | null;
+};
+
+export type SummaryOfFindingsSnapshot = {
+  id: string;
+  assessment_id: string;
+  model_version: string;
+  row: Record<string, unknown>;
+  content_hash: string;
+  created_at: string;
+};
+
+export type CertaintyWorkspaceResult =
+  | {
+      status: "ready";
+      frameworks: CertaintyFramework[];
+      thresholdVersions: Array<Record<string, unknown>>;
+      assessments: CertaintyAssessment[];
+      comparisons: CertaintyComparison[];
+      comparisonCandidates: Array<{ id: string; outcome_version_id: string; framework_version_id: string; round_number: number; assessor_user_id: string }>;
+      summaryOfFindings: SummaryOfFindingsSnapshot[];
+    }
+  | {
+      status: "unauthorized" | "unavailable";
+      frameworks: CertaintyFramework[];
+      thresholdVersions: Array<Record<string, unknown>>;
+      assessments: CertaintyAssessment[];
+      comparisons: CertaintyComparison[];
+      comparisonCandidates: Array<{
+        id: string;
+        outcome_version_id: string;
+        framework_version_id: string;
+        round_number: number;
+        assessor_user_id: string;
+      }>;
+      summaryOfFindings: SummaryOfFindingsSnapshot[];
+    };
+
+export async function getCertaintyWorkspace(
+  accessToken: string,
+  organizationId: string,
+  reviewId: string,
+): Promise<CertaintyWorkspaceResult> {
+  const empty = {
+    frameworks: [],
+    thresholdVersions: [],
+    assessments: [],
+    comparisons: [],
+    comparisonCandidates: [],
+    summaryOfFindings: [],
+  };
+  const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8000";
+  try {
+    const response = await fetch(
+      apiBaseUrl + "/api/v1/certainty/reviews/" + reviewId,
+      {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer " + accessToken,
+          "X-Organization-ID": organizationId,
+        },
+      },
+    );
+    if (response.status === 401 || response.status === 403) {
+      return { status: "unauthorized", ...empty };
+    }
+    if (!response.ok) {
+      return { status: "unavailable", ...empty };
+    }
+    const payload = (await response.json()) as {
+      frameworks: CertaintyFramework[];
+      threshold_versions: Array<Record<string, unknown>>;
+      assessments: CertaintyAssessment[];
+      comparisons: CertaintyComparison[];
+      comparison_candidates: Array<{ id: string; outcome_version_id: string; framework_version_id: string; round_number: number; assessor_user_id: string }>;
+      summary_of_findings: SummaryOfFindingsSnapshot[];
+    };
+    return {
+      status: "ready",
+      frameworks: payload.frameworks,
+      thresholdVersions: payload.threshold_versions,
+      assessments: payload.assessments,
+      comparisons: payload.comparisons,
+      comparisonCandidates: payload.comparison_candidates,
+      summaryOfFindings: payload.summary_of_findings,
+    };
+  } catch {
+    return { status: "unavailable", ...empty };
+  }
+}

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from backend.app.api.routes.analysis import router as analysis_router
+from backend.app.api.routes.certainty import router as certainty_router
 from backend.app.api.routes.citations import router as citations_router
 from backend.app.api.routes.deduplication import router as deduplication_router
 from backend.app.api.routes.documents import router as documents_router
@@ -43,6 +44,7 @@ def build_api_router(api_prefix: str) -> APIRouter:
     router.include_router(risk_of_bias_router, prefix=api_prefix)
     router.include_router(outcomes_router, prefix=api_prefix)
     router.include_router(analysis_router, prefix=api_prefix)
+    router.include_router(certainty_router, prefix=api_prefix)
     router.include_router(prisma_router, prefix=api_prefix)
     router.include_router(exports_router, prefix=api_prefix)
     return router

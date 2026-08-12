@@ -22,10 +22,10 @@
 20. **Deterministic meta-analysis foundation (implemented):** versioned explicit specifications,
     revalidated Study-independent sets, fixed-effect and DerSimonian-Laird random-effects synthesis,
     heterogeneity/prediction diagnostics, leave-one-out sensitivity, and reproducible SVG artifacts.
-21. **GRADE/certainty foundation (recommended; not started):** structured versioned certainty
-    criteria linked to immutable synthesis runs, RoB, inconsistency, indirectness, imprecision, and
-    publication-bias judgments with independent human review. It must not silently reinterpret or
-    recalculate Phase 20 results.
+21. **GRADE/certainty foundation (verified):** versioned human-first frameworks and thresholds,
+    outcome/evidence-body scoped assessments, explicit downgrade/upgrade judgments, deterministic
+    candidates, independent blind review and adjudication, immutable revisions, RoB/analysis
+    evidence hashes and staleness, Evidence Profiles, Summary-of-Findings rows, exports, and UI.
 22. **Advanced analysis/reporting (deferred):** additional estimators, dependency policies,
     subgroups, meta-regression, publication-bias inference, network meta-analysis, and mature reports.
 

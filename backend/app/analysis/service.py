@@ -469,6 +469,11 @@ class AnalysisService:
             await self._repository.list_artifacts(actor.organization_id, review_id),
         )
 
+    async def is_run_stale(self, actor: ActorContext, *, review_id: UUID, run_id: UUID) -> bool:
+        await self._reviews.get(actor, review_id)
+        run = await self._run(actor, review_id, run_id)
+        return await self._is_stale(actor, review_id, run)
+
     async def get_artifact(
         self, actor: ActorContext, *, review_id: UUID, artifact_id: UUID
     ) -> AnalysisArtifact:

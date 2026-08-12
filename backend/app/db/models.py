@@ -10,6 +10,15 @@ from backend.app.analysis.persistence import (
     MetaAnalysisSensitivityRecord,
     MetaAnalysisStudyWeightRecord,
 )
+from backend.app.certainty.persistence import (
+    CertaintyAssessmentRecord,
+    CertaintyComparisonRecord,
+    CertaintyDomainJudgmentRecord,
+    CertaintyFrameworkRecord,
+    CertaintyFrameworkVersionRecord,
+    DecisionThresholdVersionRecord,
+    SummaryOfFindingsSnapshotRecord,
+)
 from backend.app.citations.persistence import (
     ArticleRecord,
     CitationImportBatchRecord,
@@ -111,8 +120,14 @@ __all__ = [
     "AnalysisSpecificationVersionRecord",
     "ArticleRecord",
     "AuditEventRecord",
+    "CertaintyAssessmentRecord",
+    "CertaintyComparisonRecord",
+    "CertaintyDomainJudgmentRecord",
+    "CertaintyFrameworkRecord",
+    "CertaintyFrameworkVersionRecord",
     "CitationImportBatchRecord",
     "CitationSourceRecordRow",
+    "DecisionThresholdVersionRecord",
     "DeduplicationDecisionRecord",
     "DeduplicationRunRecord",
     "DocumentBlockRecord",
@@ -174,6 +189,7 @@ __all__ = [
     "SearchTranslationRecord",
     "StudyArticleLinkRecord",
     "StudyRecord",
+    "SummaryOfFindingsSnapshotRecord",
     "SynthesisCandidateEstimateRecord",
     "SynthesisCandidateSetRecord",
     "TimepointWindowRecord",

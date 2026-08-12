@@ -27,12 +27,13 @@ Last updated: 2026-08-12
 | Risk of Bias Foundation (Phase 18) | VERIFIED | Versioned declarative instruments, Study-design validation, Study Family evidence, independent blind assessments, deterministic conflict detection, immutable corrections/adjudication, export schema v3, and minimal RoB UI pass. |
 | Outcome + Effect-Estimate Harmonization (Phase 19) | VERIFIED | Versioned canonical outcomes, explicit extraction mappings, review-specific timepoint/unit/scale configuration, structured reported/derived estimates, deterministic RR/OR/RD/MD calculations, zero-event safeguards, synthesis-candidate readiness, export schema v4, and minimal Outcomes workspace pass. |
 | Deterministic Statistical Synthesis (Phase 20) | VERIFIED | Immutable explicit analysis specifications/sets/runs, Study independence and live-readiness rechecks, inverse-variance fixed-effect and DerSimonian-Laird random-effects synthesis, structured heterogeneity/weights/diagnostics, leave-one-out sensitivity, deterministic SVG forest artifacts, export schema v5, and minimal Analysis workspace pass. |
+| GRADE / Certainty-of-Evidence Foundation (Phase 21) | VERIFIED | Versioned human-first certainty frameworks and thresholds, outcome/evidence-body assessments, explicit downgrade/upgrade judgments, deterministic candidates, independent blinded review/reveal, immutable revisions, adjudication, RoB/analysis evidence hashes and staleness, Evidence Profiles, Summary-of-Findings rows, export schema v6, and minimal Certainty workspace pass. |
 
 ## Validation evidence
 
-- Backend: Ruff lint and format checks, strict mypy, and pytest pass: 183 tests, 93.91% coverage (configured threshold: 85%).
-- Frontend: ESLint, TypeScript, Vitest (9 tests), and the Next.js 16 production build pass. Dynamic routes include Search, Reports/Exports, Risk of Bias, Outcomes, Analysis, and authenticated export/analysis-artifact download proxies.
-- Alembic is linear through `20260812_0021`. A temporary SQLite database upgrades from foundation through Statistical Synthesis and downgrades fully to base.
+- Backend: Ruff lint and format checks and strict mypy pass; pytest passes 190 tests at 93.54% coverage (configured threshold: 85%).
+- Frontend: ESLint, TypeScript, Vitest (9 tests), and the Next.js 16 production build pass. Dynamic routes include Search, Reports/Exports, Risk of Bias, Outcomes, Analysis, Certainty, and authenticated export/analysis-artifact download proxies.
+- Alembic is linear through `20260812_0022`. A temporary SQLite database upgrades from foundation through the Certainty-of-Evidence foundation and downgrades fully to base.
 - Focused PRISMA tests cover record/report/Study distinctions, confirmed-duplicate counting, title/full-text completeness, retrieval state, Study Family counting, structured exclusion reasons, stable source references, immutable snapshots, role restrictions, and tenant non-enumeration.
 - Focused export tests cover deterministic byte rendering, CSV formula neutralization, portable XLSX archive structure, JSON/RIS output, all download formats, manifests, checksums, preservation of prior artifacts, provenance/audit, and tenant authorization.
 - Focused Search Execution tests cover structured PRISMA source groups, exact query and strategy/translation retention, repeated searches and corrections, status events, provider/import reconciliation, multi-source discovery, citation-source linkage, raw artifact integrity, stable exports, role restrictions, cross-review linking, and cross-tenant non-enumeration.
@@ -70,7 +71,6 @@ Last updated: 2026-08-12
 
 ## Deferred and planned
 
-- Recommended next phase: Phase 21 GRADE/Certainty Foundation, separately scoped and explicitly approved before implementation. It should attach versioned, structured human certainty judgments to immutable Phase 20 runs and preserve explicit RoB, inconsistency, indirectness, imprecision, and publication-bias rationale/evidence without recalculating synthesis results.
 - Advanced estimators/dependency policies, general subgroup inference, meta-regression, publication-bias inference, network meta-analysis, mature report authoring, paid AI providers, and real external scholarly APIs remain out of scope until separately authorized.
 - GROBID live deployment, ASReview, external scholarly APIs, R/metafor, paid AI providers, production identity, and cloud object storage remain deferred.
 

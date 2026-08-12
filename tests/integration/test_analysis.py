@@ -306,7 +306,7 @@ def test_synthetic_review_runs_golden_random_effects_and_forest_plot(
         params={"review_id": review_id},
     )
     package = json.loads(export_download.content)
-    assert package["schema_version"] == "review-export-5"
+    assert package["schema_version"] == "review-export-6"
     assert package["analysis"]["meta_analysis_runs"][0]["id"] == run.json()["id"]
     assert len(package["analysis"]["study_weights"]) == 3
 

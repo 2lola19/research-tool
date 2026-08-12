@@ -116,6 +116,11 @@ class ExportDataset:
     analysis_study_weights: tuple[dict[str, Any], ...]
     analysis_sensitivities: tuple[dict[str, Any], ...]
     analysis_artifacts: tuple[dict[str, Any], ...]
+    certainty_framework_versions: tuple[dict[str, Any], ...]
+    certainty_threshold_versions: tuple[dict[str, Any], ...]
+    certainty_assessments: tuple[dict[str, Any], ...]
+    certainty_comparisons: tuple[dict[str, Any], ...]
+    summary_of_findings: tuple[dict[str, Any], ...]
 
 
 @dataclass(frozen=True, slots=True)

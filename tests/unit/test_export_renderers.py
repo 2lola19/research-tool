@@ -206,6 +206,63 @@ def _dataset() -> ExportDataset:
                 "sha256": "f" * 64,
             },
         ),
+        certainty_framework_versions=(
+            {
+                "id": "00000000-0000-0000-0000-000000000025",
+                "framework_id": "00000000-0000-0000-0000-000000000026",
+                "version": 1,
+                "definition": {"name": "Human certainty foundation"},
+                "content_hash": "1" * 64,
+            },
+        ),
+        certainty_threshold_versions=(),
+        certainty_assessments=(
+            {
+                "id": "00000000-0000-0000-0000-000000000027",
+                "outcome_version_id": "00000000-0000-0000-0000-000000000014",
+                "timepoint_window_id": None,
+                "analysis_specification_version_id": "00000000-0000-0000-0000-000000000020",
+                "meta_analysis_run_id": "00000000-0000-0000-0000-000000000023",
+                "framework_version_id": "00000000-0000-0000-0000-000000000025",
+                "threshold_version_id": None,
+                "assessor_user_id": "00000000-0000-0000-0000-000000000011",
+                "round_number": 1,
+                "revision": 1,
+                "supersedes_assessment_id": None,
+                "evidence_body_type": "RANDOMIZED",
+                "evidence_body": {"study_ids": ["00000000-0000-0000-0000-000000000006"]},
+                "starting_certainty": "HIGH",
+                "starting_rationale": "Randomized evidence body.",
+                "candidate_certainty": "MODERATE",
+                "final_certainty": "MODERATE",
+                "final_rationale": "Explicit human judgment.",
+                "override_reason": None,
+                "status": "SUBMITTED",
+                "evidence_hash": "2" * 64,
+                "evidence_snapshot": {"snapshot_version": "certainty-evidence-1"},
+                "domains": [
+                    {
+                        "domain_key": "RISK_OF_BIAS",
+                        "direction": "DOWNGRADE",
+                        "judgment": "DOWNGRADE_ONE",
+                        "magnitude": 1,
+                        "rationale": "Structured human judgment.",
+                        "evidence": {},
+                        "evidence_location_id": None,
+                    }
+                ],
+            },
+        ),
+        certainty_comparisons=(),
+        summary_of_findings=(
+            {
+                "id": "00000000-0000-0000-0000-000000000028",
+                "assessment_id": "00000000-0000-0000-0000-000000000027",
+                "model_version": "sof-model-1",
+                "row": {"final_certainty": "MODERATE"},
+                "content_hash": "3" * 64,
+            },
+        ),
     )
 
 
@@ -249,6 +306,11 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
             "xl/worksheets/sheet18.xml",
             "xl/worksheets/sheet19.xml",
             "xl/worksheets/sheet20.xml",
+            "xl/worksheets/sheet21.xml",
+            "xl/worksheets/sheet22.xml",
+            "xl/worksheets/sheet23.xml",
+            "xl/worksheets/sheet24.xml",
+            "xl/worksheets/sheet25.xml",
         } <= set(workbook.namelist())
         articles_xml = workbook.read("xl/worksheets/sheet4.xml").decode()
         executions_xml = workbook.read("xl/worksheets/sheet6.xml").decode()
@@ -260,7 +322,7 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
 def test_json_contains_versioned_scientific_and_analysis_documentation() -> None:
     rendered = render_export(ExportFormat.JSON, _dataset())
     payload = json.loads(rendered.content)
-    assert payload["schema_version"] == "review-export-5"
+    assert payload["schema_version"] == "review-export-6"
     assert payload["search_executions"][0]["source_classification"] == ("BIBLIOGRAPHIC_DATABASE")
     assert payload["search_executions"][0]["filters"] == {"language": "all"}
     assert payload["risk_of_bias"]["assessments"][0]["instrument_version"] == 1
@@ -268,6 +330,8 @@ def test_json_contains_versioned_scientific_and_analysis_documentation() -> None
     assert payload["outcomes"]["effect_estimates"][0]["variance_scale"] == "LOG"
     assert payload["outcomes"]["analysis_readiness"][0]["status"] == "READY"
     assert payload["analysis"]["meta_analysis_runs"][0]["algorithm_version"] == ("meta-analysis-1")
+    assert payload["certainty"]["assessments"][0]["final_certainty"] == "MODERATE"
+    assert payload["certainty"]["summary_of_findings"][0]["model_version"] == "sof-model-1"
     assert payload["analysis"]["study_weights"][0]["normalized_weight_percent"] == (
         "100.000000000000"
     )

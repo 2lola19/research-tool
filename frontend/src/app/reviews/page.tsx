@@ -98,7 +98,7 @@ export default async function ReviewsPage() {
                         {project.owner_user_id.slice(0, 8)}
                       </span>
                     </div>
-                    <div className="mt-5 flex gap-4 text-sm font-semibold text-[var(--brand)]">
+                    <div className="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-[var(--brand)]">
                       <Link className="hover:underline" href={`/reviews/${project.id}/search`}>
                         Search
                       </Link>
@@ -113,6 +113,9 @@ export default async function ReviewsPage() {
                       </Link>
                       <Link className="hover:underline" href={`/reviews/${project.id}/analysis`}>
                         Analysis
+                      </Link>
+                      <Link className="hover:underline" href={"/reviews/" + project.id + "/certainty"}>
+                        Certainty
                       </Link>
                     </div>
                   </article>

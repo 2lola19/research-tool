@@ -41,3 +41,8 @@ standard-library numerical functions, explicit algorithm versioning, and reposit
 fixtures. It is a reproducible foundation rather than a claim of parity with all `metafor` methods.
 Future metafor integration remains behind the provider contract and requires license, packaging,
 independent numerical validation, and operational review.
+
+Phase 21 adds no external dependency and embeds no complete published GRADE instrument. Its
+GRADE-compatible foundation is a generic human-judgment demonstration with explicit downgrade and
+upgrade structures; adopting and maintaining complete official guidance requires separate
+methodology, licensing, and validation work. No AI or statistical package makes certainty decisions.

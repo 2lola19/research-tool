@@ -111,3 +111,17 @@ mapping used. `SynthesisCandidateSet` is an immutable future-analysis selection,
 entity performs statistical pooling.
 
 Tenant-owned aggregates carry organization ownership and review scope. Immutable versioned aggregates carry a logical identity plus monotonically increasing version and approval state.
+
+CertaintyFramework is a Review-scoped logical human appraisal framework whose immutable versions
+define explicit starting rules, downgrade domains, upgrade considerations, allowed magnitudes, and
+content hashes. DecisionThresholdVersion records optional outcome-specific thresholds without
+inventing defaults.
+
+CertaintyAssessment targets one OutcomeDefinitionVersion and optional timepoint, plus an exact
+current MetaAnalysisRun/specification when quantitative synthesis is used. Independent assessors
+record explicit starting certainty, structured human domain judgments, deterministic candidate
+certainty, separate final certainty, and override rationale. Submission stores an evidence
+snapshot/hash and becomes immutable; corrections supersede rather than rewrite. CertaintyComparison
+is the explicit blind reveal boundary and preserves deterministic disagreements. Human adjudication
+appends a final snapshot without mutating either assessment. SummaryOfFindingsSnapshot stores a
+structured outcome row and explicitly marks unsupported absolute effects unavailable.

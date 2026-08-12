@@ -100,3 +100,14 @@ numbers, one estimate link per set, one weight per Study/run, one leave-one-out 
 Study/run, and artifact identity. ORM guards reject scientific version/set/result/artifact updates
 and reject mutation after a run reaches `COMPLETED` or `FAILED`. Migration `20260812_0021` is linear
 after `20260811_0020` and supports full reverse removal.
+
+## Certainty-of-evidence tables
+
+Migration 20260812_0022 adds logical certainty frameworks and immutable content-hashed versions,
+outcome-pinned decision-threshold versions, outcome/timepoint/evidence-body certainty assessments,
+structured domain judgments, deterministic comparison/reveal history, human adjudication metadata,
+and immutable Summary-of-Findings row snapshots. Composite foreign keys repeat Organization and
+Review scope across outcomes, timepoints, analysis specifications/runs, framework/threshold
+versions, assessors, correction chains, evidence locations, comparisons, and snapshots. Submitted
+assessments and adjudicated comparisons are protected from mutation; corrections create successors.
+The migration is linear after 20260812_0021 and supports full reverse removal.
