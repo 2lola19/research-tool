@@ -84,3 +84,19 @@ trusting serialized identifiers. Check constraints cover allowed states, ranges,
 time anchors, direction transforms, effect measures, variance scales, analysis populations, and
 readiness states. ORM guards reject updates/deletes across the scientific history. The migration
 upgrades linearly from `20260811_0019` and fully downgrades on SQLite.
+## Statistical synthesis tables
+
+`analysis_specifications` and immutable `analysis_specification_versions` store the logical method
+and every explicit policy version. `analysis_sets` and normalized `analysis_set_estimates` retain the
+revalidated Phase 19 candidate selection and deterministic input hash. `meta_analysis_runs` stores
+terminal execution metadata and structured output; `meta_analysis_study_weights` and
+`meta_analysis_sensitivity_results` retain deterministic child results. `analysis_artifacts` stores
+immutable SVG bytes and SHA-256 metadata.
+
+All tables repeat Organization and Review scope. Composite foreign keys prevent cross-tenant or
+cross-Review specifications, candidates, estimates, runs, actors, and artifacts. Scoped indexes
+serve Review histories and run children; uniqueness constraints protect specification version
+numbers, one estimate link per set, one weight per Study/run, one leave-one-out child per omitted
+Study/run, and artifact identity. ORM guards reject scientific version/set/result/artifact updates
+and reject mutation after a run reaches `COMPLETED` or `FAILED`. Migration `20260812_0021` is linear
+after `20260811_0020` and supports full reverse removal.

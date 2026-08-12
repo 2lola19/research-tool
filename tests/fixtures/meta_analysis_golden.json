@@ -1,0 +1,42 @@
+{
+  "provenance": {
+    "description": "Hand-calculated inverse-variance fixture using y=[0.2,0.5,1.2], v=[0.04,0.09,0.16]. Fixed weights are 1/v. Q is calculated about the fixed pooled estimate. DerSimonian-Laird tau-squared is max(0,(Q-(k-1))/(sum(w)-sum(w^2)/sum(w))). CI uses z=1.959963984540054 for 95% normal intervals.",
+    "independent_formula_version": "documented-hand-calculation-1"
+  },
+  "fixed_effect": {
+    "estimate": "0.4262295081967213114754098361",
+    "variance": "0.02360655737704918032786885246",
+    "standard_error": "0.15364425591947517",
+    "ci_lower": "0.12509230016309497",
+    "ci_upper": "0.7273667162303477",
+    "q": "5.081967213114754098360655738",
+    "q_p_value": "0.07878886442108428",
+    "i_squared_percent": "60.64516129032258",
+    "weights_percent": [
+      "59.01639344262295",
+      "26.22950819672131",
+      "14.754098360655737"
+    ]
+  },
+  "random_effects_dl": {
+    "estimate": "0.5466480260967978163903867918",
+    "variance": "0.07194617191104866979332382940",
+    "standard_error": "0.2682278358244137751655523684",
+    "ci_lower": "0.020931128229824236",
+    "ci_upper": "1.0723649239637711",
+    "tau_squared": "0.1296551724137931034482758621",
+    "tau": "0.3600766201988031",
+    "prediction_lower": "-0.3333765544806182",
+    "prediction_upper": "1.4266726066742137",
+    "weights_percent": [
+      "42.40729645163438",
+      "32.75414419812263",
+      "24.83855935024299"
+    ],
+    "leave_one_out_estimates": [
+      "0.8000000000000000",
+      "0.6400000000000000",
+      "0.2923076923076923"
+    ]
+  }
+}

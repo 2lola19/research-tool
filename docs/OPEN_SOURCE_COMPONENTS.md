@@ -10,7 +10,7 @@ Evaluation snapshot: 2026-08-11. Versions are pinned only when integration begin
 | Temporal | https://github.com/temporalio/temporal | MIT (server); SDK licenses vary | Durable orchestration | Preliminary | Deferred behind port | Strong fit, but extra service complexity is premature before workflow semantics are implemented | TBD |
 | Temporal Python SDK | https://github.com/temporalio/sdk-python | MIT | Worker/client integration | Preliminary | Deferred behind port | Typed durable workflows; evaluate replay/versioning operational cost in Phase 4 | TBD |
 | OpenAlex / PyAlex | https://github.com/pyalex-tooling/pyalex | MIT | Scholarly metadata | Pending | Candidate | Implement behind `SearchProvider`; respect API etiquette and preserve raw source provenance | TBD |
-| metafor | https://github.com/wviechtb/metafor | GPL-2.0 | Validated meta-analysis | Pending legal/architecture review | Isolate | Prefer a separately deployed R statistical service; review distribution implications before incorporation | TBD |
+| metafor | https://github.com/wviechtb/metafor | GPL-2.0 | Validated meta-analysis | Architecture evaluated; legal/operational review pending | Isolate | Future separately deployed provider accepting canonical payloads and returning structured results; no raw R objects or duplicated domain state | TBD |
 
 No candidate code is copied into this repository. Direct integration requires a maintenance, license, security, and fit review at the relevant phase.
 
@@ -35,3 +35,9 @@ The Outcome Harmonization foundation adds no statistical dependency. Foundationa
 MD derivations use deterministic `Decimal` arithmetic and stop before pooling. A Phase 20 statistical
 engine must complete the documented legal, maintenance, and numerical-validation review before
 integrating a component such as `metafor`.
+
+Phase 20 adds no external dependency. Its bounded native inverse-variance engine uses Python
+standard-library numerical functions, explicit algorithm versioning, and repository-owned golden
+fixtures. It is a reproducible foundation rather than a claim of parity with all `metafor` methods.
+Future metafor integration remains behind the provider contract and requires license, packaging,
+independent numerical validation, and operational review.

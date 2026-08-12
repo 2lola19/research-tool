@@ -11,7 +11,7 @@ from typing import Any
 
 from backend.app.exports.domain import ExportArticle, ExportDataset, ExportFormat, RenderedExport
 
-EXPORT_SCHEMA_VERSION = "review-export-4"
+EXPORT_SCHEMA_VERSION = "review-export-5"
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
@@ -227,6 +227,14 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             "synthesis_candidate_sets": list(dataset.synthesis_candidate_sets),
             "analysis_readiness": list(dataset.analysis_readiness),
         },
+        "analysis": {
+            "specification_versions": list(dataset.analysis_specification_versions),
+            "analysis_sets": list(dataset.analysis_sets),
+            "meta_analysis_runs": list(dataset.meta_analysis_runs),
+            "study_weights": list(dataset.analysis_study_weights),
+            "leave_one_out_sensitivity": list(dataset.analysis_sensitivities),
+            "artifacts": list(dataset.analysis_artifacts),
+        },
     }
     content = (
         json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -246,6 +254,12 @@ def _render_json(dataset: ExportDataset) -> RenderedExport:
             "effect_estimates": len(dataset.effect_estimates),
             "synthesis_candidate_sets": len(dataset.synthesis_candidate_sets),
             "analysis_readiness": len(dataset.analysis_readiness),
+            "analysis_specification_versions": len(dataset.analysis_specification_versions),
+            "analysis_sets": len(dataset.analysis_sets),
+            "meta_analysis_runs": len(dataset.meta_analysis_runs),
+            "analysis_study_weights": len(dataset.analysis_study_weights),
+            "analysis_sensitivities": len(dataset.analysis_sensitivities),
+            "analysis_artifacts": len(dataset.analysis_artifacts),
         },
     )
 
@@ -343,6 +357,10 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ["effect_estimate_count", len(dataset.effect_estimates)],
         ["synthesis_candidate_set_count", len(dataset.synthesis_candidate_sets)],
         ["analysis_readiness_count", len(dataset.analysis_readiness)],
+        ["analysis_specification_version_count", len(dataset.analysis_specification_versions)],
+        ["analysis_set_count", len(dataset.analysis_sets)],
+        ["meta_analysis_run_count", len(dataset.meta_analysis_runs)],
+        ["analysis_artifact_count", len(dataset.analysis_artifacts)],
     ]
     prisma_rows: list[list[object]] = [["counter", "value"]]
     exclusion_rows: list[list[object]] = [["reason", "count"]]
@@ -618,6 +636,70 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         dataset.analysis_readiness,
         ["id", "candidate_set_id", "algorithm_version", "status", "blockers"],
     )
+    specification_rows = _structured_rows(
+        dataset.analysis_specification_versions,
+        ["id", "specification_id", "version", "definition", "content_hash"],
+    )
+    analysis_set_rows = _structured_rows(
+        dataset.analysis_sets,
+        [
+            "id",
+            "specification_version_id",
+            "candidate_set_id",
+            "included_estimate_ids",
+            "excluded_estimates",
+            "input_hash",
+        ],
+    )
+    meta_result_rows = _structured_rows(
+        dataset.meta_analysis_runs,
+        [
+            "id",
+            "specification_version_id",
+            "analysis_set_id",
+            "status",
+            "algorithm_name",
+            "algorithm_version",
+            "provider",
+            "provider_version",
+            "input_hash",
+            "result_hash",
+            "result",
+            "diagnostics",
+            "failure_reason",
+        ],
+    )
+    weight_rows = _structured_rows(
+        dataset.analysis_study_weights,
+        [
+            "run_id",
+            "study_id",
+            "estimate_id",
+            "analysis_estimate",
+            "presentation_estimate",
+            "ci_lower",
+            "ci_upper",
+            "raw_weight",
+            "normalized_weight_percent",
+        ],
+    )
+    sensitivity_rows = _structured_rows(
+        dataset.analysis_sensitivities,
+        ["run_id", "omitted_study_id", "omitted_estimate_id", "result", "result_hash"],
+    )
+    analysis_artifact_rows = _structured_rows(
+        dataset.analysis_artifacts,
+        [
+            "id",
+            "run_id",
+            "artifact_type",
+            "renderer_version",
+            "media_type",
+            "filename",
+            "sha256",
+            "byte_size",
+        ],
+    )
     sheets = [
         ("Manifest", manifest_rows),
         ("PRISMA", prisma_rows),
@@ -633,6 +715,12 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
         ("Effect Estimates", estimate_rows),
         ("Synthesis Candidates", candidate_rows),
         ("Analysis Readiness", readiness_rows),
+        ("Analysis Specifications", specification_rows),
+        ("Analysis Sets", analysis_set_rows),
+        ("Meta-Analysis Results", meta_result_rows),
+        ("Study Weights", weight_rows),
+        ("Sensitivity Analyses", sensitivity_rows),
+        ("Analysis Artifacts", analysis_artifact_rows),
     ]
     content_types = "".join(
         f'<Override PartName="/xl/worksheets/sheet{index}.xml" '
@@ -708,6 +796,12 @@ def _render_xlsx(dataset: ExportDataset) -> RenderedExport:
             "effect_estimates": len(dataset.effect_estimates),
             "synthesis_candidate_sets": len(dataset.synthesis_candidate_sets),
             "analysis_readiness": len(dataset.analysis_readiness),
+            "analysis_specification_versions": len(dataset.analysis_specification_versions),
+            "analysis_sets": len(dataset.analysis_sets),
+            "meta_analysis_runs": len(dataset.meta_analysis_runs),
+            "analysis_study_weights": len(dataset.analysis_study_weights),
+            "analysis_sensitivities": len(dataset.analysis_sensitivities),
+            "analysis_artifacts": len(dataset.analysis_artifacts),
         },
     )
 

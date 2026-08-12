@@ -1,5 +1,15 @@
 """Import all SQLAlchemy mappings so metadata and Alembic see every table."""
 
+from backend.app.analysis.persistence import (
+    AnalysisArtifactRecord,
+    AnalysisSetEstimateRecord,
+    AnalysisSetRecord,
+    AnalysisSpecificationRecord,
+    AnalysisSpecificationVersionRecord,
+    MetaAnalysisRunRecord,
+    MetaAnalysisSensitivityRecord,
+    MetaAnalysisStudyWeightRecord,
+)
 from backend.app.citations.persistence import (
     ArticleRecord,
     CitationImportBatchRecord,
@@ -93,7 +103,12 @@ from backend.app.workflow.persistence import (
 
 __all__ = [
     "AIRunRecord",
+    "AnalysisArtifactRecord",
     "AnalysisReadinessSnapshotRecord",
+    "AnalysisSetEstimateRecord",
+    "AnalysisSetRecord",
+    "AnalysisSpecificationRecord",
+    "AnalysisSpecificationVersionRecord",
     "ArticleRecord",
     "AuditEventRecord",
     "CitationImportBatchRecord",
@@ -123,6 +138,9 @@ __all__ = [
     "LocalCredentialRecord",
     "MeasurementScaleRecord",
     "MembershipRecord",
+    "MetaAnalysisRunRecord",
+    "MetaAnalysisSensitivityRecord",
+    "MetaAnalysisStudyWeightRecord",
     "OrganizationRecord",
     "OutcomeDefinitionRecord",
     "OutcomeDefinitionVersionRecord",

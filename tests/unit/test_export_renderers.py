@@ -163,6 +163,49 @@ def _dataset() -> ExportDataset:
                 "blockers": [],
             },
         ),
+        analysis_specification_versions=(
+            {
+                "id": "00000000-0000-0000-0000-000000000020",
+                "specification_id": "00000000-0000-0000-0000-000000000021",
+                "version": 1,
+                "definition": {"model": "FIXED_EFFECT", "effect_measure": "RR"},
+                "content_hash": "c" * 64,
+            },
+        ),
+        analysis_sets=(
+            {
+                "id": "00000000-0000-0000-0000-000000000022",
+                "included_estimate_ids": ["00000000-0000-0000-0000-000000000017"],
+                "excluded_estimates": [],
+                "input_hash": "d" * 64,
+            },
+        ),
+        meta_analysis_runs=(
+            {
+                "id": "00000000-0000-0000-0000-000000000023",
+                "status": "COMPLETED",
+                "algorithm_version": "meta-analysis-1",
+                "input_hash": "d" * 64,
+                "result_hash": "e" * 64,
+                "result": {"presentation_estimate": "0.5"},
+            },
+        ),
+        analysis_study_weights=(
+            {
+                "run_id": "00000000-0000-0000-0000-000000000023",
+                "study_id": "00000000-0000-0000-0000-000000000006",
+                "normalized_weight_percent": "100.000000000000",
+            },
+        ),
+        analysis_sensitivities=(),
+        analysis_artifacts=(
+            {
+                "id": "00000000-0000-0000-0000-000000000024",
+                "run_id": "00000000-0000-0000-0000-000000000023",
+                "artifact_type": "FOREST_PLOT_SVG",
+                "sha256": "f" * 64,
+            },
+        ),
     )
 
 
@@ -200,6 +243,12 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
             "xl/worksheets/sheet12.xml",
             "xl/worksheets/sheet13.xml",
             "xl/worksheets/sheet14.xml",
+            "xl/worksheets/sheet15.xml",
+            "xl/worksheets/sheet16.xml",
+            "xl/worksheets/sheet17.xml",
+            "xl/worksheets/sheet18.xml",
+            "xl/worksheets/sheet19.xml",
+            "xl/worksheets/sheet20.xml",
         } <= set(workbook.namelist())
         articles_xml = workbook.read("xl/worksheets/sheet4.xml").decode()
         executions_xml = workbook.read("xl/worksheets/sheet6.xml").decode()
@@ -208,13 +257,17 @@ def test_xlsx_contains_expected_portable_sheets() -> None:
     assert "review[Title]" in executions_xml
 
 
-def test_json_contains_versioned_search_and_risk_of_bias_documentation() -> None:
+def test_json_contains_versioned_scientific_and_analysis_documentation() -> None:
     rendered = render_export(ExportFormat.JSON, _dataset())
     payload = json.loads(rendered.content)
-    assert payload["schema_version"] == "review-export-4"
+    assert payload["schema_version"] == "review-export-5"
     assert payload["search_executions"][0]["source_classification"] == ("BIBLIOGRAPHIC_DATABASE")
     assert payload["search_executions"][0]["filters"] == {"language": "all"}
     assert payload["risk_of_bias"]["assessments"][0]["instrument_version"] == 1
     assert payload["risk_of_bias"]["comparisons"][0]["status"] == "CONFLICT"
     assert payload["outcomes"]["effect_estimates"][0]["variance_scale"] == "LOG"
     assert payload["outcomes"]["analysis_readiness"][0]["status"] == "READY"
+    assert payload["analysis"]["meta_analysis_runs"][0]["algorithm_version"] == ("meta-analysis-1")
+    assert payload["analysis"]["study_weights"][0]["normalized_weight_percent"] == (
+        "100.000000000000"
+    )

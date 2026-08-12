@@ -33,3 +33,13 @@ to an existing Document evidence location in the same Study Family. Derived esti
 `effect-foundation-1`, structured input components, Decimal output, variance scale, and zero-event
 state. Candidate selections and `analysis-readiness-1` snapshots are append-only downstream uses;
 they never replace or mutate the source extraction, mapping, or estimate.
+## Statistical synthesis trace
+
+`ANALYSIS_SPECIFICATION_VERSIONED`, `ANALYSIS_SET_CREATED`, `META_ANALYSIS_STARTED`,
+`META_ANALYSIS_COMPLETED`, `META_ANALYSIS_FAILED`, `SENSITIVITY_ANALYSIS_COMPLETED`, and
+`ANALYSIS_ARTIFACT_GENERATED` use the existing append-only scientific provenance and audit ledgers.
+The trace is: result/run -> specification version -> AnalysisSet -> selected effect estimate ->
+outcome mapping -> verified extraction -> evidence location -> Document -> Article -> Study.
+Canonical input/result hashes, provider/algorithm versions, renderer version, actor, timestamps, and
+artifact checksum make numerical and figure outputs independently reconstructable. Deterministic
+reads and staleness checks do not append noisy audit events.

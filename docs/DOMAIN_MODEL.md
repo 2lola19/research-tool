@@ -53,6 +53,20 @@ create a superseding execution while ordinary updates remain independent histori
 
 `ExtractionVerification` compares two runs deterministically. Equal canonical values become MATCHED; value or evidence disagreement creates an `ExtractionConflict` containing both original snapshots. Adjudication updates only the conflict/verification state and appends provenance; original extraction values are never overwritten.
 
+`AnalysisSpecification` owns immutable versions of the scientific synthesis policy. Each version
+pins a canonical outcome/timepoint, population and comparison, eligible designs, effect measure,
+model/estimator, transformation, interval method, zero-event/variance/adjustment rules, explicit
+selection policy, dependency safeguards, and minimum Study count. `AnalysisSet` materializes one
+explicit, revalidated estimate per Study from a Phase 19 synthesis candidate and retains its
+canonical input hash plus synthesis-specific exclusions; it never changes systematic-review
+eligibility.
+
+`MetaAnalysisRun` is an immutable execution snapshot linked to one specification version and
+AnalysisSet. A run retains terminal status, provider/algorithm versions, input/result hashes,
+structured pooled output, diagnostics, Study weights, and leave-one-out children. Historical runs
+remain reproducible when later upstream corrections make them stale. `AnalysisArtifact` contains a
+renderer-only forest plot whose version, checksum, and generation time link back to the run.
+
 `RiskOfBiasInstrument` is a Review-scoped logical method. Each immutable
 `RiskOfBiasInstrumentVersion` stores ordered domains and signalling questions, instrument-specific
 answer/domain/overall choices, compatible Study designs, optional guidance, declarative suggestion

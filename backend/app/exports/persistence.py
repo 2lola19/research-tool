@@ -21,6 +21,14 @@ from sqlalchemy import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, Mapper, mapped_column
 
+from backend.app.analysis.persistence import (
+    AnalysisArtifactRecord,
+    AnalysisSetRecord,
+    AnalysisSpecificationVersionRecord,
+    MetaAnalysisRunRecord,
+    MetaAnalysisSensitivityRecord,
+    MetaAnalysisStudyWeightRecord,
+)
 from backend.app.citations.persistence import ArticleRecord, CitationSourceRecordRow
 from backend.app.db.base import Base
 from backend.app.exports.domain import (
@@ -204,6 +212,75 @@ class SqlAlchemyExportRepository:
         )
         readiness_snapshots = await outcome_repository.list_readiness_snapshots(
             snapshot.organization_id, snapshot.review_id
+        )
+        analysis_versions = list(
+            await self._session.scalars(
+                select(AnalysisSpecificationVersionRecord)
+                .where(
+                    AnalysisSpecificationVersionRecord.organization_id == snapshot.organization_id,
+                    AnalysisSpecificationVersionRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    AnalysisSpecificationVersionRecord.specification_id,
+                    AnalysisSpecificationVersionRecord.version,
+                )
+            )
+        )
+        analysis_sets = list(
+            await self._session.scalars(
+                select(AnalysisSetRecord)
+                .where(
+                    AnalysisSetRecord.organization_id == snapshot.organization_id,
+                    AnalysisSetRecord.review_id == snapshot.review_id,
+                )
+                .order_by(AnalysisSetRecord.created_at, AnalysisSetRecord.id)
+            )
+        )
+        analysis_runs = list(
+            await self._session.scalars(
+                select(MetaAnalysisRunRecord)
+                .where(
+                    MetaAnalysisRunRecord.organization_id == snapshot.organization_id,
+                    MetaAnalysisRunRecord.review_id == snapshot.review_id,
+                )
+                .order_by(MetaAnalysisRunRecord.created_at, MetaAnalysisRunRecord.id)
+            )
+        )
+        analysis_weights = list(
+            await self._session.scalars(
+                select(MetaAnalysisStudyWeightRecord)
+                .where(
+                    MetaAnalysisStudyWeightRecord.organization_id == snapshot.organization_id,
+                    MetaAnalysisStudyWeightRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    MetaAnalysisStudyWeightRecord.run_id,
+                    MetaAnalysisStudyWeightRecord.study_id,
+                )
+            )
+        )
+        analysis_sensitivities = list(
+            await self._session.scalars(
+                select(MetaAnalysisSensitivityRecord)
+                .where(
+                    MetaAnalysisSensitivityRecord.organization_id == snapshot.organization_id,
+                    MetaAnalysisSensitivityRecord.review_id == snapshot.review_id,
+                )
+                .order_by(
+                    MetaAnalysisSensitivityRecord.run_id,
+                    MetaAnalysisSensitivityRecord.omitted_study_id,
+                )
+            )
+        )
+        analysis_artifacts = list(
+            await self._session.scalars(
+                select(AnalysisArtifactRecord)
+                .where(
+                    AnalysisArtifactRecord.organization_id == snapshot.organization_id,
+                    AnalysisArtifactRecord.review_id == snapshot.review_id,
+                )
+                .order_by(AnalysisArtifactRecord.created_at, AnalysisArtifactRecord.id)
+            )
         )
         outcome_keys = {item.id: item.key for item in outcome_definitions}
         risk_versions = {
@@ -458,6 +535,82 @@ class SqlAlchemyExportRepository:
                     "blockers": list(item.blockers),
                 }
                 for item in readiness_snapshots
+            ),
+            analysis_specification_versions=tuple(
+                {
+                    "id": str(item.id),
+                    "specification_id": str(item.specification_id),
+                    "version": item.version,
+                    "definition": item.definition,
+                    "content_hash": item.content_hash,
+                }
+                for item in analysis_versions
+            ),
+            analysis_sets=tuple(
+                {
+                    "id": str(item.id),
+                    "specification_version_id": str(item.specification_version_id),
+                    "candidate_set_id": str(item.candidate_set_id),
+                    "included_estimate_ids": list(item.included_estimate_ids),
+                    "excluded_estimates": item.excluded_estimates,
+                    "input_hash": item.input_hash,
+                }
+                for item in analysis_sets
+            ),
+            meta_analysis_runs=tuple(
+                {
+                    "id": str(item.id),
+                    "specification_version_id": str(item.specification_version_id),
+                    "analysis_set_id": str(item.analysis_set_id),
+                    "status": item.status,
+                    "algorithm_name": item.algorithm_name,
+                    "algorithm_version": item.algorithm_version,
+                    "provider": item.provider,
+                    "provider_version": item.provider_version,
+                    "input_hash": item.input_hash,
+                    "result_hash": item.result_hash,
+                    "result": item.result,
+                    "diagnostics": item.diagnostics,
+                    "failure_reason": item.failure_reason,
+                }
+                for item in analysis_runs
+            ),
+            analysis_study_weights=tuple(
+                {
+                    "run_id": str(item.run_id),
+                    "study_id": str(item.study_id),
+                    "estimate_id": str(item.estimate_id),
+                    "analysis_estimate": str(item.analysis_estimate),
+                    "presentation_estimate": str(item.presentation_estimate),
+                    "ci_lower": str(item.ci_lower),
+                    "ci_upper": str(item.ci_upper),
+                    "raw_weight": str(item.raw_weight),
+                    "normalized_weight_percent": str(item.normalized_weight_percent),
+                }
+                for item in analysis_weights
+            ),
+            analysis_sensitivities=tuple(
+                {
+                    "run_id": str(item.run_id),
+                    "omitted_study_id": str(item.omitted_study_id),
+                    "omitted_estimate_id": str(item.omitted_estimate_id),
+                    "result": item.result,
+                    "result_hash": item.result_hash,
+                }
+                for item in analysis_sensitivities
+            ),
+            analysis_artifacts=tuple(
+                {
+                    "id": str(item.id),
+                    "run_id": str(item.run_id),
+                    "artifact_type": item.artifact_type,
+                    "renderer_version": item.renderer_version,
+                    "media_type": item.media_type,
+                    "filename": item.filename,
+                    "sha256": item.sha256,
+                    "byte_size": item.byte_size,
+                }
+                for item in analysis_artifacts
             ),
         )
 

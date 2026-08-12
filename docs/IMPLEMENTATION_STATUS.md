@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 
 ## Status by milestone
 
@@ -26,17 +26,19 @@ Last updated: 2026-08-11
 | Search Execution + Identification-Source Provenance (Phase 17) | VERIFIED | Structured source classes, immutable repeated/corrected executions, exact query/provider/method/status history, citation-import discovery links, raw artifact integrity, deterministic PRISMA grouping, versioned export documentation, and minimal Search UI pass. |
 | Risk of Bias Foundation (Phase 18) | VERIFIED | Versioned declarative instruments, Study-design validation, Study Family evidence, independent blind assessments, deterministic conflict detection, immutable corrections/adjudication, export schema v3, and minimal RoB UI pass. |
 | Outcome + Effect-Estimate Harmonization (Phase 19) | VERIFIED | Versioned canonical outcomes, explicit extraction mappings, review-specific timepoint/unit/scale configuration, structured reported/derived estimates, deterministic RR/OR/RD/MD calculations, zero-event safeguards, synthesis-candidate readiness, export schema v4, and minimal Outcomes workspace pass. |
+| Deterministic Statistical Synthesis (Phase 20) | VERIFIED | Immutable explicit analysis specifications/sets/runs, Study independence and live-readiness rechecks, inverse-variance fixed-effect and DerSimonian-Laird random-effects synthesis, structured heterogeneity/weights/diagnostics, leave-one-out sensitivity, deterministic SVG forest artifacts, export schema v5, and minimal Analysis workspace pass. |
 
 ## Validation evidence
 
-- Backend: Ruff lint and format checks, strict mypy, and pytest pass: 162 tests, 93.83% coverage (configured threshold: 85%).
-- Frontend: ESLint, TypeScript, Vitest (8 tests), and the Next.js 16 production build pass. Dynamic routes include Search, Reports/Exports, Risk of Bias, Outcomes, and the authenticated artifact-download proxy.
-- Alembic is linear through `20260811_0020`. A temporary SQLite database upgrades from foundation through Outcome Harmonization and downgrades fully to base.
+- Backend: Ruff lint and format checks, strict mypy, and pytest pass: 183 tests, 93.91% coverage (configured threshold: 85%).
+- Frontend: ESLint, TypeScript, Vitest (9 tests), and the Next.js 16 production build pass. Dynamic routes include Search, Reports/Exports, Risk of Bias, Outcomes, Analysis, and authenticated export/analysis-artifact download proxies.
+- Alembic is linear through `20260812_0021`. A temporary SQLite database upgrades from foundation through Statistical Synthesis and downgrades fully to base.
 - Focused PRISMA tests cover record/report/Study distinctions, confirmed-duplicate counting, title/full-text completeness, retrieval state, Study Family counting, structured exclusion reasons, stable source references, immutable snapshots, role restrictions, and tenant non-enumeration.
 - Focused export tests cover deterministic byte rendering, CSV formula neutralization, portable XLSX archive structure, JSON/RIS output, all download formats, manifests, checksums, preservation of prior artifacts, provenance/audit, and tenant authorization.
 - Focused Search Execution tests cover structured PRISMA source groups, exact query and strategy/translation retention, repeated searches and corrections, status events, provider/import reconciliation, multi-source discovery, citation-source linkage, raw artifact integrity, stable exports, role restrictions, cross-review linking, and cross-tenant non-enumeration.
 - Focused Risk of Bias tests cover declarative ordering/rules, answer-choice validation, Study-design compatibility, assessor blindness, structured disagreement, submitted-record immutability, adjudication, Study Family evidence spanning multiple Articles, unrelated-Study evidence rejection, audit/provenance, export ordering, role restrictions, and tenant/review non-enumeration.
 - Focused Outcome Harmonization tests cover immutable versions, explicit mapping, original-value retention, review-scoped time windows, context-safe unit conversion, direction transformations, RR/OR/RD/MD formulae, defined decimal precision, zero-event behavior, verified-source requirements, duplicate-Study detection, adjusted/population compatibility, deterministic export ordering, and tenant/review non-enumeration.
+- Focused Statistical Synthesis tests cover independent golden fixed/random calculations, explicit transformations and confidence methods, Study weights, Q/Q p-value/I-squared/tau-squared, prediction diagnostics, leave-one-out sensitivity, Study independence, current READY enforcement, live staleness rechecks, failure-safe edge cases, immutable/checksummed forest artifacts, export schema v5, centralized roles, and tenant/review/direct-ID non-enumeration.
 
 ## Environment-blocked validation
 
@@ -59,6 +61,8 @@ Last updated: 2026-08-11
 - MEDIUM resolved: month/year durations are preserved but are not converted through a universal average; only days/weeks normalize intrinsically, and calendar-unit harmonization requires an explicit review-specific rule.
 - MEDIUM resolved: reported estimates with adequate uncertainty are not rejected solely for missing arm sizes; derived estimates retain structured components, provenance, and measure-appropriate variance scales.
 - MEDIUM resolved: synthesis readiness detects incompatible outcomes/timepoints/units/scales, unverified extraction, duplicate Study estimates, adjustment/population mismatches, and zero-event policy needs without performing statistical pooling.
+- MEDIUM resolved: AnalysisSet creation now requires a current Phase 19 READY evaluation and then independently rechecks the selected live estimates; execution repeats that check and compares the canonical input hash, preventing stale-ready reuse.
+- MEDIUM resolved: completed/failed statistical runs and result children are immutable, every consequential method is explicit, ratio measures use a versioned log transform, no continuity correction is hidden, and unsupported dependent multi-arm/cluster/crossover inputs block safely.
 - MEDIUM resolved: all read-maximum-plus-one allocators now use scoped database uniqueness and bounded savepoint retries; PostgreSQL remains the production concurrency validation target.
 - LOW: worker dispatch remains a lifecycle shell. Phase 11 keeps processing synchronous behind a parser/service boundary; durable claiming and retries remain deferred.
 - Unblinded screening remains rejected until an explicit reveal policy exists.
@@ -66,8 +70,8 @@ Last updated: 2026-08-11
 
 ## Deferred and planned
 
-- Recommended next phase: Phase 20 Meta-Analysis Engine, separately scoped and explicitly approved before implementation. It should consume only READY, immutable synthesis-candidate snapshots; define fixed/random-effects estimators, heterogeneity and zero-event policies, Study-level selection, numerical validation against a trusted reference, and deterministic forest-plot/report artifacts.
-- Meta-analysis implementation, GRADE/certainty, mature report authoring, paid AI providers, and real external scholarly APIs remain out of scope until separately authorized.
+- Recommended next phase: Phase 21 GRADE/Certainty Foundation, separately scoped and explicitly approved before implementation. It should attach versioned, structured human certainty judgments to immutable Phase 20 runs and preserve explicit RoB, inconsistency, indirectness, imprecision, and publication-bias rationale/evidence without recalculating synthesis results.
+- Advanced estimators/dependency policies, general subgroup inference, meta-regression, publication-bias inference, network meta-analysis, mature report authoring, paid AI providers, and real external scholarly APIs remain out of scope until separately authorized.
 - GROBID live deployment, ASReview, external scholarly APIs, R/metafor, paid AI providers, production identity, and cloud object storage remain deferred.
 
 ## Architecture decisions
@@ -81,6 +85,7 @@ Last updated: 2026-08-11
 - Search design remains separate from append-only SearchExecution history; source classifications are structured, citation discovery links survive deduplication, and PRISMA identification counts derive only from eligible completed execution links.
 - Risk of Bias instruments are declarative immutable versions; assessments apply to Studies, reuse Document evidence locations across Study Families, remain assessor-owned until authorized reveal, and preserve original submissions through append-only comparison/adjudication history.
 - Outcome definitions are immutable scientific versions; mappings preserve reported values and timing, conversions require structured review-specific rules, effect derivations retain components and formula versions, and candidate readiness snapshots never perform pooling.
+- Analysis specifications, sets, terminal runs, weights, sensitivities, and artifacts are immutable scientific records; the provider-neutral synthesis engine consumes only canonical revalidated inputs, and forest rendering is separate from statistical calculation.
 - Tenant actor context is resolved from active database membership on every request; storage keys never substitute for authorization.
 
-See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [ADR-016](adr/ADR-016-search-execution-identification-provenance.md), [ADR-017](adr/ADR-017-versioned-risk-of-bias-assessments.md), [ADR-018](adr/ADR-018-outcome-effect-harmonization-readiness.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).
+See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [ADR-016](adr/ADR-016-search-execution-identification-provenance.md), [ADR-017](adr/ADR-017-versioned-risk-of-bias-assessments.md), [ADR-018](adr/ADR-018-outcome-effect-harmonization-readiness.md), [ADR-019](adr/ADR-019-deterministic-statistical-synthesis.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).

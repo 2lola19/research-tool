@@ -12,6 +12,16 @@ RR/OR/RD/MD calculations never accept an arbitrary continuity correction. Reads 
 ordering. Mutations require centralized outcome/harmonization/synthesis permissions and use the
 existing provenance/audit ledgers. No endpoint performs pooled analysis.
 
+## Deterministic statistical synthesis
+
+Authenticated Review-scoped `/api/v1/analysis` endpoints create logical specifications and immutable
+versions, materialize explicitly selected AnalysisSets from Phase 19 candidates, execute immutable
+runs, list workspace history/staleness, generate SVG forest artifacts, and authorize artifact
+downloads. Execution accepts only a persisted AnalysisSet; it rechecks live scientific readiness and
+never accepts transient estimates or method flags. Responses contain structured result,
+heterogeneity, weights, leave-one-out sensitivity, diagnostics, provider/algorithm versions, and
+input/result hashes. The download proxy keeps bearer credentials server-side.
+
 | Service | Purpose | Required stage | Providers | Credentials | Free/open alternative | Current mock | Status |
 |---|---|---|---|---|---|---|---|
 | AI inference | Screening, extraction, adjudication assistance | Screening onward | OpenAI, Anthropic, Gemini | Provider API key | Local models where validated | `MockAIProvider` | Mock interface only; real providers deferred |
@@ -20,7 +30,7 @@ existing provenance/audit ledgers. No endpoint performs pooled analysis.
 | Object storage | Durable document storage | Document management | S3-compatible providers | Access key/secret/role | Local filesystem | `LocalFileStorageProvider` | Local-first foundation implemented; S3 adapter deferred |
 | Notifications | Human checkpoints and job failures | Workflow | Email providers | Provider credentials | Console/mock notifications | Mock planned | Deferred to Phase 4 |
 | Durable orchestration | Retries, timers, checkpoints | Workflow | Temporal self-hosted/cloud | None locally; cloud credentials later | Local PostgreSQL-backed adapter | Contract created | Evaluate in Phase 4 |
-| Statistical service | Deterministic meta-analysis | Analysis | R service with metafor | None | Local R container | Interface planned | Deferred to Phase 20 |
+| Statistical service | Deterministic meta-analysis | Analysis | Isolated R service with metafor | None | Versioned native deterministic engine | `StatisticalSynthesisEngine` | Native fixed/DL foundation implemented; metafor service deferred |
 | Production identity | User authentication and enterprise federation | Production hardening | Standards-based OIDC provider | OIDC client credentials/metadata | Local scrypt + signed-token provider | `AuthenticationProvider` + local implementation | Provider selection deferred; local provider complete |
 
 ## Implemented scientific endpoints

@@ -110,6 +110,12 @@ class ExportDataset:
     effect_estimates: tuple[dict[str, Any], ...]
     synthesis_candidate_sets: tuple[dict[str, Any], ...]
     analysis_readiness: tuple[dict[str, Any], ...]
+    analysis_specification_versions: tuple[dict[str, Any], ...]
+    analysis_sets: tuple[dict[str, Any], ...]
+    meta_analysis_runs: tuple[dict[str, Any], ...]
+    analysis_study_weights: tuple[dict[str, Any], ...]
+    analysis_sensitivities: tuple[dict[str, Any], ...]
+    analysis_artifacts: tuple[dict[str, Any], ...]
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  getAnalysisWorkspace,
   getBackendHealth,
   getOutcomeWorkspace,
   getReviewProjects,
@@ -8,6 +9,40 @@ import {
   getRiskOfBiasWorkspace,
   getSearchDocumentation,
 } from "./api";
+
+describe("getAnalysisWorkspace", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("loads immutable specifications, sets, runs, and artifacts", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          specifications: [{ id: "specification-1", versions: [{ id: "version-1" }] }],
+          analysis_sets: [{ id: "set-1", input_hash: "input-hash" }],
+          runs: [{ id: "run-1", status: "COMPLETED", stale: false }],
+          artifacts: [{ id: "artifact-1", run_id: "run-1" }],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getAnalysisWorkspace("signed-token", "organization-1", "review-1");
+
+    expect(result.status).toBe("ready");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/api/v1/analysis/reviews/review-1",
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({ "X-Organization-ID": "organization-1" }),
+      }),
+    );
+    expect(result.analysisSets[0]?.id).toBe("set-1");
+    expect(result.runs[0]?.stale).toBe(false);
+  });
+});
 
 describe("getBackendHealth", () => {
   afterEach(() => {

@@ -39,6 +39,8 @@ class Permission(StrEnum):
     MANAGE_OUTCOMES = "manage_outcomes"
     HARMONIZE_OUTCOMES = "harmonize_outcomes"
     PREPARE_SYNTHESIS = "prepare_synthesis"
+    MANAGE_ANALYSIS = "manage_analysis"
+    RUN_ANALYSIS = "run_analysis"
     EXPORT_REVIEW = "export_review"
 
 
@@ -68,6 +70,8 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_OUTCOMES,
             Permission.HARMONIZE_OUTCOMES,
             Permission.PREPARE_SYNTHESIS,
+            Permission.MANAGE_ANALYSIS,
+            Permission.RUN_ANALYSIS,
             Permission.EXPORT_REVIEW,
         }
     ),
@@ -93,6 +97,8 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.MANAGE_OUTCOMES,
             Permission.HARMONIZE_OUTCOMES,
             Permission.PREPARE_SYNTHESIS,
+            Permission.MANAGE_ANALYSIS,
+            Permission.RUN_ANALYSIS,
         }
     ),
     OrganizationRole.VIEWER: frozenset(),

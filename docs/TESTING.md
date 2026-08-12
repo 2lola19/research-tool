@@ -57,3 +57,15 @@ extraction linkage, explicit time anchors/windows, immutable mappings, derived p
 readiness, duplicate-Study protection, cross-review selection rejection, role/tenant isolation,
 deterministic `review-export-4` JSON/XLSX sections, and the full `20260811_0020` SQLite
 upgrade/downgrade chain. PostgreSQL-specific execution remains environment-blocked.
+
+Statistical synthesis tests isolate the native engine from HTTP/database code and use a documented
+golden fixture with independently derived fixed-effect and DerSimonian-Laird results. Assertions use
+explicit tolerances for pooled estimates, normal confidence intervals, model weights, Q, Q p-value,
+I-squared, tau-squared/tau, log/back-transformation, prediction intervals, and leave-one-out runs.
+Edge tests cover one/two Studies, duplicate Study identity, non-positive/near-zero/large variance,
+extreme effects and weights, missing variance, invalid confidence/model/transform combinations,
+zero/double-zero policies, adjusted/population mismatch, unsupported multi-arm/cluster/crossover
+dependencies, and stale inputs. The synthetic integration review flows from verified extraction
+through harmonization/readiness into a persisted specification, set, run, export, forest artifact,
+audit/provenance, and tenant/direct-ID isolation. Migration tests cover `20260812_0021` upgrade and
+full downgrade; PostgreSQL-specific execution remains environment-blocked.

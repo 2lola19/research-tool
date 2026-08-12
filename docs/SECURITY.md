@@ -42,3 +42,12 @@ candidate estimates to the same tenant/review. Effect evidence must resolve thro
 target Study Family. Foreign and cross-review identifiers return not-found semantics, viewers cannot
 mutate, and scientific history is append-only. Context-keyed unit conversion prevents a generic unit
 rule from crossing analytes or dimensions.
+
+Statistical synthesis uses centralized `MANAGE_ANALYSIS` and `RUN_ANALYSIS` permissions. Owner,
+Administrator, assigned Lead Reviewer, and assigned Statistician may configure/run; all reads still
+require active Review access. Every specification, set, selected estimate, run, weight, sensitivity
+result, and artifact lookup repeats Organization and Review scope, with composite foreign keys as a
+second boundary. Cross-review candidate/estimate IDs and foreign direct IDs return not-found
+semantics. Forest bytes are resolved only after Review authorization and are served through an
+authenticated server proxy. Terminal records are immutable and artifact checksums are verified
+before use; no statistical provider receives tenant credentials or direct database authority.

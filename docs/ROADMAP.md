@@ -19,7 +19,14 @@
 17. **Search execution and identification-source provenance (implemented):** structured source classes, immutable repeated executions, exact query/provider/method/status history, import discovery links, raw artifacts, deterministic PRISMA grouping, and search documentation exports/UI.
 18. **Risk of Bias foundation (verified):** versioned declarative instruments, Study-design compatibility, multi-Article evidence, independent blind assessments, deterministic disagreement, human adjudication, and reproducible exports.
 19. **Outcome/effect-estimate harmonization (verified):** versioned outcomes, explicit extraction mappings, Review-specific timepoints/units/scales, structured reported/derived effects, immutable candidate sets, and deterministic readiness without pooling.
-20. **Meta-analysis engine (recommended; not started):** explicit analysis policy, validated fixed/random-effects models, heterogeneity, prediction intervals, sensitivity/subgroup handling, and reproducible forest-plot data built only from READY candidate sets.
-21. **Later scientific engines (deferred):** certainty/GRADE and mature reporting.
+20. **Deterministic meta-analysis foundation (implemented):** versioned explicit specifications,
+    revalidated Study-independent sets, fixed-effect and DerSimonian-Laird random-effects synthesis,
+    heterogeneity/prediction diagnostics, leave-one-out sensitivity, and reproducible SVG artifacts.
+21. **GRADE/certainty foundation (recommended; not started):** structured versioned certainty
+    criteria linked to immutable synthesis runs, RoB, inconsistency, indirectness, imprecision, and
+    publication-bias judgments with independent human review. It must not silently reinterpret or
+    recalculate Phase 20 results.
+22. **Advanced analysis/reporting (deferred):** additional estimators, dependency policies,
+    subgroups, meta-regression, publication-bias inference, network meta-analysis, and mature reports.
 
 Each milestone must meet the definition of done in the master specification before progression.

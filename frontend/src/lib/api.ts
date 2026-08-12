@@ -577,3 +577,148 @@ export async function getOutcomeWorkspace(
     };
   }
 }
+
+export type AnalysisSpecificationVersion = {
+  id: string;
+  version: number;
+  content_hash: string;
+  definition: {
+    outcome_version_id: string;
+    timepoint_window_id: string | null;
+    synthesis_population: string;
+    intervention: string;
+    comparator: string;
+    effect_measure: string;
+    model: string;
+    heterogeneity_estimator: string;
+    confidence_level: string;
+    transformation: string;
+    zero_event_policy: string;
+    adjustment_policy: string;
+    analysis_population: string;
+    minimum_studies: number;
+    prediction_interval: boolean;
+  };
+};
+
+export type AnalysisSpecification = {
+  id: string;
+  key: string;
+  versions: AnalysisSpecificationVersion[];
+};
+
+export type StatisticalAnalysisSet = {
+  id: string;
+  specification_version_id: string;
+  candidate_set_id: string;
+  included_estimate_ids: string[];
+  excluded_estimates: Array<{ estimate_id: string; code: string }>;
+  input_hash: string;
+};
+
+export type MetaAnalysisRun = {
+  id: string;
+  specification_version_id: string;
+  analysis_set_id: string;
+  status: "PLANNED" | "RUNNING" | "COMPLETED" | "FAILED";
+  algorithm_name: string;
+  algorithm_version: string;
+  provider: string;
+  input_hash: string;
+  result_hash: string | null;
+  result: {
+    presentation_estimate: string;
+    presentation_ci_lower: string;
+    presentation_ci_upper: string;
+    number_of_studies: number;
+    model: string;
+    estimator: string;
+    heterogeneity: {
+      q: string;
+      degrees_of_freedom: number;
+      q_p_value: string;
+      tau_squared: string;
+      i_squared_percent: string;
+    };
+    weights: Array<{
+      study_id: string;
+      estimate_id: string;
+      analysis_estimate: string;
+      normalized_weight_percent: string;
+    }>;
+    sensitivity: Array<{
+      omitted_study_id: string;
+      presentation_estimate: string;
+      presentation_ci_lower: string;
+      presentation_ci_upper: string;
+    }>;
+  } | null;
+  diagnostics: Array<{ code: string; level: string; message: string }>;
+  failure_reason: string | null;
+  stale: boolean;
+};
+
+export type AnalysisArtifact = {
+  id: string;
+  run_id: string;
+  artifact_type: string;
+  renderer_version: string;
+  filename: string;
+  sha256: string;
+  byte_size: number;
+};
+
+export type AnalysisWorkspaceResult =
+  | {
+      status: "ready";
+      specifications: AnalysisSpecification[];
+      analysisSets: StatisticalAnalysisSet[];
+      runs: MetaAnalysisRun[];
+      artifacts: AnalysisArtifact[];
+    }
+  | {
+      status: "unauthorized" | "unavailable";
+      specifications: [];
+      analysisSets: [];
+      runs: [];
+      artifacts: [];
+    };
+
+export async function getAnalysisWorkspace(
+  accessToken: string,
+  organizationId: string,
+  reviewId: string,
+): Promise<AnalysisWorkspaceResult> {
+  const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8000";
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/v1/analysis/reviews/${reviewId}`, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        "X-Organization-ID": organizationId,
+      },
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { status: "unauthorized", specifications: [], analysisSets: [], runs: [], artifacts: [] };
+    }
+    if (!response.ok) {
+      return { status: "unavailable", specifications: [], analysisSets: [], runs: [], artifacts: [] };
+    }
+    const payload = (await response.json()) as {
+      specifications: AnalysisSpecification[];
+      analysis_sets: StatisticalAnalysisSet[];
+      runs: MetaAnalysisRun[];
+      artifacts: AnalysisArtifact[];
+    };
+    return {
+      status: "ready",
+      specifications: payload.specifications,
+      analysisSets: payload.analysis_sets,
+      runs: payload.runs,
+      artifacts: payload.artifacts,
+    };
+  } catch {
+    return { status: "unavailable", specifications: [], analysisSets: [], runs: [], artifacts: [] };
+  }
+}
