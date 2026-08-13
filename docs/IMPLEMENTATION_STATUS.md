@@ -29,6 +29,8 @@ Last updated: 2026-08-12
 | Deterministic Statistical Synthesis (Phase 20) | VERIFIED | Immutable explicit analysis specifications/sets/runs, Study independence and live-readiness rechecks, inverse-variance fixed-effect and DerSimonian-Laird random-effects synthesis, structured heterogeneity/weights/diagnostics, leave-one-out sensitivity, deterministic SVG forest artifacts, export schema v5, and minimal Analysis workspace pass. |
 | GRADE / Certainty-of-Evidence Foundation (Phase 21) | VERIFIED | Versioned human-first certainty frameworks and thresholds, outcome/evidence-body assessments, explicit downgrade/upgrade judgments, deterministic candidates, independent blinded review/reveal, immutable revisions, adjudication, RoB/analysis evidence hashes and staleness, Evidence Profiles, Summary-of-Findings rows, export schema v6, and minimal Certainty workspace pass. |
 
+| Summary Findings + Reproducibility Reporting (Phase 22) | IMPLEMENTED | Deterministic report specifications/readiness, immutable report snapshots/artifacts, scientific-content hashes, structured JSON/HTML/XLSX, validated reproducibility ZIPs, and reporting workspace foundation. |
+
 ## Validation evidence
 
 - Backend: Ruff lint and format checks and strict mypy pass; pytest passes 190 tests at 93.54% coverage (configured threshold: 85%).
@@ -89,3 +91,23 @@ Last updated: 2026-08-12
 - Tenant actor context is resolved from active database membership on every request; storage keys never substitute for authorization.
 
 See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [ADR-016](adr/ADR-016-search-execution-identification-provenance.md), [ADR-017](adr/ADR-017-versioned-risk-of-bias-assessments.md), [ADR-018](adr/ADR-018-outcome-effect-harmonization-readiness.md), [ADR-019](adr/ADR-019-deterministic-statistical-synthesis.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).
+
+## Phase 22 reporting and reproducibility foundation
+
+Phase 22 adds a deterministic reporting layer over canonical Review state. Versioned `ReportSpecification`
+records request explicit report types/sections/formats; immutable `ReportSnapshot` records source references,
+source hashes, renderer version, and scientific-content hash; `ReportArtifact` stores exact JSON, HTML, XLSX,
+and reproducibility-ZIP bytes with independent file checksums. Reporting readiness is report-type-specific and
+supports explicitly labelled drafts. Report generation never recalculates PRISMA, Risk of Bias, certainty, or
+meta-analysis results.
+
+The reproducibility package validator checks deterministic relative paths, manifest schema, per-file SHA-256
+checksums, package hash, and source identity without database mutation. Structured scientific records are
+included; full-text binaries, raw provider bytes, secrets, environment files, storage keys, and runtime files
+are excluded by default. Scientific staleness hashes cover canonical upstream scientific tables only; generated
+provenance, exports, UI metadata, and report artifacts do not make an otherwise unchanged report stale.
+
+A dedicated reporting workspace supports readiness, report type, package preview, generation, current/stale
+status, checksum metadata, and authenticated downloads. Phase 22 is not a mature manuscript authoring system;
+AI writing, living-review automation, PDF/DOCX, restricted document redistribution, and provider execution remain
+deferred.

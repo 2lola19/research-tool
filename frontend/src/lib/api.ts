@@ -885,3 +885,52 @@ export async function getCertaintyWorkspace(
     return { status: "unavailable", ...empty };
   }
 }
+export type ReportingWorkspaceResult = {
+  status: "ready" | "unauthorized" | "unavailable";
+  snapshots: Array<{
+    snapshot: {
+      id: string;
+      status: string;
+      scientific_content_hash: string | null;
+      renderer_version: string;
+      created_at: string;
+    };
+    currency: "CURRENT" | "STALE";
+    stale_reasons: Array<{ code: string; source: string }>;
+    artifacts: Array<{
+      id: string;
+      format: "JSON" | "HTML" | "XLSX" | "ZIP";
+      filename: string;
+      sha256: string;
+      byte_size: number;
+    }>;
+  }>;
+};
+
+export async function getReportingWorkspace(
+  accessToken: string,
+  organizationId: string,
+  reviewId: string,
+): Promise<ReportingWorkspaceResult> {
+  try {
+    const response = await fetch(
+      (process.env.API_BASE_URL ?? "http://localhost:8000") +
+        "/api/v1/reporting/reviews/" + reviewId + "/snapshots",
+      {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer " + accessToken,
+          "X-Organization-ID": organizationId,
+        },
+      },
+    );
+    if (response.status === 401 || response.status === 403) {
+      return { status: "unauthorized", snapshots: [] };
+    }
+    if (!response.ok) return { status: "unavailable", snapshots: [] };
+    return { status: "ready", snapshots: await response.json() };
+  } catch {
+    return { status: "unavailable", snapshots: [] };
+  }
+}

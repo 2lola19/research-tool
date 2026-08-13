@@ -45,6 +45,7 @@ class Permission(StrEnum):
     ASSESS_CERTAINTY = "assess_certainty"
     ADJUDICATE_CERTAINTY = "adjudicate_certainty"
     EXPORT_REVIEW = "export_review"
+    GENERATE_REPORT = "generate_report"
 
 
 ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
@@ -79,6 +80,7 @@ ROLE_PERMISSIONS: dict[OrganizationRole, frozenset[Permission]] = {
             Permission.ASSESS_CERTAINTY,
             Permission.ADJUDICATE_CERTAINTY,
             Permission.EXPORT_REVIEW,
+            Permission.GENERATE_REPORT,
         }
     ),
     OrganizationRole.REVIEWER: frozenset(

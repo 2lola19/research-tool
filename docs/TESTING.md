@@ -69,3 +69,23 @@ dependencies, and stale inputs. The synthetic integration review flows from veri
 through harmonization/readiness into a persisted specification, set, run, export, forest artifact,
 audit/provenance, and tenant/direct-ID isolation. Migration tests cover `20260812_0021` upgrade and
 full downgrade; PostgreSQL-specific execution remains environment-blocked.
+
+## Phase 22 reporting and reproducibility foundation
+
+Phase 22 adds a deterministic reporting layer over canonical Review state. Versioned `ReportSpecification`
+records request explicit report types/sections/formats; immutable `ReportSnapshot` records source references,
+source hashes, renderer version, and scientific-content hash; `ReportArtifact` stores exact JSON, HTML, XLSX,
+and reproducibility-ZIP bytes with independent file checksums. Reporting readiness is report-type-specific and
+supports explicitly labelled drafts. Report generation never recalculates PRISMA, Risk of Bias, certainty, or
+meta-analysis results.
+
+The reproducibility package validator checks deterministic relative paths, manifest schema, per-file SHA-256
+checksums, package hash, and source identity without database mutation. Structured scientific records are
+included; full-text binaries, raw provider bytes, secrets, environment files, storage keys, and runtime files
+are excluded by default. Scientific staleness hashes cover canonical upstream scientific tables only; generated
+provenance, exports, UI metadata, and report artifacts do not make an otherwise unchanged report stale.
+
+A dedicated reporting workspace supports readiness, report type, package preview, generation, current/stale
+status, checksum metadata, and authenticated downloads. Phase 22 is not a mature manuscript authoring system;
+AI writing, living-review automation, PDF/DOCX, restricted document redistribution, and provider execution remain
+deferred.

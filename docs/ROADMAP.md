@@ -26,7 +26,28 @@
     outcome/evidence-body scoped assessments, explicit downgrade/upgrade judgments, deterministic
     candidates, independent blind review and adjudication, immutable revisions, RoB/analysis
     evidence hashes and staleness, Evidence Profiles, Summary-of-Findings rows, exports, and UI.
-22. **Advanced analysis/reporting (deferred):** additional estimators, dependency policies,
+22. **Summary findings and reproducibility reporting (implemented):** deterministic report snapshots, readiness profiles, structured Evidence Profile/SoF consumption, checksummed JSON/HTML/XLSX, validated reproducibility packages, and minimal reporting UI.
+23. **Advanced analysis/reporting (deferred):** additional estimators, dependency policies,
     subgroups, meta-regression, publication-bias inference, network meta-analysis, and mature reports.
 
 Each milestone must meet the definition of done in the master specification before progression.
+
+## Phase 22 reporting and reproducibility foundation
+
+Phase 22 adds a deterministic reporting layer over canonical Review state. Versioned `ReportSpecification`
+records request explicit report types/sections/formats; immutable `ReportSnapshot` records source references,
+source hashes, renderer version, and scientific-content hash; `ReportArtifact` stores exact JSON, HTML, XLSX,
+and reproducibility-ZIP bytes with independent file checksums. Reporting readiness is report-type-specific and
+supports explicitly labelled drafts. Report generation never recalculates PRISMA, Risk of Bias, certainty, or
+meta-analysis results.
+
+The reproducibility package validator checks deterministic relative paths, manifest schema, per-file SHA-256
+checksums, package hash, and source identity without database mutation. Structured scientific records are
+included; full-text binaries, raw provider bytes, secrets, environment files, storage keys, and runtime files
+are excluded by default. Scientific staleness hashes cover canonical upstream scientific tables only; generated
+provenance, exports, UI metadata, and report artifacts do not make an otherwise unchanged report stale.
+
+A dedicated reporting workspace supports readiness, report type, package preview, generation, current/stale
+status, checksum metadata, and authenticated downloads. Phase 22 is not a mature manuscript authoring system;
+AI writing, living-review automation, PDF/DOCX, restricted document redistribution, and provider execution remain
+deferred.

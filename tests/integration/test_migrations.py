@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260812_0022",)
+    assert version == ("20260813_0023",)
     assert {
         "users",
         "organizations",
@@ -121,6 +121,9 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "certainty_domain_judgments",
         "certainty_comparisons",
         "summary_of_findings_snapshots",
+        "report_specifications",
+        "report_snapshots",
+        "report_artifacts",
     } <= tables
 
     downgrade = subprocess.run(
@@ -152,3 +155,6 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert "meta_analysis_runs" not in remaining_tables
     assert "certainty_assessments" not in remaining_tables
     assert "summary_of_findings_snapshots" not in remaining_tables
+    assert "report_specifications" not in remaining_tables
+    assert "report_snapshots" not in remaining_tables
+    assert "report_artifacts" not in remaining_tables
