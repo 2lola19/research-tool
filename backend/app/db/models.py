@@ -1,5 +1,14 @@
 """Import all SQLAlchemy mappings so metadata and Alembic see every table."""
 
+from backend.app.ai.persistence import (
+    AIExecutionRunRecord,
+    AIModelVersionRecord,
+    AIOutputProposalRecord,
+    AIPromptTemplateVersionRecord,
+    AIReviewDecisionRecord,
+    AIRunAttemptRecord,
+    AIValidationResultRecord,
+)
 from backend.app.analysis.persistence import (
     AnalysisArtifactRecord,
     AnalysisSetEstimateRecord,
@@ -111,7 +120,14 @@ from backend.app.workflow.persistence import (
 )
 
 __all__ = [
+    "AIExecutionRunRecord",
+    "AIModelVersionRecord",
+    "AIOutputProposalRecord",
+    "AIPromptTemplateVersionRecord",
+    "AIReviewDecisionRecord",
+    "AIRunAttemptRecord",
     "AIRunRecord",
+    "AIValidationResultRecord",
     "AnalysisArtifactRecord",
     "AnalysisReadinessSnapshotRecord",
     "AnalysisSetEstimateRecord",

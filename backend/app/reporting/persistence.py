@@ -218,7 +218,13 @@ class SqlAlchemyReportingRepository:
             created_at=row.created_at,
         )
         dataset = await SqlAlchemyExportRepository(self._session).build_dataset(snapshot)
-        return _dataset_payload(dataset)
+        payload = _dataset_payload(dataset)
+        from backend.app.ai.reporting import accepted_ai_provenance
+
+        payload["sections"]["provenance"] = await accepted_ai_provenance(
+            self._session, organization_id, review_id
+        )
+        return payload
 
     async def current_source_hashes(self, organization_id: UUID, review_id: UUID) -> dict[str, Any]:
         from backend.app.reporting.source_reader import read_scientific_tables, table_hashes
