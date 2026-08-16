@@ -15,3 +15,24 @@ AI is a bounded capability, never the workflow or scientific source of truth. A 
 Proposal generation is not scientific acceptance. Human decisions are append-only and idempotent. Future consequential acceptance adapters must invoke the existing domain service and attach the proposal, run, prompt, model, reviewer, and evidence chain. The Phase 23 demonstration accepts only a search-query draft and proves that no SearchStrategyVersion changes.
 
 The deterministic MockAIProvider supports known outputs, malformed outputs, timeouts, rate limits, permanent failures, retry exhaustion, usage fixtures, and abstention. Real-provider adapters are intentionally absent. AI reproducibility means preserving requested and returned model metadata, configuration, prompt, input, output, attempts, validation, and human review; it is not mathematical or bit-for-bit reproducibility.
+
+## Phase 24 governed screening assistance
+
+Phase 24 adds one governed scientific AI task: title/abstract screening suggestions. A versioned
+review policy selects `OFF`, `BLINDED_AI`, or `ASSISTED` behavior and a bounded batch size. Every
+proposal snapshots the approved protocol version and content hash, criterion hashes, citation hash,
+task-definition version, assignment, run, prompt, and model. The proposal is always separate from the
+canonical immutable screening decision.
+
+`BLINDED_AI` withholds the suggestion until the assigned reviewer records a human decision;
+`ASSISTED` permits a pre-decision view and records the access event. Post-decision reveals are
+assignment-scoped and append-only. Human disagreement categories, interaction state, audit events,
+and provenance preserve how the proposal was handled without allowing AI output to write workflow or
+scientific state.
+
+Evaluation datasets are curated reference records separate from Study, Article, and screening
+decision entities. Deterministic local metrics report coverage, confusion counts, sensitivity and
+specificity, Wilson intervals, calibration bins, threshold simulations, abstention/maybe rates, and
+high-risk false exclusions. Evaluation results and case-level error classifications are immutable.
+The Phase 24 implementation uses only the deterministic mock provider; full-text screening, paid or
+live providers, autonomous exclusion, automatic acceptance, and model training remain deferred.

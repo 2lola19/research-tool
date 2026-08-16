@@ -14,7 +14,6 @@ from backend.app.ai.domain import (
     AIRun,
     AIRunState,
     AITaskDefinition,
-    AITaskRisk,
     AITaskType,
     AIValidationStage,
     content_hash,
@@ -24,6 +23,7 @@ from backend.app.ai.domain import (
 from backend.app.ai.execution import call_with_timeout
 from backend.app.ai.persistence import SqlAlchemyAIRepository
 from backend.app.ai.provider import AIProvider, AIProviderError, ProviderRequest
+from backend.app.ai.tasks import SEARCH_QUERY_TASK, TASKS, prompt_definition
 from backend.app.core.errors import ConflictError, ResourceNotFoundError
 from backend.app.identity.domain import ActorContext, Permission
 from backend.app.identity.service import AuthorizationService
@@ -34,34 +34,6 @@ from backend.app.reviews.service import ReviewService
 VALIDATOR_VERSION = "ai-structured-validator-1"
 RETRY_POLICY_VERSION = "bounded-transient-retry-1"
 MAX_OUTPUT_BYTES = 32_768
-
-SEARCH_QUERY_TASK = AITaskDefinition(
-    key="search-query-suggestion",
-    version=1,
-    task_type=AITaskType.SEARCH_QUERY_SUGGESTION,
-    input_contract={"required": ["query", "objective"]},
-    output_schema={
-        "required": [
-            "query",
-            "rationale",
-            "evidence_references",
-            "model_reported_confidence",
-            "abstention",
-        ],
-        "allowed": [
-            "query",
-            "rationale",
-            "evidence_references",
-            "model_reported_confidence",
-            "abstention",
-        ],
-    },
-    required_capabilities=("structured_generation",),
-    risk=AITaskRisk.LOW,
-    human_review_required=True,
-    deterministic_post_processing=False,
-    retry_policy_version=RETRY_POLICY_VERSION,
-)
 
 
 class AIExecutionService:
@@ -77,8 +49,15 @@ class AIExecutionService:
         self._provenance = provenance
         self._providers = providers
 
-    async def ensure_defaults(self, actor: ActorContext) -> tuple[Any, Any]:
+    async def ensure_defaults(
+        self,
+        actor: ActorContext,
+        task_type: AITaskType = AITaskType.SEARCH_QUERY_SUGGESTION,
+    ) -> tuple[Any, Any]:
         AuthorizationService.require(actor, Permission.MANAGE_AI)
+        task = TASKS.get(task_type)
+        if task is None:
+            raise ValueError(f"AI task is not enabled: {task_type.value}")
         models = await self._repository.list_models(actor.organization_id)
         if models:
             model = models[-1]
@@ -102,23 +81,9 @@ class AIExecutionService:
                 content_hash=content_hash(definition),
             )
         prompts = await self._repository.list_prompts(actor.organization_id)
-        if prompts:
-            prompt = prompts[-1]
-        else:
-            definition = {
-                "prompt_key": "search-query-suggestion",
-                "version": 1,
-                "purpose": "Suggest a search-query refinement for explicit human review.",
-                "task_type": AITaskType.SEARCH_QUERY_SUGGESTION.value,
-                "system_instructions": "Return only the requested structured proposal. Never make or apply scientific decisions.",  # noqa: E501
-                "user_template": "Objective: {objective}\nCurrent query: {query}",
-                "output_schema": SEARCH_QUERY_TASK.output_schema,
-                "validation_requirements": {
-                    "human_review_required": True,
-                    "source_content_is_untrusted": True,
-                },
-                "status": "ACTIVE",
-            }
+        prompt = next((item for item in prompts if item.task_type is task_type), None)
+        if prompt is None:
+            definition = prompt_definition(task)
             prompt = await self._repository.create_prompt(
                 organization_id=actor.organization_id,
                 created_by_user_id=actor.user_id,
@@ -128,7 +93,10 @@ class AIExecutionService:
         return model, prompt
 
     async def registry(self, actor: ActorContext) -> dict[str, Any]:
-        model, prompt = await self.ensure_defaults(actor)
+        await self.ensure_defaults(actor, AITaskType.SEARCH_QUERY_SUGGESTION)
+        await self.ensure_defaults(actor, AITaskType.SCREENING_SUGGESTION)
+        models = await self._repository.list_models(actor.organization_id)
+        prompts = await self._repository.list_prompts(actor.organization_id)
         return {
             "providers": [
                 {
@@ -137,9 +105,9 @@ class AIExecutionService:
                     "network_required": False,
                 }
             ],
-            "models": [model],
-            "prompts": [prompt],
-            "tasks": [SEARCH_QUERY_TASK],
+            "models": models,
+            "prompts": prompts,
+            "tasks": list(TASKS.values()),
         }
 
     async def create_and_execute(
@@ -154,14 +122,17 @@ class AIExecutionService:
         maximum_attempts: int = 3,
         timeout_seconds: int = 30,
         per_run_token_ceiling: int | None = 4096,
+        target_type: str | None = None,
+        target_id: UUID | None = None,
     ) -> tuple[AIRun, AIOutputProposal | None]:
         AuthorizationService.require(actor, Permission.MANAGE_AI)
         await self._reviews.get(actor, review_id)
-        if task_type is not AITaskType.SEARCH_QUERY_SUGGESTION:
-            raise ValueError("Phase 23 executes only the search-query demonstration task")
+        task = TASKS.get(task_type)
+        if task is None:
+            raise ValueError(f"AI task is not enabled: {task_type.value}")
         if maximum_attempts < 1 or maximum_attempts > 5:
             raise ValueError("maximum attempts must be from 1 through 5")
-        model, prompt = await self.ensure_defaults(actor)
+        model, prompt = await self.ensure_defaults(actor, task_type)
         if model_version_id is not None:
             model = await self._repository.get_model(actor.organization_id, model_version_id)
         if prompt_version_id is not None:
@@ -170,8 +141,8 @@ class AIExecutionService:
             raise ResourceNotFoundError("AI model version was not found or is not allowed")
         if prompt is None or prompt.task_type is not task_type:
             raise ResourceNotFoundError("AI prompt version was not found")
-        self._validate_input(input_data)
-        sanitized = self._sanitize_input(input_data)
+        self._validate_input(input_data, task)
+        sanitized = self._sanitize_input(input_data, task)
         rendered, prompt_hash = render_prompt(prompt, sanitized)
         snapshot = {
             "variables": sanitized,
@@ -195,9 +166,9 @@ class AIExecutionService:
             organization_id=actor.organization_id,
             review_id=review_id,
             task_type=task_type.value,
-            task_definition_key=SEARCH_QUERY_TASK.key,
-            task_definition_version=SEARCH_QUERY_TASK.version,
-            output_schema_version=1,
+            task_definition_key=task.key,
+            task_definition_version=task.version,
+            output_schema_version=int(task.output_schema.get("version", 1)),
             prompt_version_id=prompt.id,
             model_version_id=model.id,
             policy_snapshot={
@@ -205,7 +176,7 @@ class AIExecutionService:
                 "maximum_attempts": maximum_attempts,
                 "timeout_seconds": timeout_seconds,
                 "per_run_token_ceiling": per_run_token_ceiling,
-                "human_review_required": True,
+                "human_review_required": task.human_review_required,
                 "allow_fallback": False,
             },
             input_snapshot=snapshot,
@@ -270,7 +241,7 @@ class AIExecutionService:
                     estimated_cost=estimate_cost(result.usage, model.pricing),
                     duration_ms=result.duration_ms,
                 )
-                errors = self._validate_output(result.output)
+                errors = self._validate_output(result.output, task, sanitized)
                 await self._repository.append_validation(
                     organization_id=actor.organization_id,
                     review_id=review_id,
@@ -294,15 +265,20 @@ class AIExecutionService:
                     )
                     return run, None
                 assert isinstance(result.output, dict)
+                evidence_references = result.output.get("evidence_references")
+                if not isinstance(evidence_references, list):
+                    evidence_references = result.output.get("evidence", [])
+                if not isinstance(evidence_references, list):
+                    evidence_references = []
                 proposal = await self._repository.create_proposal(
                     organization_id=actor.organization_id,
                     review_id=review_id,
                     ai_run_id=run.id,
                     task_type=task_type.value,
-                    target_type="SEARCH_QUERY_DRAFT",
-                    target_id=None,
+                    target_type=target_type if target_type is not None else "SEARCH_QUERY_DRAFT",
+                    target_id=target_id,
                     structured_value=result.output,
-                    evidence_references=result.output["evidence_references"],
+                    evidence_references=evidence_references,
                     model_reported_confidence=result.output["model_reported_confidence"],
                     response_hash=response_hash,
                 )
@@ -438,12 +414,16 @@ class AIExecutionService:
         return decided
 
     @staticmethod
-    def _validate_input(value: dict[str, Any]) -> None:
-        missing = [
-            key
-            for key in SEARCH_QUERY_TASK.input_contract["required"]
-            if not isinstance(value.get(key), str) or not value[key].strip()
-        ]
+    def _validate_input(value: dict[str, Any], task: AITaskDefinition = SEARCH_QUERY_TASK) -> None:
+        missing = []
+        for key in task.input_contract["required"]:
+            current = value.get(key)
+            if key in {"eligibility_criteria", "exclusion_criteria"}:
+                valid = isinstance(current, list) and bool(current)
+            else:
+                valid = isinstance(current, str) and bool(current.strip())
+            if not valid:
+                missing.append(key)
         if missing:
             raise ValueError(f"missing required AI task input: {', '.join(missing)}")
         serialized = json.dumps(value, default=str)
@@ -455,26 +435,59 @@ class AIExecutionService:
             for marker in ("api_key", "authorization: bearer", "database_url", "private key")
         ):
             raise ValueError("AI task input appears to contain a secret")
+        if task.task_type is AITaskType.SCREENING_SUGGESTION:
+            for key in ("eligibility_criteria", "exclusion_criteria"):
+                if not isinstance(value.get(key), list) or not value[key]:
+                    raise ValueError(f"{key} must be a non-empty list")
+            if value.get("abstract") is not None and not isinstance(value["abstract"], str):
+                raise ValueError("article abstract must be text or null")
 
     @staticmethod
-    def _sanitize_input(value: dict[str, Any]) -> dict[str, Any]:
-        return {"query": value["query"].strip(), "objective": value["objective"].strip()}
+    def _sanitize_input(
+        value: dict[str, Any], task: AITaskDefinition = SEARCH_QUERY_TASK
+    ) -> dict[str, Any]:
+        if task.task_type is AITaskType.SEARCH_QUERY_SUGGESTION:
+            return {"query": value["query"].strip(), "objective": value["objective"].strip()}
+        citation = value.get("citation")
+        if not isinstance(citation, dict):
+            citation = {
+                "article_id": str(value["article_id"]),
+                "title": value["title"].strip(),
+                "abstract": value.get("abstract"),
+            }
+        return {
+            "review_id": str(value["review_id"]),
+            "protocol_version_id": str(value["protocol_version_id"]),
+            "eligibility_criteria": value["eligibility_criteria"],
+            "exclusion_criteria": value["exclusion_criteria"],
+            "article_id": str(value["article_id"]),
+            "title": value["title"].strip(),
+            "abstract": value.get("abstract"),
+            "citation": citation,
+        }
 
     @staticmethod
-    def _validate_output(value: dict[str, Any] | str) -> list[dict[str, str]]:
+    def _validate_output(
+        value: dict[str, Any] | str,
+        task: AITaskDefinition = SEARCH_QUERY_TASK,
+        input_data: dict[str, Any] | None = None,
+    ) -> list[dict[str, str]]:
         if not isinstance(value, dict):
             return [
                 {"code": "INVALID_JSON_OBJECT", "message": "structured output must be an object"}
             ]
         if len(json.dumps(value, default=str).encode()) > MAX_OUTPUT_BYTES:
             return [{"code": "OUTPUT_TOO_LARGE", "message": "structured output exceeds limit"}]
-        required = set(SEARCH_QUERY_TASK.output_schema["required"])
-        allowed = set(SEARCH_QUERY_TASK.output_schema["allowed"])
+        required = set(task.output_schema["required"])
+        allowed = set(task.output_schema["allowed"])
         missing = sorted(required - value.keys())
         extra = sorted(value.keys() - allowed)
         errors = [{"code": "MISSING_FIELD", "message": key} for key in missing] + [
             {"code": "UNEXPECTED_FIELD", "message": key} for key in extra
         ]
+        if task.task_type is AITaskType.SCREENING_SUGGESTION:
+            errors.extend(AIExecutionService._validate_screening_output(value, input_data))
+            return errors
         if "evidence_references" in value and not isinstance(value["evidence_references"], list):
             errors.append(
                 {"code": "INVALID_EVIDENCE", "message": "evidence_references must be a list"}
@@ -488,12 +501,121 @@ class AIExecutionService:
             )
         confidence = value.get("model_reported_confidence")
         if confidence is not None and (
+            isinstance(confidence, bool)
+            or not isinstance(confidence, (int, float))
+            or not 0 <= confidence <= 1
+        ):
+            errors.append(
+                {
+                    "code": "INVALID_CONFIDENCE",
+                    "message": "model confidence must be from 0 through 1",
+                }
+            )
+        return errors
+
+    @staticmethod
+    def _validate_screening_output(
+        value: dict[str, Any], input_data: dict[str, Any] | None
+    ) -> list[dict[str, str]]:
+        errors: list[dict[str, str]] = []
+        suggestion = value.get("suggestion")
+        if suggestion not in {"INCLUDE", "EXCLUDE", "MAYBE", "ABSTAIN"}:
+            errors.append({"code": "INVALID_SUGGESTION", "message": "unknown screening suggestion"})
+        criterion_ids = value.get("exclusion_criterion_ids")
+        if not isinstance(criterion_ids, list) or not all(
+            isinstance(item, str) for item in criterion_ids
+        ):
+            errors.append(
+                {
+                    "code": "INVALID_CRITERIA",
+                    "message": "exclusion_criterion_ids must be a list of strings",
+                }
+            )
+        elif input_data is not None:
+            allowed_ids = {
+                str(item.get("id"))
+                for item in input_data.get("exclusion_criteria", [])
+                if isinstance(item, dict) and item.get("id") is not None
+            }
+            if any(item not in allowed_ids for item in criterion_ids):
+                errors.append(
+                    {
+                        "code": "UNKNOWN_CRITERION",
+                        "message": "output referenced an exclusion criterion not in the protocol",
+                    }
+                )
+        rationale = value.get("rationale")
+        if not isinstance(rationale, str) or not rationale.strip():
+            errors.append({"code": "INVALID_RATIONALE", "message": "rationale must be text"})
+        confidence = value.get("model_reported_confidence")
+        if confidence is not None and (
             not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1
         ):
             errors.append(
                 {
                     "code": "INVALID_CONFIDENCE",
                     "message": "model confidence must be from 0 through 1",
+                }
+            )
+        evidence = value.get("evidence")
+        if not isinstance(evidence, list):
+            errors.append({"code": "INVALID_EVIDENCE", "message": "evidence must be a list"})
+        else:
+            source = ""
+            if input_data is not None:
+                source = (
+                    f"{input_data.get('title', '')}\n{input_data.get('abstract') or ''}".casefold()
+                )
+            for item in evidence:
+                quote = (
+                    item
+                    if isinstance(item, str)
+                    else item.get("quote")
+                    if isinstance(item, dict)
+                    else None
+                )
+                if not isinstance(quote, str) or not quote.strip():
+                    errors.append(
+                        {"code": "INVALID_EVIDENCE", "message": "each evidence item needs a quote"}
+                    )
+                elif len(quote) > 500:
+                    errors.append(
+                        {
+                            "code": "EVIDENCE_TOO_LARGE",
+                            "message": "evidence quotes are limited to 500 characters",
+                        }
+                    )
+                elif input_data is not None and quote.casefold() not in source:
+                    errors.append(
+                        {
+                            "code": "EVIDENCE_NOT_IN_SOURCE",
+                            "message": (
+                                "evidence quote was not found in the supplied title or abstract"
+                            ),
+                        }
+                    )
+        uncertainty = value.get("uncertainty_reason")
+        if suggestion in {"MAYBE", "ABSTAIN"} and (
+            not isinstance(uncertainty, str) or not uncertainty.strip()
+        ):
+            errors.append(
+                {
+                    "code": "UNCERTAINTY_REASON_REQUIRED",
+                    "message": "MAYBE and ABSTAIN require an uncertainty reason",
+                }
+            )
+        if suggestion == "INCLUDE" and criterion_ids:
+            errors.append(
+                {
+                    "code": "INCLUDE_HAS_EXCLUSION_CRITERIA",
+                    "message": "INCLUDE cannot cite exclusion criteria",
+                }
+            )
+        if suggestion == "EXCLUDE" and not criterion_ids:
+            errors.append(
+                {
+                    "code": "EXCLUDE_MISSING_CRITERIA",
+                    "message": "EXCLUDE must cite at least one listed exclusion criterion",
                 }
             )
         return errors

@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: 2026-08-12
+Last updated: 2026-08-16
 
 ## Status by milestone
 
@@ -30,12 +30,14 @@ Last updated: 2026-08-12
 | GRADE / Certainty-of-Evidence Foundation (Phase 21) | VERIFIED | Versioned human-first certainty frameworks and thresholds, outcome/evidence-body assessments, explicit downgrade/upgrade judgments, deterministic candidates, independent blinded review/reveal, immutable revisions, adjudication, RoB/analysis evidence hashes and staleness, Evidence Profiles, Summary-of-Findings rows, export schema v6, and minimal Certainty workspace pass. |
 
 | Summary Findings + Reproducibility Reporting (Phase 22) | IMPLEMENTED | Deterministic report specifications/readiness, immutable report snapshots/artifacts, scientific-content hashes, structured JSON/HTML/XLSX, validated reproducibility ZIPs, and reporting workspace foundation. |
+| AI Provider Foundation (Phase 23) | VERIFIED | Provider-neutral task execution, immutable model/prompt versions, bounded runs, structured validation, append-only proposals/acceptance, deterministic mock execution, and provenance. |
+| Governed AI Screening Assistance (Phase 24) | IMPLEMENTED | Versioned screening policy, assignment-scoped title/abstract suggestions, server-enforced blinded/assisted reveal, deterministic evaluation metrics, case-level error taxonomy, migration, API, UI, provenance, audit, and tenant tests. |
 
 ## Validation evidence
 
-- Backend: Ruff lint and format checks and strict mypy pass; pytest passes 190 tests at 93.54% coverage (configured threshold: 85%).
-- Frontend: ESLint, TypeScript, Vitest (9 tests), and the Next.js 16 production build pass. Dynamic routes include Search, Reports/Exports, Risk of Bias, Outcomes, Analysis, Certainty, and authenticated export/analysis-artifact download proxies.
-- Alembic is linear through `20260812_0022`. A temporary SQLite database upgrades from foundation through the Certainty-of-Evidence foundation and downgrades fully to base.
+- Backend: repository Ruff check/format and strict mypy pass; Phase 24-focused unit and integration tests pass. The full pytest run was attempted with a repository-local temp workaround but exceeded the unelevated fallback command limit without a test failure report.
+- Frontend: TypeScript passes. ESLint, Vitest, and the Next.js 16 production build were attempted; the unelevated fallback blocked their subprocess/config work with timeout or `spawn EPERM` errors.
+- Alembic is linear through `20260815_0025`. A temporary SQLite database upgrades through Phase 24 and downgrades fully to base in the focused migration test.
 - Focused PRISMA tests cover record/report/Study distinctions, confirmed-duplicate counting, title/full-text completeness, retrieval state, Study Family counting, structured exclusion reasons, stable source references, immutable snapshots, role restrictions, and tenant non-enumeration.
 - Focused export tests cover deterministic byte rendering, CSV formula neutralization, portable XLSX archive structure, JSON/RIS output, all download formats, manifests, checksums, preservation of prior artifacts, provenance/audit, and tenant authorization.
 - Focused Search Execution tests cover structured PRISMA source groups, exact query and strategy/translation retention, repeated searches and corrections, status events, provider/import reconciliation, multi-source discovery, citation-source linkage, raw artifact integrity, stable exports, role restrictions, cross-review linking, and cross-tenant non-enumeration.
@@ -90,7 +92,7 @@ Last updated: 2026-08-12
 - Analysis specifications, sets, terminal runs, weights, sensitivities, and artifacts are immutable scientific records; the provider-neutral synthesis engine consumes only canonical revalidated inputs, and forest rendering is separate from statistical calculation.
 - Tenant actor context is resolved from active database membership on every request; storage keys never substitute for authorization.
 
-See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [ADR-016](adr/ADR-016-search-execution-identification-provenance.md), [ADR-017](adr/ADR-017-versioned-risk-of-bias-assessments.md), [ADR-018](adr/ADR-018-outcome-effect-harmonization-readiness.md), [ADR-019](adr/ADR-019-deterministic-statistical-synthesis.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).
+See [ADR-012](adr/ADR-012-concurrent-sequential-allocation.md), [ADR-013](adr/ADR-013-document-processing-and-grobid-adapter.md), [ADR-014](adr/ADR-014-study-extraction-verification.md), [ADR-015](adr/ADR-015-deterministic-prisma-and-reproducible-exports.md), [ADR-016](adr/ADR-016-search-execution-identification-provenance.md), [ADR-017](adr/ADR-017-versioned-risk-of-bias-assessments.md), [ADR-018](adr/ADR-018-outcome-effect-harmonization-readiness.md), [ADR-019](adr/ADR-019-deterministic-statistical-synthesis.md), [ADR-022](adr/ADR-022-provider-neutral-ai-execution-and-human-acceptance.md), [ADR-023](adr/ADR-023-governed-ai-screening-assistance-and-evaluation.md), [API_REQUIREMENTS.md](API_REQUIREMENTS.md), and [OPEN_SOURCE_COMPONENTS.md](OPEN_SOURCE_COMPONENTS.md).
 
 ## Phase 22 reporting and reproducibility foundation
 
@@ -123,3 +125,16 @@ Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immu
 - Frontend: ESLint PASS; TypeScript PASS; Vitest 9 PASS; Next.js 16.3 production build PASS.
 - Repository: git diff --check PASS; focused secret audit PASS.
 - Live paid AI providers and PostgreSQL remain intentionally unexecuted/environment-blocked.
+
+## Phase 24 validation (2026-08-16)
+
+- Backend: focused Ruff lint/format, Python compilation, strict mypy, unit screening tests, and the
+  assignment-scoped end-to-end screening integration test pass. The integration test covers blinded
+  withholding, post-decision reveal, evaluation dataset/result/case-result/error classification,
+  provenance/audit, and cross-tenant not-found behavior.
+- Migration/schema: the Phase 24 metadata creates nine screening tables, including assignment-level
+  proposal foreign keys; the linear `20260815_0025` upgrade/downgrade path is covered by migration
+  tests. PostgreSQL-specific execution remains environment-blocked.
+- Frontend: TypeScript passes. ESLint, Vitest, and the Next.js production build reached the local
+  toolchain but are environment-blocked by the unelevated Windows fallback (`spawn EPERM` during
+  config/test/build subprocess work); no code diagnostic was emitted by those failures.

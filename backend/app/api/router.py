@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from backend.app.api.routes.ai import router as ai_router
 from backend.app.api.routes.ai_inspection import router as ai_inspection_router
+from backend.app.api.routes.ai_screening import router as ai_screening_router
 from backend.app.api.routes.analysis import router as analysis_router
 from backend.app.api.routes.certainty import router as certainty_router
 from backend.app.api.routes.citations import router as citations_router
@@ -48,6 +49,7 @@ def build_api_router(api_prefix: str) -> APIRouter:
     router.include_router(outcomes_router, prefix=api_prefix)
     router.include_router(ai_router, prefix=api_prefix)
     router.include_router(ai_inspection_router, prefix=api_prefix)
+    router.include_router(ai_screening_router, prefix=api_prefix)
     router.include_router(analysis_router, prefix=api_prefix)
     router.include_router(certainty_router, prefix=api_prefix)
     router.include_router(prisma_router, prefix=api_prefix)

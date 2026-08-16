@@ -6,12 +6,19 @@ from uuid import UUID
 from fastapi import APIRouter, Path, status
 from pydantic import BaseModel, Field
 
+from backend.app.ai.mock_provider import DeterministicMockAIProvider
+from backend.app.ai.persistence import SqlAlchemyAIRepository
+from backend.app.ai.screening_persistence import SqlAlchemyAIScreeningRepository
+from backend.app.ai.screening_service import AIScreeningService
+from backend.app.ai.service import AIExecutionService
 from backend.app.api.dependencies import ActorContextDependency, DbSessionDependency
 from backend.app.citations.persistence import SqlAlchemyCitationRepository
 from backend.app.deduplication.persistence import SqlAlchemyDeduplicationRepository
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
+from backend.app.protocols.persistence import SqlAlchemyProtocolRepository
 from backend.app.provenance.persistence import SqlAlchemyProvenanceRepository
 from backend.app.reviews.persistence import SqlAlchemyReviewRepository
+from backend.app.reviews.service import ReviewService
 from backend.app.screening.domain import (
     ScreeningAdjudication,
     ScreeningAssignment,
@@ -197,6 +204,27 @@ def _service(session: DbSessionDependency) -> ScreeningService:
     )
 
 
+def _ai_screening_service(session: DbSessionDependency) -> AIScreeningService:
+    identity = SqlAlchemyIdentityRepository(session)
+    reviews = ReviewService(SqlAlchemyReviewRepository(session), identity)
+    provenance = SqlAlchemyProvenanceRepository(session)
+    return AIScreeningService(
+        SqlAlchemyAIScreeningRepository(session),
+        SqlAlchemyAIRepository(session),
+        SqlAlchemyScreeningRepository(session),
+        SqlAlchemyCitationRepository(session),
+        SqlAlchemyProtocolRepository(session),
+        reviews,
+        provenance,
+        AIExecutionService(
+            SqlAlchemyAIRepository(session),
+            reviews,
+            provenance,
+            {"mock": DeterministicMockAIProvider()},
+        ),
+    )
+
+
 @router.post("/rounds", response_model=RoundResponse, status_code=status.HTTP_201_CREATED)
 async def create_screening_round(
     payload: RoundRequest,
@@ -259,6 +287,7 @@ async def record_screening_decision(
         decision=payload.decision,
         exclusion_reason=payload.exclusion_reason,
     )
+    await _ai_screening_service(session).record_decision_interaction(actor, item)
     await session.commit()
     return DecisionResponse.from_domain(item)
 

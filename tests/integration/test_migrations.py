@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260814_0024",)
+    assert version == ("20260815_0025",)
     assert {
         "users",
         "organizations",
@@ -129,6 +129,15 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "ai_validation_results",
         "ai_output_proposals",
         "ai_review_decisions",
+        "ai_screening_policy_versions",
+        "ai_screening_proposal_links",
+        "ai_screening_access_events",
+        "ai_screening_decision_links",
+        "ai_screening_evaluation_datasets",
+        "ai_screening_evaluation_cases",
+        "ai_screening_evaluation_results",
+        "ai_screening_evaluation_case_results",
+        "ai_screening_error_classifications",
         "report_snapshots",
         "report_artifacts",
     } <= tables
@@ -164,5 +173,9 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert "summary_of_findings_snapshots" not in remaining_tables
     assert "report_specifications" not in remaining_tables
     assert "ai_execution_runs" not in remaining_tables
+    assert "ai_screening_policy_versions" not in remaining_tables
+    assert "ai_screening_proposal_links" not in remaining_tables
+    assert "ai_screening_evaluation_datasets" not in remaining_tables
+    assert "ai_screening_evaluation_results" not in remaining_tables
     assert "report_snapshots" not in remaining_tables
     assert "report_artifacts" not in remaining_tables

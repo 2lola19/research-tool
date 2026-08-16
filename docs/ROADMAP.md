@@ -27,8 +27,13 @@
     candidates, independent blind review and adjudication, immutable revisions, RoB/analysis
     evidence hashes and staleness, Evidence Profiles, Summary-of-Findings rows, exports, and UI.
 22. **Summary findings and reproducibility reporting (implemented):** deterministic report snapshots, readiness profiles, structured Evidence Profile/SoF consumption, checksummed JSON/HTML/XLSX, validated reproducibility packages, and minimal reporting UI.
-23. **Advanced analysis/reporting (deferred):** additional estimators, dependency policies,
-    subgroups, meta-regression, publication-bias inference, network meta-analysis, and mature reports.
+23. **AI provider foundation (implemented):** provider-neutral task execution, immutable model/prompt
+    versions, bounded runs, structured validation, human acceptance, and deterministic mock execution.
+24. **Governed AI screening assistance (implemented):** versioned policy, assignment-scoped title/abstract
+    suggestions, server-enforced blinded/assisted reveal, provenance/audit links, deterministic evaluation,
+    calibration, threshold simulation, and human error taxonomy.
+25. **Advanced analysis/reporting (deferred):** additional estimators, dependency policies, subgroups,
+    meta-regression, publication-bias inference, network meta-analysis, and mature reports.
 
 Each milestone must meet the definition of done in the master specification before progression.
 
@@ -55,3 +60,11 @@ deferred.
 ## Phase 23 AI provider foundation
 
 Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immutable model and prompt versions, bounded run/attempt lifecycles, input/prompt/response hashes, structured validation, append-only proposals and human decisions, usage/cost metadata, policy ceilings, tenant scoping, and accepted-AI provenance in reporting packages. The only executable workflow is an offline deterministic search-query draft proposal; it never mutates SearchStrategyVersion or another canonical scientific domain. Real providers, credentials, production scientific AI tasks, autonomous tools, and auto-accept remain deferred. AI provenance supports reconstruction of what was requested, returned, validated, and accepted but does not claim bit-for-bit model reproducibility.
+
+## Phase 24 governed AI screening assistance
+
+Phase 24 is the first scientific AI assistance workflow. It is deliberately limited to title/abstract
+screening suggestions under a Review policy and approved protocol. Suggestions remain proposals; human
+screening decisions remain canonical and immutable. Blinded and assisted modes, assignment-level reveal
+audits, deterministic evaluation datasets/metrics, and error classifications are implemented locally.
+Full-text assistance, production providers, autonomous decisions, and Phase 25 work remain deferred.

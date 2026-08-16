@@ -94,6 +94,16 @@ deferred.
 
 Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immutable model and prompt versions, bounded run/attempt lifecycles, input/prompt/response hashes, structured validation, append-only proposals and human decisions, usage/cost metadata, policy ceilings, tenant scoping, and accepted-AI provenance in reporting packages. The only executable workflow is an offline deterministic search-query draft proposal; it never mutates SearchStrategyVersion or another canonical scientific domain. Real providers, credentials, production scientific AI tasks, autonomous tools, and auto-accept remain deferred. AI provenance supports reconstruction of what was requested, returned, validated, and accepted but does not claim bit-for-bit model reproducibility.
 
+## Phase 24 governed AI screening assistance
+
+Unit tests cover explicit disagreement classes, conservative/strict/coverage metric behavior, Wilson
+intervals, calibration and threshold output, deterministic mock task contracts, and evidence/criterion
+validation. Integration coverage exercises approved-protocol pinning, policy modes, assignment ownership,
+blinded withholding, post-decision reveal, access/audit/provenance links, deterministic evaluation,
+case-result reads, append-only error classification, and cross-tenant direct-ID non-enumeration.
+Migration checks cover the nine Phase 24 tables and full reverse removal. Full-text, live-provider,
+PostgreSQL, and Docker execution remain intentionally outside this phase.
+
 ### Phase 23 validation (2026-08-14)
 
 - Backend: Ruff and format PASS; strict mypy PASS (185 source files); pytest 209 PASS; coverage 92.98% (threshold 85%).

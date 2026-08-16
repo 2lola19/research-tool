@@ -120,6 +120,9 @@ export default async function ReviewsPage() {
                       <Link className="hover:underline" href={"/reviews/" + project.id + "/ai"}>
                         AI
                       </Link>
+                      <Link className="hover:underline" href={"/reviews/" + project.id + "/screening-ai"}>
+                        Screening AI
+                      </Link>
                       <Link className="hover:underline" href={"/reviews/" + project.id + "/certainty"}>
                         Certainty
                       </Link>

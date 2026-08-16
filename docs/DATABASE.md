@@ -134,3 +134,18 @@ deferred.
 ## Phase 23 AI provider foundation
 
 Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immutable model and prompt versions, bounded run/attempt lifecycles, input/prompt/response hashes, structured validation, append-only proposals and human decisions, usage/cost metadata, policy ceilings, tenant scoping, and accepted-AI provenance in reporting packages. The only executable workflow is an offline deterministic search-query draft proposal; it never mutates SearchStrategyVersion or another canonical scientific domain. Real providers, credentials, production scientific AI tasks, autonomous tools, and auto-accept remain deferred. AI provenance supports reconstruction of what was requested, returned, validated, and accepted but does not claim bit-for-bit model reproducibility.
+
+## Phase 24 governed AI screening assistance
+
+Migration `20260815_0025` adds immutable, tenant- and Review-scoped policy versions, assignment-linked
+screening proposal snapshots, reveal/access events, canonical-decision links, evaluation datasets and
+cases, deterministic evaluation results and case results, and append-only error classifications. The
+proposal link repeats protocol, criterion, citation, task, assignment, run, and AI proposal identity;
+composite foreign keys prevent cross-organization and cross-Review links. Check constraints cover
+modes, reference decisions and standards, task versions, metric policy, suggestions, confidence, hashes,
+and error categories. ORM guards reject updates and deletes across the Phase 24 scientific history.
+
+Evaluation datasets retain human-curated reference decisions separately from canonical screening
+decisions and never replace Article, Study, or screening entities. Case-level results retain the exact
+proposal and metric dimensions used for deterministic evaluation. The migration is linear after
+`20260814_0024` and supports reverse removal of all Phase 24 tables.

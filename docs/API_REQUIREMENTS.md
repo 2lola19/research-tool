@@ -100,3 +100,19 @@ deferred.
 ## Phase 23 AI provider foundation
 
 Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immutable model and prompt versions, bounded run/attempt lifecycles, input/prompt/response hashes, structured validation, append-only proposals and human decisions, usage/cost metadata, policy ceilings, tenant scoping, and accepted-AI provenance in reporting packages. The only executable workflow is an offline deterministic search-query draft proposal; it never mutates SearchStrategyVersion or another canonical scientific domain. Real providers, credentials, production scientific AI tasks, autonomous tools, and auto-accept remain deferred. AI provenance supports reconstruction of what was requested, returned, validated, and accepted but does not claim bit-for-bit model reproducibility.
+
+## Phase 24 governed AI screening assistance
+
+The `/ai/screening` routes expose Review-scoped versioned policies, assignment-scoped title/abstract
+suggestion generation and reveal, curated evaluation datasets, deterministic evaluation results,
+case-result reads, and append-only error classifications. `BLINDED_AI` keeps model output hidden until
+the assigned reviewer has recorded the canonical screening decision; `ASSISTED` records a pre-decision
+access event. Every suggestion requires an approved protocol and preserves assignment, citation,
+criterion, prompt, model, task, run, and content-hash references.
+
+Evaluation datasets use explicit reference standards and decisions. Evaluation is deterministic and
+never changes screening decisions; it reports coverage, false-negative-sensitive metrics, calibration,
+threshold simulations, and high-risk disagreements. All routes resolve active organization membership
+and Review access server-side, return not-found semantics for foreign direct identifiers, and preserve
+human decisions as the canonical workflow state. Only the offline deterministic mock provider is
+enabled; full-text screening and production providers remain deferred.

@@ -69,3 +69,11 @@ deferred.
 ## Phase 23 AI provider foundation
 
 Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immutable model and prompt versions, bounded run/attempt lifecycles, input/prompt/response hashes, structured validation, append-only proposals and human decisions, usage/cost metadata, policy ceilings, tenant scoping, and accepted-AI provenance in reporting packages. The only executable workflow is an offline deterministic search-query draft proposal; it never mutates SearchStrategyVersion or another canonical scientific domain. Real providers, credentials, production scientific AI tasks, autonomous tools, and auto-accept remain deferred. AI provenance supports reconstruction of what was requested, returned, validated, and accepted but does not claim bit-for-bit model reproducibility.
+
+## Phase 24 governed AI screening assistance
+
+Phase 24 adds no external component. Title/abstract suggestion validation, Wilson confidence
+intervals, calibration bins, threshold simulations, disagreement classification, and evaluation metrics
+use repository-owned deterministic Python code. The only provider is the existing offline deterministic
+mock. No paid AI SDK, scholarly API, full-text classifier, statistical package, training framework, or
+copyrighted screening instrument is introduced.
