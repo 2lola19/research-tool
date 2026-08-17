@@ -34,6 +34,10 @@ from backend.app.reviews.service import ReviewService
 VALIDATOR_VERSION = "ai-structured-validator-1"
 RETRY_POLICY_VERSION = "bounded-transient-retry-1"
 MAX_OUTPUT_BYTES = 32_768
+_GOVERNED_SCREENING_TASKS = {
+    AITaskType.SCREENING_SUGGESTION,
+    AITaskType.FULL_TEXT_SCREENING_SUGGESTION,
+}
 
 
 class AIExecutionService:
@@ -95,6 +99,7 @@ class AIExecutionService:
     async def registry(self, actor: ActorContext) -> dict[str, Any]:
         await self.ensure_defaults(actor, AITaskType.SEARCH_QUERY_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.SCREENING_SUGGESTION)
+        await self.ensure_defaults(actor, AITaskType.FULL_TEXT_SCREENING_SUGGESTION)
         models = await self._repository.list_models(actor.organization_id)
         prompts = await self._repository.list_prompts(actor.organization_id)
         return {
@@ -350,14 +355,15 @@ class AIExecutionService:
 
     async def list_runs(self, actor: ActorContext, review_id: UUID) -> list[AIRun]:
         await self._reviews.get(actor, review_id)
-        return await self._repository.list_runs(actor.organization_id, review_id)
+        runs = await self._repository.list_runs(actor.organization_id, review_id)
+        return [item for item in runs if item.task_type not in _GOVERNED_SCREENING_TASKS]
 
     async def proposal(
         self, actor: ActorContext, review_id: UUID, proposal_id: UUID
     ) -> AIOutputProposal:
         await self._reviews.get(actor, review_id)
         item = await self._repository.get_proposal(actor.organization_id, review_id, proposal_id)
-        if item is None:
+        if item is None or item.task_type in _GOVERNED_SCREENING_TASKS:
             raise ResourceNotFoundError("AI proposal was not found")
         return item
 
@@ -418,7 +424,7 @@ class AIExecutionService:
         missing = []
         for key in task.input_contract["required"]:
             current = value.get(key)
-            if key in {"eligibility_criteria", "exclusion_criteria"}:
+            if key in {"eligibility_criteria", "exclusion_criteria", "chunks"}:
                 valid = isinstance(current, list) and bool(current)
             else:
                 valid = isinstance(current, str) and bool(current.strip())
@@ -435,12 +441,21 @@ class AIExecutionService:
             for marker in ("api_key", "authorization: bearer", "database_url", "private key")
         ):
             raise ValueError("AI task input appears to contain a secret")
-        if task.task_type is AITaskType.SCREENING_SUGGESTION:
+        if task.task_type in {
+            AITaskType.SCREENING_SUGGESTION,
+            AITaskType.FULL_TEXT_SCREENING_SUGGESTION,
+        }:
             for key in ("eligibility_criteria", "exclusion_criteria"):
                 if not isinstance(value.get(key), list) or not value[key]:
                     raise ValueError(f"{key} must be a non-empty list")
             if value.get("abstract") is not None and not isinstance(value["abstract"], str):
                 raise ValueError("article abstract must be text or null")
+        if task.task_type is AITaskType.FULL_TEXT_SCREENING_SUGGESTION:
+            chunks = value.get("chunks")
+            if not isinstance(chunks, list) or not chunks:
+                raise ValueError("full-text screening requires selected document chunks")
+            if len(chunks) > 80:
+                raise ValueError("full-text screening input exceeds the chunk limit")
 
     @staticmethod
     def _sanitize_input(
@@ -448,6 +463,18 @@ class AIExecutionService:
     ) -> dict[str, Any]:
         if task.task_type is AITaskType.SEARCH_QUERY_SUGGESTION:
             return {"query": value["query"].strip(), "objective": value["objective"].strip()}
+        if task.task_type is AITaskType.FULL_TEXT_SCREENING_SUGGESTION:
+            return {
+                "review_id": str(value["review_id"]),
+                "protocol_version_id": str(value["protocol_version_id"]),
+                "eligibility_criteria": value["eligibility_criteria"],
+                "exclusion_criteria": value["exclusion_criteria"],
+                "article_id": str(value["article_id"]),
+                "citation": value["citation"],
+                "document_identity": value["document_identity"],
+                "chunks": value["chunks"],
+                "input_preparation": value["input_preparation"],
+            }
         citation = value.get("citation")
         if not isinstance(citation, dict):
             citation = {
@@ -487,6 +514,11 @@ class AIExecutionService:
         ]
         if task.task_type is AITaskType.SCREENING_SUGGESTION:
             errors.extend(AIExecutionService._validate_screening_output(value, input_data))
+            return errors
+        if task.task_type is AITaskType.FULL_TEXT_SCREENING_SUGGESTION:
+            errors.extend(
+                AIExecutionService._validate_full_text_screening_output(value, input_data)
+            )
             return errors
         if "evidence_references" in value and not isinstance(value["evidence_references"], list):
             errors.append(
@@ -619,6 +651,14 @@ class AIExecutionService:
                 }
             )
         return errors
+
+    @staticmethod
+    def _validate_full_text_screening_output(
+        value: dict[str, Any], input_data: dict[str, Any] | None
+    ) -> list[dict[str, str]]:
+        from backend.app.ai.full_text_domain import validate_full_text_output
+
+        return validate_full_text_output(value, input_data or {})
 
     async def _audit(
         self,

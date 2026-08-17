@@ -77,3 +77,8 @@ intervals, calibration bins, threshold simulations, disagreement classification,
 use repository-owned deterministic Python code. The only provider is the existing offline deterministic
 mock. No paid AI SDK, scholarly API, full-text classifier, statistical package, training framework, or
 copyrighted screening instrument is introduced.
+
+Phase 25 adds no third-party dependency. Full-text selection, Unicode/whitespace normalization,
+evidence validation, metrics, and mock fixtures are deterministic repository code. `DocumentParser`
+remains the provider boundary; the fixture parser is sufficient. Live GROBID, OCR/computer vision,
+embeddings, external retrieval, and paid AI providers remain deferred.

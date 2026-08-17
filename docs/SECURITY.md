@@ -90,3 +90,16 @@ accesses are recorded. Proposal and evaluation tables have composite tenant/revi
 immutable ORM guards, and constrained modes/values. Article text is framed as untrusted source data,
 evidence quotes must occur in the supplied title/abstract, exclusion criteria must come from the
 approved protocol, and no provider receives credentials or workflow mutation authority.
+
+Phase 25 repeats scope through exact Document/version, processing run, and chunk manifest. Only the
+assigned reviewer reads assignment/direct-proposal content; BLINDED_AI returns no suggestion or
+structured output before human decision and refuses evaluation leakage. Organization, Review,
+Article, assignment, protocol, document, run, and chunk composition is checked before execution,
+reveal, acceptance, or evaluation. Generic AI creation, proposal, decision, and run-list routes do
+not expose either screening task, and the proposal's originally pinned mode governs disclosure even
+if the Review policy later changes. Stale proposals cannot be accepted.
+
+Providers receive bounded structured data with no tools, filesystem, shell, browser, network,
+database, or arbitrary retrieval. Paper instructions and URLs remain inert quoted data. Secret
+markers, oversized input/output, unknown criteria, foreign IDs, fabricated chunks/pages/sections, and
+non-verbatim quotes fail deterministically. PDF bytes and storage paths are not prompt input.

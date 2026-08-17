@@ -149,3 +149,17 @@ Evaluation datasets retain human-curated reference decisions separately from can
 decisions and never replace Article, Study, or screening entities. Case-level results retain the exact
 proposal and metric dimensions used for deterministic evaluation. The migration is linear after
 `20260814_0024` and supports reverse removal of all Phase 24 tables.
+
+## Phase 25 AI full-text screening tables
+
+Migration `20260816_0026` adds append-only full-text proposal links, access events, canonical-decision
+links, evaluation datasets/cases/results/case results, and error classifications. Proposal links
+repeat Organization and Review scope across AI run/proposal, assignment, Article, ProtocolVersion,
+Document source artifact/version, and DocumentProcessingRun. They retain parser metadata, scientific
+hashes, ordered selected chunk IDs, omitted-chunk hash metadata, selection method, task version, mode,
+and document role. Composite foreign keys prevent cross-tenant or cross-Review composition.
+
+Evaluation cases pin document/version/parser/protocol/reference/evidence identities. Results preserve
+prompt/model/task/policy dimensions, deterministic metrics, criterion correctness, evidence issues,
+and sections. ORM guards reject update/delete. The migration upgrades linearly after
+`20260815_0025` and fully downgrades on SQLite.

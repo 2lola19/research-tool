@@ -291,6 +291,22 @@ class SqlAlchemyCitationRepository:
         )
         return [_article_to_domain(row) for row in await self._session.scalars(query)]
 
+    async def list_articles_by_ids(
+        self, organization_id: UUID, review_id: UUID, article_ids: set[UUID]
+    ) -> list[Article]:
+        if not article_ids:
+            return []
+        query = (
+            select(ArticleRecord)
+            .where(
+                ArticleRecord.organization_id == organization_id,
+                ArticleRecord.review_id == review_id,
+                ArticleRecord.id.in_(article_ids),
+            )
+            .order_by(ArticleRecord.created_at, ArticleRecord.id)
+        )
+        return [_article_to_domain(row) for row in await self._session.scalars(query)]
+
     async def get_article(
         self, organization_id: UUID, review_id: UUID, article_id: UUID
     ) -> Article | None:

@@ -32,6 +32,7 @@ Last updated: 2026-08-16
 | Summary Findings + Reproducibility Reporting (Phase 22) | IMPLEMENTED | Deterministic report specifications/readiness, immutable report snapshots/artifacts, scientific-content hashes, structured JSON/HTML/XLSX, validated reproducibility ZIPs, and reporting workspace foundation. |
 | AI Provider Foundation (Phase 23) | VERIFIED | Provider-neutral task execution, immutable model/prompt versions, bounded runs, structured validation, append-only proposals/acceptance, deterministic mock execution, and provenance. |
 | Governed AI Screening Assistance (Phase 24) | IMPLEMENTED | Versioned screening policy, assignment-scoped title/abstract suggestions, server-enforced blinded/assisted reveal, deterministic evaluation metrics, case-level error taxonomy, migration, API, UI, provenance, audit, and tenant tests. |
+| Governed AI Full-Text Screening (Phase 25) | IMPLEMENTED | Document/version/parser-pinned bounded suggestions, exact evidence/criterion validation, structured uncertainty, direct-ID blinding, human-only canonical acceptance, staleness, batch isolation, full-text evaluation, migration, API, UI, and tenant tests. |
 
 ## Validation evidence
 
@@ -138,3 +139,23 @@ Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immu
 - Frontend: TypeScript passes. ESLint, Vitest, and the Next.js production build reached the local
   toolchain but are environment-blocked by the unelevated Windows fallback (`spawn EPERM` during
   config/test/build subprocess work); no code diagnostic was emitted by those failures.
+
+## Phase 25 validation (2026-08-16)
+
+- Full Ruff lint/format and strict mypy pass (196 source files). Eleven deterministic Phase 25 unit
+  tests, the assignment-scoped API integration, and the SQLite full upgrade/downgrade pass. Coverage
+  includes bounded/scoped chunks, normalization, fabricated
+  criteria/chunks/quotes/documents/pages, abstention, prompt injection, false-negative direction,
+  wrong-criterion scoring, direct-ID blinding, canonical-state non-mutation, post-decision reveal,
+  generic-endpoint closure, policy-change resistance, tenant non-enumeration, unchanged PRISMA
+  counts, evaluation, audit, document replacement staleness, and protocol staleness.
+- Frontend ESLint and TypeScript pass. The integrated workspace exposes readiness, document/parser pins,
+  withholding/reveal, staleness, missing information, evidence, human acceptance, and safety metrics.
+- `ENVIRONMENT_BLOCKED`: normal pytest Temp/basetemp creation receives Windows `Access denied` in the
+  intentional unelevated sandbox. The exact full command passed 118 tests but produced 108 Temp-fixture
+  setup errors; its resulting 64% partial coverage is not a valid full-suite measurement and cannot
+  satisfy the 85% gate. Focused tests and migration validation used pre-created local paths and direct
+  fixture execution without ACL changes.
+  Vitest fails before loading tests at Vite config startup with `spawn EPERM`; the Next.js build compiles
+  successfully, then its TypeScript worker hits `spawn EPERM`. PostgreSQL, live GROBID, Docker, and
+  paid/live AI providers remain unexecuted.

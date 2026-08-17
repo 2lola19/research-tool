@@ -503,6 +503,65 @@ class SqlAlchemyDocumentRepository:
         ).scalar_one_or_none()
         return _document(row) if row is not None else None
 
+    async def list_documents_for_article(
+        self, organization_id: UUID, review_id: UUID, article_id: UUID
+    ) -> list[Document]:
+        rows = await self._session.scalars(
+            select(DocumentRecord)
+            .where(
+                DocumentRecord.organization_id == organization_id,
+                DocumentRecord.review_id == review_id,
+                DocumentRecord.article_id == article_id,
+            )
+            .order_by(DocumentRecord.created_at, DocumentRecord.id)
+        )
+        return [_document(row) for row in rows]
+
+    async def list_blocks(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> list[DocumentBlock]:
+        rows = await self._session.scalars(
+            select(DocumentBlockRecord)
+            .where(
+                DocumentBlockRecord.organization_id == organization_id,
+                DocumentBlockRecord.review_id == review_id,
+                DocumentBlockRecord.document_id == document_id,
+            )
+            .order_by(DocumentBlockRecord.block_order, DocumentBlockRecord.id)
+        )
+        return [_block(row) for row in rows]
+
+    async def latest_successful_processing_run(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> DocumentProcessingRun | None:
+        row = await self._session.scalar(
+            select(DocumentProcessingRunRecord)
+            .where(
+                DocumentProcessingRunRecord.organization_id == organization_id,
+                DocumentProcessingRunRecord.review_id == review_id,
+                DocumentProcessingRunRecord.document_id == document_id,
+                DocumentProcessingRunRecord.status == ProcessingRunStatus.SUCCEEDED.value,
+            )
+            .order_by(DocumentProcessingRunRecord.created_at.desc())
+            .limit(1)
+        )
+        return _run(row) if row is not None else None
+
+    async def get_full_text_screening_for_document(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> FullTextScreening | None:
+        row = await self._session.scalar(
+            select(FullTextScreeningRecord)
+            .where(
+                FullTextScreeningRecord.organization_id == organization_id,
+                FullTextScreeningRecord.review_id == review_id,
+                FullTextScreeningRecord.document_id == document_id,
+            )
+            .order_by(FullTextScreeningRecord.decided_at.desc())
+            .limit(1)
+        )
+        return _screening(row) if row is not None else None
+
     async def update_document_status(
         self, organization_id: UUID, document_id: UUID, status: DocumentStatus
     ) -> Document:

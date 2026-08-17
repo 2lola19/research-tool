@@ -116,3 +116,17 @@ threshold simulations, and high-risk disagreements. All routes resolve active or
 and Review access server-side, return not-found semantics for foreign direct identifiers, and preserve
 human decisions as the canonical workflow state. Only the offline deterministic mock provider is
 enabled; full-text screening and production providers remain deferred.
+
+## Phase 25 governed AI full-text screening
+
+`/api/v1/ai/screening/full-text` exposes assignment/document readiness, bounded batch generation,
+assignment and direct-proposal reads with server-side blinding, human acceptance through the canonical
+screening service, document-version evaluation datasets, deterministic results, case results, and
+error classifications. Requests name an explicit Review, assignment, processed Document and role.
+Batch entries fail independently and never complete a stage.
+
+Responses distinguish unavailable page/section metadata, expose stale reasons, structured missing
+information, selected chunk IDs, and selection method. Direct IDs are scoped by Organization, Review,
+assignment, and reviewer. Evaluation refuses unrevealed BLINDED_AI proposals and labels metrics
+`FULL_TEXT`. No route auto-excludes, changes PRISMA, merges reports, or treats an AI proposal as a
+canonical decision.

@@ -162,3 +162,17 @@ classification. `ScreeningEvaluationDataset` and its cases are independent human
 records. `ScreeningEvaluationResult` and immutable case results retain deterministic metrics and the
 proposal dimensions used for evaluation. Error classifications append human review taxonomy without
 mutating the model output or reference case.
+
+## Phase 25 AI full-text eligibility assistance
+
+`AIFullTextProposalLink` is an immutable provenance bridge, not a decision. It binds one proposal to
+one full-text assignment, Article, acquired Document artifact version, successful parser run, approved
+protocol, parser representation, and deterministic chunk snapshot. `PRIMARY_FULL_TEXT`, `SUPPLEMENT`,
+`APPENDIX`, and `OTHER_SUPPORTING_DOCUMENT` preserve future multi-document semantics without merging
+Article and Study. Cross-report Study Family evidence remains disabled by default.
+
+Readiness blocks absent, unprocessed, failed, or textless documents. MAYBE and ABSTAIN carry structured
+missing-information reasons; missing information is not exclusion. Evidence uses scoped chunk IDs,
+nullable parser page/section metadata, and exact-verifiable quotes. Staleness is a derived current-view
+property over immutable history. Evaluation reference records remain distinct from ScreeningDecision,
+Article, Study, and StudyFamily.

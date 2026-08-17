@@ -156,6 +156,10 @@ def _calibration(items: list[ScreeningPrediction]) -> list[dict[str, Any]]:
             and item.reference is ScreeningReferenceDecision.RETAIN
             for item in members
         )
+        abstentions = sum(
+            item.suggestion in {AIScreeningSuggestion.MAYBE, AIScreeningSuggestion.ABSTAIN}
+            for item in members
+        )
         result.append(
             {
                 "lower": lower,
@@ -165,6 +169,7 @@ def _calibration(items: list[ScreeningPrediction]) -> list[dict[str, Any]]:
                 "agreement_count": agreements,
                 "empirical_accuracy": _ratio(agreements, len(comparable)),
                 "false_negatives": false_negatives,
+                "abstentions": abstentions,
             }
         )
     return result

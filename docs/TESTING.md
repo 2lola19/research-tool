@@ -111,3 +111,23 @@ PostgreSQL, and Docker execution remain intentionally outside this phase.
 - Frontend: ESLint PASS; TypeScript PASS; Vitest 9 PASS; Next.js 16.3 production build PASS.
 - Repository: git diff --check PASS; focused secret audit PASS.
 - Live paid AI providers and PostgreSQL remain intentionally unexecuted/environment-blocked.
+
+## Phase 25 AI full-text screening validation
+
+- Golden tests cover bounded/scoped chunks, omitted manifests, Unicode/whitespace normalization,
+  exact quotes and limits, page/section checks, foreign document/version/chunk rejection, fabricated
+  criteria, structured abstention, prompt injection, mock failures, and human acceptance delegation.
+- Metric tests define retained reports as positive and FN as AI EXCLUDE/reference RETAIN; they verify
+  sensitivity/FNR, preserve MAYBE/ABSTAIN, score wrong criteria separately, measure evidence/sections,
+  and expose high-risk disagreements and simulation-only thresholds.
+- API integration covers readiness, document/parser pins, proposal generation without a decision,
+  BLINDED_AI assignment/direct-ID withholding, generic AI endpoint closure, pinning of the original
+  assistance mode across later policy changes, post-decision reveal, tenant non-enumeration, unchanged
+  PRISMA counts, evaluation, audit links, document replacement staleness, and protocol staleness.
+- SQLite upgrades through `20260816_0026` and downgrades fully. Normal Windows pytest Temp creation is
+  environment-blocked in the unelevated sandbox; pre-created repository-local direct runners are the
+  safe workaround and do not change ACLs. The exact full pytest command records 118 passing tests and
+  108 Temp-fixture setup errors; its 64% partial coverage is not a valid gate result. Full
+  pytest/coverage, Vitest (`spawn EPERM` while loading
+  Vite config), and the final Next.js post-compilation worker (`spawn EPERM`) require manual host
+  validation; Ruff, formatting, strict mypy, ESLint, and TypeScript pass in the sandbox.

@@ -67,6 +67,12 @@ export default async function AIScreeningPage({ params, searchParams }: Props) {
           Suggestions are proposals only. Human screening decisions remain canonical, immutable,
           and independently auditable.
         </p>
+        <Link
+          className="mt-4 inline-block text-sm font-semibold text-[var(--brand)] hover:underline"
+          href={`/reviews/${reviewId}/screening-ai/full-text`}
+        >
+          Open document-grounded full-text assistance &rarr;
+        </Link>
       </header>
 
       {query.error ? (

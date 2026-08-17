@@ -12,12 +12,17 @@ from backend.app.ai.mock_provider import DeterministicMockAIProvider
 from backend.app.ai.persistence import SqlAlchemyAIRepository
 from backend.app.ai.service import AIExecutionService
 from backend.app.api.dependencies import ActorContextDependency, DbSessionDependency
+from backend.app.core.errors import ConflictError
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
 from backend.app.provenance.persistence import SqlAlchemyProvenanceRepository
 from backend.app.reviews.persistence import SqlAlchemyReviewRepository
 from backend.app.reviews.service import ReviewService
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+_GOVERNED_SCREENING_TASKS = {
+    AITaskType.SCREENING_SUGGESTION,
+    AITaskType.FULL_TEXT_SCREENING_SUGGESTION,
+}
 
 
 class CreateRunRequest(BaseModel):
@@ -65,6 +70,8 @@ async def registry(actor: ActorContextDependency, session: DbSessionDependency) 
 async def create_run(
     payload: CreateRunRequest, actor: ActorContextDependency, session: DbSessionDependency
 ) -> dict[str, Any]:
+    if payload.task_type in _GOVERNED_SCREENING_TASKS:
+        raise ConflictError("screening AI runs must use the governed screening endpoints")
     run, proposal = await _service(session).create_and_execute(actor, **payload.model_dump())
     await session.commit()
     return {"run": asdict(run), "proposal": asdict(proposal) if proposal else None}

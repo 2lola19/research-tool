@@ -81,3 +81,15 @@ in the screening domain; a decision link records interaction and disagreement on
 evaluation datasets receive human provenance, deterministic evaluations receive system provenance with
 metric and dataset hashes, and case error classifications receive human audit events. No Phase 24
 operation auto-accepts, auto-excludes, or overwrites a scientific record.
+
+## Phase 25 full-text AI provenance
+
+The trace is ScreeningDecision -> human actor -> optional full-text proposal link -> AI proposal ->
+run/attempt/validation -> model/prompt/task -> approved protocol/criteria -> Article/citation ->
+Document/version/checksum -> processing run/parser -> parsed/chunk hashes -> selected chunks/evidence.
+Append-only access and interaction records distinguish unseen, assisted-viewed, post-decision revealed,
+accepted, overridden, disagreed, and abstained behavior without mutating AI or human records.
+
+Staleness never rewrites old records. Scientific publication exports do not use unaccepted proposals;
+accepted human-decision provenance may enter audit/reproducibility packages, while evaluation remains
+separate from effect estimates.

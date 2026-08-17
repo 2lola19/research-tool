@@ -67,4 +67,20 @@ Phase 24 is the first scientific AI assistance workflow. It is deliberately limi
 screening suggestions under a Review policy and approved protocol. Suggestions remain proposals; human
 screening decisions remain canonical and immutable. Blinded and assisted modes, assignment-level reveal
 audits, deterministic evaluation datasets/metrics, and error classifications are implemented locally.
-Full-text assistance, production providers, autonomous decisions, and Phase 25 work remain deferred.
+At the Phase 24 checkpoint, full-text assistance, production providers, autonomous decisions, and
+Phase 25 work remained deferred.
+
+## Phase 25 complete: governed AI full-text screening
+
+Phase 25 extends existing AI and screening boundaries to exact Document/parser inputs, bounded
+structured chunks, deterministic criterion/evidence checks, structured uncertainty, server-side
+BLINDED_AI, human-only canonical acceptance, immutable staleness, bounded batch execution, and formal
+full-text safety evaluation. Live providers, OCR, cross-report evidence, active learning, and autonomous
+exclusion remain deferred.
+
+## Recommended Phase 26
+
+Begin governed AI extraction assistance only after explicit Phase 26 authorization. Reuse the same
+run/proposal/human-acceptance laws; pin extraction schemas and document evidence; keep deterministic
+typed validation and canonical writes human-controlled. Do not broaden Phase 25 into Risk of Bias,
+GRADE, manuscript generation, or autonomous agents.

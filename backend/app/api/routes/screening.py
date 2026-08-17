@@ -6,6 +6,8 @@ from uuid import UUID
 from fastapi import APIRouter, Path, status
 from pydantic import BaseModel, Field
 
+from backend.app.ai.full_text_persistence import SqlAlchemyAIFullTextRepository
+from backend.app.ai.full_text_service import AIFullTextScreeningService
 from backend.app.ai.mock_provider import DeterministicMockAIProvider
 from backend.app.ai.persistence import SqlAlchemyAIRepository
 from backend.app.ai.screening_persistence import SqlAlchemyAIScreeningRepository
@@ -14,6 +16,7 @@ from backend.app.ai.service import AIExecutionService
 from backend.app.api.dependencies import ActorContextDependency, DbSessionDependency
 from backend.app.citations.persistence import SqlAlchemyCitationRepository
 from backend.app.deduplication.persistence import SqlAlchemyDeduplicationRepository
+from backend.app.documents.persistence import SqlAlchemyDocumentRepository
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
 from backend.app.protocols.persistence import SqlAlchemyProtocolRepository
 from backend.app.provenance.persistence import SqlAlchemyProvenanceRepository
@@ -225,6 +228,42 @@ def _ai_screening_service(session: DbSessionDependency) -> AIScreeningService:
     )
 
 
+def _ai_full_text_service(session: DbSessionDependency) -> AIFullTextScreeningService:
+    identity = SqlAlchemyIdentityRepository(session)
+    reviews_repository = SqlAlchemyReviewRepository(session)
+    reviews = ReviewService(reviews_repository, identity)
+    provenance = SqlAlchemyProvenanceRepository(session)
+    ai_repository = SqlAlchemyAIRepository(session)
+    screening_repository = SqlAlchemyScreeningRepository(session)
+    citation_repository = SqlAlchemyCitationRepository(session)
+    canonical = ScreeningService(
+        screening_repository,
+        citation_repository,
+        SqlAlchemyDeduplicationRepository(session),
+        reviews_repository,
+        identity,
+        provenance,
+    )
+    return AIFullTextScreeningService(
+        SqlAlchemyAIFullTextRepository(session),
+        ai_repository,
+        SqlAlchemyAIScreeningRepository(session),
+        screening_repository,
+        SqlAlchemyDocumentRepository(session),
+        citation_repository,
+        SqlAlchemyProtocolRepository(session),
+        reviews,
+        provenance,
+        AIExecutionService(
+            ai_repository,
+            reviews,
+            provenance,
+            {"mock": DeterministicMockAIProvider()},
+        ),
+        canonical,
+    )
+
+
 @router.post("/rounds", response_model=RoundResponse, status_code=status.HTTP_201_CREATED)
 async def create_screening_round(
     payload: RoundRequest,
@@ -288,6 +327,7 @@ async def record_screening_decision(
         exclusion_reason=payload.exclusion_reason,
     )
     await _ai_screening_service(session).record_decision_interaction(actor, item)
+    await _ai_full_text_service(session).record_decision_interaction(actor, item)
     await session.commit()
     return DecisionResponse.from_domain(item)
 

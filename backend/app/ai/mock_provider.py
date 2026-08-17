@@ -40,6 +40,16 @@ class DeterministicMockAIProvider:
 
     @staticmethod
     def _default_output(request: ProviderRequest) -> dict[str, Any]:
+        if request.task_type == "FULL_TEXT_SCREENING_SUGGESTION":
+            return {
+                "suggestion": "MAYBE",
+                "exclusion_criterion_ids": [],
+                "rationale": "The deterministic mock retains uncertain full texts for review.",
+                "evidence": [],
+                "missing_information": ["STUDY_DESIGN_UNCLEAR"],
+                "model_reported_confidence": 0.5,
+                "uncertainty_reason": "Human verification is required.",
+            }
         if request.task_type == "SCREENING_SUGGESTION":
             return {
                 "suggestion": "MAYBE",
@@ -56,3 +66,81 @@ class DeterministicMockAIProvider:
             "model_reported_confidence": None,
             "abstention": "NEEDS_HUMAN_REVIEW",
         }
+
+    @staticmethod
+    def full_text_fixture(
+        scenario: str, structured_input: dict[str, Any]
+    ) -> dict[str, Any] | str | AIProviderErrorKind:
+        """Named offline fixtures for the governed full-text task."""
+        errors = {
+            "timeout": AIProviderErrorKind.TIMEOUT,
+            "rate_limit": AIProviderErrorKind.RATE_LIMIT,
+            "transient_failure": AIProviderErrorKind.UNAVAILABLE,
+            "permanent_failure": AIProviderErrorKind.PERMANENT,
+        }
+        if scenario in errors:
+            return errors[scenario]
+        if scenario == "malformed":
+            return "not-a-structured-object"
+        identity = structured_input.get("document_identity", {})
+        chunks = structured_input.get("chunks", [])
+        first_chunk = chunks[0] if chunks else {}
+        criteria = structured_input.get("exclusion_criteria", [])
+        first_criterion = criteria[0].get("id") if criteria else "exclusion-1"
+        base: dict[str, Any] = {
+            "suggestion": "MAYBE",
+            "exclusion_criterion_ids": [],
+            "rationale": "Deterministic full-text fixture for human review.",
+            "evidence": [],
+            "missing_information": ["STUDY_DESIGN_UNCLEAR"],
+            "model_reported_confidence": 0.5,
+            "uncertainty_reason": "Eligibility remains uncertain.",
+        }
+        if scenario == "include":
+            return {
+                **base,
+                "suggestion": "INCLUDE",
+                "missing_information": [],
+                "uncertainty_reason": None,
+            }
+        if scenario == "maybe":
+            return base
+        if scenario == "abstain":
+            return {
+                **base,
+                "suggestion": "ABSTAIN",
+                "missing_information": ["SUPPLEMENT_REQUIRED"],
+                "uncertainty_reason": "A required supplement is unavailable.",
+            }
+        evidence = {
+            "document_id": str(identity.get("document_id", "")),
+            "document_version_id": str(identity.get("document_version_id", "")),
+            "chunk_id": str(first_chunk.get("chunk_id", "")),
+            "page": first_chunk.get("page"),
+            "section": first_chunk.get("section"),
+            "quoted_text": str(first_chunk.get("text", ""))[:80],
+        }
+        excluded = {
+            **base,
+            "suggestion": "EXCLUDE",
+            "exclusion_criterion_ids": [first_criterion],
+            "evidence": [evidence],
+            "missing_information": [],
+            "uncertainty_reason": None,
+            "model_reported_confidence": 0.9,
+        }
+        if scenario == "exclude_valid":
+            return excluded
+        if scenario == "fabricated_criterion":
+            return {**excluded, "exclusion_criterion_ids": ["fabricated-criterion"]}
+        if scenario == "fabricated_chunk":
+            return {**excluded, "evidence": [{**evidence, "chunk_id": "fabricated:chunk"}]}
+        if scenario == "wrong_page":
+            return {**excluded, "evidence": [{**evidence, "page": 999999}]}
+        if scenario == "quote_mismatch":
+            return {**excluded, "evidence": [{**evidence, "quoted_text": "fabricated quote"}]}
+        if scenario == "wrong_document":
+            return {**excluded, "evidence": [{**evidence, "document_id": "wrong-document"}]}
+        if scenario == "oversized_output":
+            return {**base, "rationale": "x" * 40_000}
+        raise ValueError(f"unknown full-text mock fixture: {scenario}")

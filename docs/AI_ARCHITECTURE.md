@@ -36,3 +36,22 @@ specificity, Wilson intervals, calibration bins, threshold simulations, abstenti
 high-risk false exclusions. Evaluation results and case-level error classifications are immutable.
 The Phase 24 implementation uses only the deterministic mock provider; full-text screening, paid or
 live providers, autonomous exclusion, automatic acceptance, and model training remain deferred.
+
+## Phase 25 governed full-text assistance
+
+Phase 25 adds the critical-risk `FULL_TEXT_SCREENING_SUGGESTION` task on the same provider-neutral
+execution service. Each run pins an approved protocol, exclusion criteria, full-text assignment,
+Article, immutable acquired Document artifact, successful processing run, parser/version, parsed and
+selected-text hashes, ordered scoped chunk IDs, deterministic selection method, prompt, model, task,
+and input snapshot. Input is bounded structured data; providers have no tools or retrieval authority.
+
+Exact normalized-substring validation checks evidence quote, document/version/chunk, parser page and
+section metadata, size, criterion identity, and Review scope. EXCLUDE without pinned criteria and
+substantive evidence is invalid. MAYBE/ABSTAIN require structured missing information. BLINDED_AI
+withholding applies to assignment reads, direct proposal IDs, and evaluation. Only the existing human
+`ScreeningService` creates canonical decisions. Staleness never mutates or silently refreshes history.
+
+Full-text evaluation remains labeled separately from title/abstract evaluation. Retention is positive;
+AI EXCLUDE/reference RETAIN is the false-negative safety event. Metrics include criterion correctness,
+evidence validation, section analysis, calibration, simulations, and high-risk disagreements. The
+offline deterministic mock remains the only provider.

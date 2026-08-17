@@ -4,7 +4,12 @@ import pytest
 
 from backend.app.core.config import Settings
 from backend.app.core.errors import AuthenticationError
-from backend.app.identity.security import LocalTokenAuthenticationProvider, ScryptPasswordHasher
+from backend.app.identity.security import (
+    LocalTokenAuthenticationProvider,
+    ScryptPasswordHasher,
+    _decode_base64,
+    _encode_base64,
+)
 
 
 def test_scrypt_password_hash_round_trip() -> None:
@@ -46,7 +51,15 @@ def test_local_token_rejects_tampering() -> None:
         token_ttl_seconds=60,
     )
     token = provider.issue_token(uuid4())
-    tampered = f"{token[:-1]}{'a' if token[-1] != 'a' else 'b'}"
+    version, encoded_payload, encoded_signature = token.split(".")
+    original_signature = _decode_base64(encoded_signature)
+    tampered_signature = bytearray(original_signature)
+    tampered_signature[0] ^= 0x01
+    tampered_signature_segment = _encode_base64(bytes(tampered_signature))
+    tampered = f"{version}.{encoded_payload}.{tampered_signature_segment}"
+
+    assert tampered != token
+    assert original_signature != _decode_base64(tampered_signature_segment)
 
     with pytest.raises(AuthenticationError):
         provider.authenticate(tampered)
