@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260817_0027",)
+    assert version == ("20260818_0028",)
     assert {
         "users",
         "organizations",
@@ -157,6 +157,17 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "ai_extraction_evaluation_results",
         "ai_extraction_evaluation_case_results",
         "ai_extraction_error_classifications",
+        "ai_rob_policy_versions",
+        "ai_rob_proposal_links",
+        "ai_rob_sources",
+        "ai_rob_evidence",
+        "ai_rob_access_events",
+        "ai_rob_answer_reviews",
+        "ai_rob_evaluation_datasets",
+        "ai_rob_evaluation_cases",
+        "ai_rob_evaluation_results",
+        "ai_rob_evaluation_case_results",
+        "ai_rob_error_classifications",
         "report_snapshots",
         "report_artifacts",
     } <= tables
@@ -198,5 +209,8 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert "ai_screening_evaluation_results" not in remaining_tables
     assert "ai_full_text_proposal_links" not in remaining_tables
     assert "ai_full_text_evaluation_results" not in remaining_tables
+    assert "ai_rob_policy_versions" not in remaining_tables
+    assert "ai_rob_proposal_links" not in remaining_tables
+    assert "ai_rob_evaluation_results" not in remaining_tables
     assert "report_snapshots" not in remaining_tables
     assert "report_artifacts" not in remaining_tables

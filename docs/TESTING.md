@@ -140,3 +140,14 @@ staleness, bounded failure-isolated batches, direct-ID blinding and reveal, tena
 human accept/edit provenance through manual extraction, dual-extractor separation, unchanged PRISMA,
 downstream isolation, deterministic evaluation, hallucination/grounding queues, calibration, and
 hypothetical-only thresholds. Migration testing performs a full SQLite upgrade and downgrade.
+
+## Phase 27 Risk-of-Bias AI coverage
+
+Unit tests cover exact instrument choices, one-answer-per-question completeness, valid abstention,
+wrong-answer/source-block/chunk/page/section/quote rejection, declarative domain/overall derivation,
+dangerous-underestimation metrics, descriptive calibration status, prompt safety, and deterministic
+fixtures. Integration tests cover approved-version/readiness gates, Study Family parser inputs,
+BLINDED_AI withholding and generic-route closure, ASSISTED question dispositions, canonical human
+assessment immutability, post-submission reveal, evaluation abstention/high-risk records, audit links,
+and tenant/assessor direct-ID non-enumeration. The `20260818_0028` migration upgrades and downgrades
+fully on SQLite. PostgreSQL and live provider execution remain production-phase gates.

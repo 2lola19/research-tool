@@ -102,3 +102,19 @@ processing/parser and parsed-content hashes, chunk manifests, and exact bounded 
 UNSEEN, VIEWED/REVEALED, ACCEPTED, EDITED, REJECTED, UNRESOLVED, and model abstention remain
 distinguishable. Human edits never mutate the original proposal. Unaccepted proposals remain audit and
 evaluation records only and are excluded from normal scientific exports.
+
+## AI-assisted Risk-of-Bias provenance
+
+For every governed RoB proposal, the provenance chain retains the human-owned assessment and Study,
+immutable instrument version/content hash, exact question/choice definitions, Article/Document/version,
+successful processing run, parser/version, parsed block hash, selected/omitted chunk manifest, input
+hash, task/prompt/model versions, attempt history, response/validation hashes, and evidence quote/hash.
+The `AIRobProposalLink` is never a canonical assessment record.
+
+`BLINDED_AI` access is withheld until the assessor submits; `ASSISTED` access and every question-level
+human disposition are append-only. ACCEPTED/EDITED dispositions point through the existing RoB answer
+service and record the human actor, rationale, canonical answer, proposal, AI run, and instrument
+identities. REJECTED/UNRESOLVED and abstention remain distinct. Domain and overall suggestions are
+derived by the existing declarative instrument rules only. Evaluation datasets/results and
+high-risk/error classifications carry separate human/system provenance and never enter scientific
+exports as canonical RoB state.

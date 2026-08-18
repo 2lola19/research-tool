@@ -186,3 +186,17 @@ when the human actor calls the existing manual extraction service. Human field-r
 blinded reveal events are append-only, while ordinary extraction revision, verification, and
 adjudication semantics remain unchanged. Study and Article stay distinct; every source names both its
 Article and Document.
+
+## Governed AI Risk-of-Bias assistance
+
+`AIRobProposalLink` is an immutable advisory bridge over an assessor-owned `RiskOfBiasAssessment`.
+It pins the Study, approved immutable `RiskOfBiasInstrumentVersion`, exact signalling questions and
+allowed choices, explicit Study Family source Documents, parser snapshot, selected/omitted chunks,
+validation results, and derived provisional rule outputs. `AIRobSourceRecord` and
+`AIRobEvidenceRecord` preserve Article/Document/parser/block identity and exact quotes.
+
+`AIRobAnswerReviewRecord` stores a human disposition without changing the original AI proposal. An
+accepted or edited signalling answer calls the existing `RiskOfBiasService`; AI never creates a
+canonical domain judgment, overall judgment, assessment submission, comparison, or adjudication.
+`AIRobEvaluationDataset` and its immutable results are separate from Studies, Articles, assessments,
+and canonical RoB decisions. The demonstration instrument remains explicitly incomplete.

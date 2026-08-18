@@ -88,3 +88,12 @@ Governed structured extraction adds no new third-party runtime dependency. Typed
 field-aware chunk selection, evaluation, and mock fixtures use the existing Python/FastAPI/Pydantic/
 SQLAlchemy stack. No OCR, computer-vision, model-training, paid-provider, or network-retrieval package
 is introduced.
+
+## Phase 27 dependency impact
+
+Governed Risk-of-Bias assistance adds no third-party runtime dependency. Instrument normalization and
+judgment rules remain repository-owned deterministic code; evidence selection/validation, hashing,
+metrics, and mock safety fixtures use the existing Python/FastAPI/Pydantic/SQLAlchemy stack. No
+complete published RoB 2 instrument, model-training package, retrieval/embedding service, OCR package,
+paid AI SDK, or external provider is introduced. Complete instrument adoption remains a separate
+methodology, licensing, maintenance, and validation decision.

@@ -38,6 +38,7 @@ _GOVERNED_SCREENING_TASKS = {
     AITaskType.SCREENING_SUGGESTION,
     AITaskType.FULL_TEXT_SCREENING_SUGGESTION,
     AITaskType.EXTRACTION_SUGGESTION,
+    AITaskType.ROB_SUGGESTION,
 }
 
 
@@ -102,6 +103,7 @@ class AIExecutionService:
         await self.ensure_defaults(actor, AITaskType.SCREENING_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.FULL_TEXT_SCREENING_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.EXTRACTION_SUGGESTION)
+        await self.ensure_defaults(actor, AITaskType.ROB_SUGGESTION)
         models = await self._repository.list_models(actor.organization_id)
         prompts = await self._repository.list_prompts(actor.organization_id)
         return {
@@ -432,8 +434,11 @@ class AIExecutionService:
                 "schema_fields",
                 "source_documents",
                 "chunks",
+                "questions",
             }:
                 valid = isinstance(current, list) and bool(current)
+            elif key in {"instrument_definition"}:
+                valid = isinstance(current, dict) and bool(current)
             else:
                 valid = isinstance(current, str) and bool(current.strip())
             if not valid:
@@ -474,6 +479,16 @@ class AIExecutionService:
                 raise ValueError("structured extraction requires 1 through 80 selected chunks")
             if not isinstance(documents, list) or not documents or len(documents) > 8:
                 raise ValueError("structured extraction requires 1 through 8 source documents")
+        if task.task_type is AITaskType.ROB_SUGGESTION:
+            questions = value.get("questions")
+            chunks = value.get("chunks")
+            documents = value.get("source_documents")
+            if not isinstance(questions, list) or not questions or len(questions) > 200:
+                raise ValueError("Risk of Bias assistance requires 1 through 200 questions")
+            if not isinstance(chunks, list) or not chunks or len(chunks) > 80:
+                raise ValueError("Risk of Bias assistance requires 1 through 80 selected chunks")
+            if not isinstance(documents, list) or not documents or len(documents) > 8:
+                raise ValueError("Risk of Bias assistance requires 1 through 8 source documents")
 
     @staticmethod
     def _sanitize_input(
@@ -501,6 +516,18 @@ class AIExecutionService:
                 "schema_version_id": str(value["schema_version_id"]),
                 "schema_identity": value["schema_identity"],
                 "schema_fields": value["schema_fields"],
+                "source_documents": value["source_documents"],
+                "chunks": value["chunks"],
+                "input_preparation": value["input_preparation"],
+            }
+        if task.task_type is AITaskType.ROB_SUGGESTION:
+            return {
+                "review_id": str(value["review_id"]),
+                "assessment_id": str(value["assessment_id"]),
+                "study_id": str(value["study_id"]),
+                "instrument_version_id": str(value["instrument_version_id"]),
+                "instrument_definition": value["instrument_definition"],
+                "questions": value["questions"],
                 "source_documents": value["source_documents"],
                 "chunks": value["chunks"],
                 "input_preparation": value["input_preparation"],
@@ -559,6 +586,35 @@ class AIExecutionService:
                 )
             if not isinstance(value.get("fields"), list):
                 errors.append({"code": "INVALID_FIELDS", "message": "fields must be a list"})
+            return errors
+        if task.task_type is AITaskType.ROB_SUGGESTION:
+            if str(value.get("instrument_version_id", "")) != str(
+                (input_data or {}).get("instrument_version_id", "")
+            ):
+                errors.append(
+                    {
+                        "code": "WRONG_INSTRUMENT_VERSION",
+                        "message": "instrument version does not match",
+                    }
+                )
+            if str(value.get("assessment_id", "")) != str(
+                (input_data or {}).get("assessment_id", "")
+            ):
+                errors.append({"code": "WRONG_ASSESSMENT", "message": "assessment does not match"})
+            if not isinstance(value.get("answers"), list):
+                errors.append({"code": "INVALID_ANSWERS", "message": "answers must be a list"})
+            confidence = value.get("model_reported_confidence")
+            if confidence is not None and (
+                isinstance(confidence, bool)
+                or not isinstance(confidence, (int, float))
+                or not 0 <= confidence <= 1
+            ):
+                errors.append(
+                    {
+                        "code": "INVALID_CONFIDENCE",
+                        "message": "model confidence must be from 0 through 1",
+                    }
+                )
             return errors
         if "evidence_references" in value and not isinstance(value["evidence_references"], list):
             errors.append(

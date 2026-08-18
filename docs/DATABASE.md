@@ -171,3 +171,19 @@ organization/review foreign keys preserve tenant scope across AI runs/proposals,
 human extraction assignments, Documents, processing runs, parsed blocks, and evaluation records.
 Scientific field values remain exclusively in the existing manual extraction tables. AI tables never
 serve as canonical extraction, verification, or analysis input.
+
+## Phase 27 AI Risk-of-Bias metadata
+
+Migration `20260818_0028` adds append-only `ai_rob_policy_versions`, proposal links, source manifests,
+evidence spans, reveal/access events, question-level answer reviews, evaluation datasets/cases/results,
+case results, and error classifications. Proposal links repeat Organization/Review scope across the
+AI run/proposal, assessor-owned `rob_assessment`, Study, immutable instrument version, and source/hash
+metadata. Source rows retain Article, Document/version, successful processing run, parser, parsed
+content hash, and block count. Evidence rows bind exact chunks and source blocks to the same tenant and
+Review.
+
+Composite foreign keys and scoped uniqueness prevent cross-tenant/review composition and duplicate
+source/evidence ordinals. Check constraints cover policy modes, task versions, source version identity,
+reference standards, review actions, and error categories. ORM guards reject updates/deletes across
+the AI scientific history. The migration is linear after `20260817_0027` and upgrades/downgrades
+fully on SQLite; PostgreSQL-specific validation remains a later production gate.

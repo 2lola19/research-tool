@@ -34,6 +34,7 @@ Last updated: 2026-08-17
 | Governed AI Screening Assistance (Phase 24) | IMPLEMENTED | Versioned screening policy, assignment-scoped title/abstract suggestions, server-enforced blinded/assisted reveal, deterministic evaluation metrics, case-level error taxonomy, migration, API, UI, provenance, audit, and tenant tests. |
 | Governed AI Full-Text Screening (Phase 25) | IMPLEMENTED | Document/version/parser-pinned bounded suggestions, exact evidence/criterion validation, structured uncertainty, direct-ID blinding, human-only canonical acceptance, staleness, batch isolation, full-text evaluation, migration, API, UI, and tenant tests. |
 | Governed AI Structured Extraction (Phase 26) | IMPLEMENTED | ExtractionSchemaVersion-pinned typed field proposals, exact report/document/chunk evidence, source/normalized value separation, explicit missingness/conflicts/limitations, direct-ID blinding, human-only manual-service acceptance/editing, staleness, batch isolation, field-level safety evaluation, migration, API, UI, and tenant tests. |
+| Governed AI Risk-of-Bias Assistance (Phase 27) | IMPLEMENTED | Instrument-version-pinned signalling-answer proposals, Study Family/document/parser/chunk provenance, deterministic evidence and declarative-rule validation, blinded/assisted reveal, human disposition through the existing RoB service, abstention/high-risk evaluation, migration, API, UI, and tenant tests. The bundled instrument remains a demonstration framework, not complete RoB 2. |
 
 ## Validation evidence
 
@@ -189,3 +190,10 @@ Field-level evaluation supports qualified human/curated reference standards, num
 explicit tolerances, categorical confusion, missingness, hallucination and grounding metrics,
 calibration bins, hypothetical thresholds, and high-risk queues. Repeated runs are immutable and
 schema/document/parser/task/prompt changes report staleness without rerun.
+
+## Phase 27 Risk-of-Bias assistance validation
+
+- Focused unit coverage passes for exact instrument answer choices, fabricated chunk/source-block/quote rejection, valid abstention, declarative domain/overall derivation, descriptive metrics, high-risk underestimation flags, prompt safety, and deterministic mock fixtures.
+- The repository-local Phase 27 integration shard passes. It covers approved-instrument/readiness gates, processed Study Family Documents, BLINDED_AI withholding, ASSISTED human disposition, generic-route closure, canonical assessment immutability, post-submission reveal, evaluation abstention metrics, audit links, and tenant/assessor direct-ID non-enumeration.
+- Ruff, format, strict mypy, compile, and the full SQLite upgrade/downgrade chain through `20260818_0028` pass. Frontend ESLint and TypeScript pass. The ordinary Windows pytest temp root remains environment-blocked; a narrow repository-local temp root was used for the integration shard.
+- No complete published RoB 2 instrument was added. The demonstration instrument continues to be labeled as such, and AI never writes canonical domains, overall judgments, submissions, comparisons, or adjudications.

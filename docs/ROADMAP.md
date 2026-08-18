@@ -32,8 +32,11 @@
 24. **Governed AI screening assistance (implemented):** versioned policy, assignment-scoped title/abstract
     suggestions, server-enforced blinded/assisted reveal, provenance/audit links, deterministic evaluation,
     calibration, threshold simulation, and human error taxonomy.
-25. **Advanced analysis/reporting (deferred):** additional estimators, dependency policies, subgroups,
-    meta-regression, publication-bias inference, network meta-analysis, and mature reports.
+25. **Remaining V1 completion envelope (in progress):** durable jobs/recovery, production scholarly and
+    AI provider adapters, document/object-storage hardening, collaboration/QC UX, production readiness,
+    and end-to-end release validation. Advanced estimators, dependency policies, subgroups,
+    meta-regression, publication-bias inference, network meta-analysis, and mature reports remain
+    deferred beyond V1.
 
 Each milestone must meet the definition of done in the master specification before progression.
 
@@ -90,3 +93,19 @@ safety evaluation. It does not add OCR, live providers, AI verification, or auto
 Build governed, evidence-grounded AI Risk of Bias assistance against immutable instrument versions and
 human-only domain judgments. Preserve independent assessors, blinding, deterministic validation,
 Study/document evidence, formal evaluation, and no autonomous judgment or adjudication.
+
+## Phase 27 complete: governed AI Risk-of-Bias assistance
+
+Phase 27 implements the recommendation above. The governed task pins Review, Study, assessment,
+approved immutable instrument version, question choices, explicit Study Family source Documents,
+successful parser runs, selected evidence chunks, prompt/model/task versions, and hashes. Exact
+deterministic validation rejects invented questions, choices, documents, chunks, source blocks,
+pages, sections, or quotes. Domain and overall suggestions are derived only from validated answers
+through the existing declarative RoB rules; they are never canonical AI judgments.
+
+`BLINDED_AI` withholds structured output, validation, and suggestions until the assessor submits the
+canonical assessment. `ASSISTED` permits an assignment-scoped human view and records disposition;
+neither mode lets AI submit answers, satisfy independent dual assessment, adjudicate, or alter
+submitted records. Evaluation results are immutable/descriptive, include signalling/domain/overall
+agreement, evidence grounding, abstention/coverage, confusion counts, calibration status, and a
+dangerous-underestimation queue. The demonstration instrument is not complete RoB 2.

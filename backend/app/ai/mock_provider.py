@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import deque
-from typing import Any
+from typing import Any, cast
 
 from backend.app.ai.domain import AIProviderErrorKind, ProviderResult
 from backend.app.ai.provider import AIProviderError, ProviderRequest
@@ -60,6 +60,11 @@ class DeterministicMockAIProvider:
                     for field in fields
                 ],
             }
+        if request.task_type == "ROB_SUGGESTION":
+            return cast(
+                dict[str, Any],
+                DeterministicMockAIProvider.rob_fixture("ABSTAIN", request.structured_input),
+            )
         if request.task_type == "FULL_TEXT_SCREENING_SUGGESTION":
             return {
                 "suggestion": "MAYBE",
@@ -304,3 +309,104 @@ class DeterministicMockAIProvider:
         if scenario == "OVERSIZED_OUTPUT":
             return {**output, "fields": [{**proposed, "note": "x" * 40_000}]}
         raise ValueError(f"unknown extraction mock fixture: {scenario}")
+
+    @staticmethod
+    def rob_fixture(
+        scenario: str, structured_input: dict[str, Any]
+    ) -> dict[str, Any] | str | AIProviderErrorKind:
+        """Named offline fixtures for document-grounded Risk of Bias assistance."""
+        scenario = scenario.upper()
+        errors = {
+            "TIMEOUT": AIProviderErrorKind.TIMEOUT,
+            "RATE_LIMIT": AIProviderErrorKind.RATE_LIMIT,
+            "TRANSIENT_FAILURE": AIProviderErrorKind.UNAVAILABLE,
+            "PERMANENT_FAILURE": AIProviderErrorKind.PERMANENT,
+        }
+        if scenario in errors:
+            return errors[scenario]
+        if scenario == "MALFORMED_JSON":
+            return "not-a-structured-object"
+        questions = structured_input.get("questions", [])
+        chunks = structured_input.get("chunks", [])
+        first_chunk = chunks[0] if chunks else {}
+        base_answers: list[dict[str, Any]] = [
+            {
+                "question_key": str(question.get("key", "")),
+                "status": "ABSTAIN",
+                "answer": None,
+                "evidence": [],
+                "confidence": None,
+                "note": "Human Risk of Bias assessment is required.",
+            }
+            for question in questions
+        ]
+        base: dict[str, Any] = {
+            "instrument_version_id": str(structured_input.get("instrument_version_id", "")),
+            "assessment_id": str(structured_input.get("assessment_id", "")),
+            "answers": base_answers,
+            "rationale": "The deterministic mock abstains pending human assessment.",
+            "model_reported_confidence": 0.5,
+            "abstention": "HUMAN_ASSESSMENT_REQUIRED",
+        }
+        if scenario in {"ABSTAIN", "SUCCESS_ABSTAIN"}:
+            return base
+        if not questions:
+            return base
+        question = questions[0]
+        allowed = list(question.get("allowed_answers", []))
+        answer = allowed[0] if allowed else ""
+        evidence = {
+            "document_id": str(first_chunk.get("document_id", "")),
+            "document_version_id": str(first_chunk.get("document_version_id", "")),
+            "chunk_id": str(first_chunk.get("chunk_id", "")),
+            "source_block_id": str(first_chunk.get("source_block_id", "")),
+            "page": first_chunk.get("page"),
+            "section": first_chunk.get("section"),
+            "quote": str(first_chunk.get("text", ""))[:120],
+        }
+        proposed = {
+            **base_answers[0],
+            "status": "PROPOSED_ANSWER",
+            "answer": answer,
+            "evidence": [evidence],
+            "confidence": 0.8,
+            "note": None,
+        }
+        if scenario in {"SUCCESS", "SUCCESS_PARTIAL"}:
+            return {**base, "answers": [proposed, *base_answers[1:]], "abstention": None}
+        if scenario == "WRONG_ANSWER":
+            return {
+                **base,
+                "answers": [{**proposed, "answer": "INVENTED"}, *base_answers[1:]],
+                "abstention": None,
+            }
+        if scenario == "FABRICATED_CHUNK":
+            return {
+                **base,
+                "answers": [
+                    {**proposed, "evidence": [{**evidence, "chunk_id": "fabricated"}]},
+                    *base_answers[1:],
+                ],
+                "abstention": None,
+            }
+        if scenario == "QUOTE_MISMATCH":
+            return {
+                **base,
+                "answers": [
+                    {**proposed, "evidence": [{**evidence, "quote": "fabricated quote"}]},
+                    *base_answers[1:],
+                ],
+                "abstention": None,
+            }
+        if scenario == "WRONG_DOCUMENT":
+            return {
+                **base,
+                "answers": [
+                    {**proposed, "evidence": [{**evidence, "document_id": "wrong"}]},
+                    *base_answers[1:],
+                ],
+                "abstention": None,
+            }
+        if scenario == "OVERSIZED_OUTPUT":
+            return {**base, "rationale": "x" * 40_000}
+        raise ValueError(f"unknown Risk of Bias mock fixture: {scenario}")

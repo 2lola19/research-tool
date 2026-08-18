@@ -112,3 +112,19 @@ BLINDED_AI withholds values, missingness, confidence, evidence, and validation t
 direct proposal, generic AI, and evaluation paths until human submission. Prompt framing treats paper
 instructions as inert content, inputs are bounded, secret markers remain blocked, and providers have no
 filesystem, network, browser, database, shell, or arbitrary tools.
+
+## Phase 27 Risk-of-Bias isolation and disclosure
+
+Every RoB AI policy, proposal link, source, evidence span, access event, answer review, evaluation
+dataset, case, result, and error classification repeats Organization/Review scope and uses composite
+foreign keys. Readiness requires the current actor to own the assessor-owned assessment, use an
+approved instrument version, and name only processed Documents linked to the Study Family. Foreign
+tenant, Review, assessor, Article, Document, parser, block, and evaluation identifiers fail closed.
+
+The generic AI create/list/direct-proposal routes reject or omit `ROB_SUGGESTION`. Dedicated serializers
+withhold structured answers, rationale, confidence, evidence, validation, domain, and overall fields
+for BLINDED_AI until canonical submission; direct IDs do not bypass this rule. ASSISTED access is
+assignment-scoped and audited. Stale instrument, assessment, parser, block, or selected-text inputs
+cannot be accepted. Source text is untrusted, bounded, secret-screened, and passed to a no-tools
+provider adapter. AI cannot satisfy dual assessment, adjudicate disagreement, or mutate canonical RoB
+state.

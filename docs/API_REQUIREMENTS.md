@@ -139,3 +139,21 @@ creation, evaluation, and high-risk result queues. No route accepts an arbitrary
 call. Direct-ID responses enforce the same BLINDED_AI withholding as assignment responses; generic AI
 endpoints exclude structured extraction content. Accept/edit requests invoke the normal manual
 extraction service and attribute the canonical value to the authenticated human.
+
+## Phase 27 AI Risk-of-Bias API
+
+Authenticated Review-scoped routes under `/api/v1/ai/risk-of-bias/reviews/{review_id}` provide
+versioned policy creation, assessment/source readiness, bounded proposal generation, assignment and
+proposal reads, question-level human dispositions, evaluation dataset creation/evaluation, case
+results, high-risk queues, and append-only error classifications. Requests require the assessor-owned
+RoB assessment, an approved immutable instrument version, and one through eight explicit processed
+Study Family Documents. Source manifests retain Article, Document/version, processing/parser, parsed
+content, and block metadata; proposals retain selected/omitted chunk hashes and task/model/prompt
+provenance through the existing AI run.
+
+`BLINDED_AI` responses omit structured answers, validation, domain, and overall suggestions before
+canonical submission; `ASSISTED` responses are visible only to the assigned assessor and record
+access/disposition. Generic `/ai/runs`, run lists, and direct proposal reads reject or omit
+`ROB_SUGGESTION`. Human dispositions invoke the existing Risk-of-Bias answer service and never
+create a domain/overall judgment or submit an assessment. Evaluation routes cannot evaluate an
+unrevealed blinded proposal and expose only deterministic descriptive metrics.

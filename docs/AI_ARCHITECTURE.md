@@ -74,3 +74,27 @@ validation until human submission and record reveal access. Only ASSISTED valid/
 accepted or edited, always through `ManualExtractionService`. Generic run/proposal endpoints exclude
 the task. Evaluations use deterministic field metrics, explicit reference standards, calibration bins,
 hypothetical-only thresholds, and high-risk hallucination/evidence queues.
+
+## Phase 27: governed Risk-of-Bias assistance
+
+`ROB_SUGGESTION` is a critical-risk task on the existing provider-neutral execution substrate. The
+input snapshot pins the Review, assessor-owned RoB assessment, Study, approved immutable instrument
+version and content hash, normalized question definitions and allowed choices, explicit Study Family
+Articles/Documents, processing/parser identity, selected/omitted chunks, and deterministic input
+hashes. Source content is untrusted quoted data; providers receive no tools or retrieval authority.
+
+The validator requires exactly one envelope per pinned signalling question. A proposed answer must
+use an instrument-allowed choice and a quote whose document/version/chunk/source-block/page/section
+identity matches the immutable input. `ABSTAIN` is valid and conservative. Only after validation do
+the existing declarative instrument rules derive provisional domain/overall suggestions; the model
+does not supply or calculate those judgments. The existing `RiskOfBiasService` remains the only
+canonical answer/domain/overall/submission path.
+
+Review policies support `OFF`, `BLINDED_AI`, and `ASSISTED`. Blinded serializers withhold structured
+answers, validation, domain, and overall fields until the assessor submits; generic AI run/list/direct
+proposal endpoints exclude the task. Assisted views and human dispositions are append-only and
+assignment-scoped. Staleness compares instrument, assessment, source/parser, parsed-block, and
+selected-text hashes. Evaluation is deterministic and descriptive only: signalling/domain/overall
+agreement, grounding, abstention, coverage, confusion counts, calibration status, and dangerous
+underestimation/high-risk queues. The bundled instrument remains a demonstration framework and is
+not a claim of complete RoB 2 support.

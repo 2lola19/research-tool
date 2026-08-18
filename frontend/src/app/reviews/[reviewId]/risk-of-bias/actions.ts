@@ -169,3 +169,48 @@ export async function adjudicateComparison(
   );
   await finish(reviewId, response, "conflict_adjudicated");
 }
+
+export async function createAIRiskOfBiasPolicy(reviewId: string, formData: FormData) {
+  const response = await request("POST", `/api/v1/ai/risk-of-bias/reviews/${reviewId}/policies`, {
+    mode: value(formData, "mode"),
+    maximum_batch_size: Number(value(formData, "maximum_batch_size") || "20"),
+  });
+  await finish(reviewId, response, "ai_rob_policy_saved");
+}
+
+export async function generateAIRiskOfBiasProposal(reviewId: string, formData: FormData) {
+  const assessmentId = value(formData, "assessment_id");
+  const documents = value(formData, "document_ids")
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map((document_id, index) => ({
+      document_id,
+      document_role: index === 0 ? "PRIMARY_FULL_TEXT" : "SUPPLEMENT",
+    }));
+  const response = await request("POST", `/api/v1/ai/risk-of-bias/reviews/${reviewId}/proposals`, {
+    items: [{ assessment_id: assessmentId, documents }],
+  });
+  await finish(reviewId, response, "ai_rob_proposal_created");
+}
+
+export async function reviewAIRiskOfBiasAnswer(
+  reviewId: string,
+  proposalId: string,
+  questionKey: string,
+  formData: FormData,
+) {
+  const action = value(formData, "action");
+  const response = await request(
+    "POST",
+    `/api/v1/ai/risk-of-bias/reviews/${reviewId}/proposals/${proposalId}/answers/${questionKey}/review`,
+    {
+      action,
+      reason: optional(formData, "reason"),
+      human_answer:
+        action === "EDITED"
+          ? { answer: value(formData, "human_answer"), rationale: value(formData, "reason") }
+          : null,
+    },
+  );
+  await finish(reviewId, response, "ai_rob_answer_reviewed");
+}

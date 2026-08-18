@@ -3,13 +3,17 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getRiskOfBiasWorkspace } from "@/lib/api";
+import { getAIRiskOfBiasWorkspace } from "@/lib/ai-risk-of-bias-api";
 
 import {
   adjudicateComparison,
+  createAIRiskOfBiasPolicy,
   compareAssessments,
   createAssessment,
   decideVersion,
+  generateAIRiskOfBiasProposal,
   installDemonstration,
+  reviewAIRiskOfBiasAnswer,
   saveAnswer,
   saveDomain,
   saveOverall,
@@ -31,7 +35,10 @@ export default async function RiskOfBiasPage({ params, searchParams }: Props) {
   const accessToken = cookieStore.get("review_access_token")?.value;
   const organizationId = cookieStore.get("review_organization_id")?.value;
   if (!accessToken || !organizationId) redirect("/login");
-  const result = await getRiskOfBiasWorkspace(accessToken, organizationId, reviewId);
+  const [result, aiResult] = await Promise.all([
+    getRiskOfBiasWorkspace(accessToken, organizationId, reviewId),
+    getAIRiskOfBiasWorkspace(accessToken, organizationId, reviewId),
+  ]);
   if (result.status === "unauthorized") redirect("/login?error=session_expired");
 
   const versions = result.instruments.flatMap((instrument) => instrument.versions);
@@ -65,6 +72,47 @@ export default async function RiskOfBiasPage({ params, searchParams }: Props) {
           {query.updated.replaceAll("_", " ")}.
         </p>
       ) : null}
+
+      <section className="mt-8 grid gap-6 border-y border-[var(--line)] py-8 lg:grid-cols-[1fr_1.4fr]">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--brand)]">
+            Governed assistance
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold">Risk of Bias AI assistant</h2>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            The assistant proposes only instrument-allowed signalling answers. It never submits
+            an assessment, replaces dual human review, adjudicates disagreement, or creates a
+            domain or overall judgment.
+          </p>
+          <form action={createAIRiskOfBiasPolicy.bind(null, reviewId)} className="mt-5 space-y-3 rounded-xl bg-[#edf4f0] p-4">
+            <label className="block text-xs font-semibold">Assistance mode
+              <select className={field} defaultValue="BLINDED_AI" name="mode">
+                <option value="BLINDED_AI">Blinded until submission</option>
+                <option value="ASSISTED">Assisted reviewer view</option>
+              </select>
+            </label>
+            <label className="block text-xs font-semibold">Maximum batch size
+              <input className={field} defaultValue="20" min="1" max="100" name="maximum_batch_size" type="number" />
+            </label>
+            <button className={button} type="submit">Save governed policy</button>
+          </form>
+        </div>
+        <div>
+          <form action={generateAIRiskOfBiasProposal.bind(null, reviewId)} className="rounded-xl border border-[var(--line)] bg-white p-5">
+            <h3 className="font-semibold">Prepare a document-grounded proposal</h3>
+            <p className="mt-1 text-xs text-[var(--muted)]">Enter the assigned assessment and one or more processed Document UUIDs. The first is treated as primary full text; later IDs are explicit supplements.</p>
+            <label className="mt-4 block text-xs font-semibold">Assessment UUID
+              <input className={field} name="assessment_id" placeholder="Assessment UUID" required />
+            </label>
+            <label className="mt-4 block text-xs font-semibold">Processed Document UUIDs
+              <textarea className={field} name="document_ids" placeholder="Document UUIDs separated by spaces or commas" required />
+            </label>
+            <button className={`${button} mt-4`} type="submit">Generate proposal</button>
+          </form>
+          {aiResult.status === "unavailable" ? <p className="mt-3 text-sm text-amber-800">AI assistance data is temporarily unavailable; canonical assessment data is unaffected.</p> : null}
+          {aiResult.status === "unauthorized" ? <p className="mt-3 text-sm text-[var(--muted)]">AI assistance is restricted to authorized review roles.</p> : null}
+        </div>
+      </section>
 
       {result.status === "unavailable" ? (
         <section className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
@@ -220,6 +268,48 @@ export default async function RiskOfBiasPage({ params, searchParams }: Props) {
                 );
               })}
             </div>
+          </section>
+
+          <section className="border-t border-[var(--line)] py-9">
+            <h2 className="text-2xl font-semibold">AI proposals and evaluation</h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">Proposal visibility follows the selected mode. Evidence references remain tied to the pinned parser snapshot; stale proposals must not be accepted.</p>
+            <div className="mt-6 space-y-5">
+              {aiResult.proposals.map((proposal) => (
+                <article className="rounded-2xl border border-[var(--line)] bg-white p-6" key={proposal.proposal_id ?? proposal.ai_run_id}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">Assessment {proposal.assessment_id}</h3>
+                      <p className="mt-1 text-xs text-[var(--muted)]">{proposal.mode} · {proposal.status} · {proposal.is_revealed ? "revealed" : "blinded"}{proposal.stale ? " · stale" : ""}</p>
+                    </div>
+                    <span className="rounded-full bg-[#edf4f0] px-3 py-1 text-xs font-semibold">{proposal.readiness}</span>
+                  </div>
+                  {proposal.stale_reasons.length ? <p className="mt-3 text-sm text-red-700">Staleness: {proposal.stale_reasons.join(", ")}</p> : null}
+                  {proposal.is_revealed && proposal.structured_value ? (
+                    <div className="mt-5 space-y-4">
+                      {proposal.structured_value.answers?.map((answer) => (
+                        <div className="rounded-xl border border-[var(--line)] p-4" key={answer.question_key}>
+                          <div className="flex flex-wrap justify-between gap-2 text-sm">
+                            <span className="font-semibold">{answer.question_key}</span>
+                            <span>{answer.status} · {answer.answer ?? "abstained"}</span>
+                          </div>
+                          {answer.evidence.map((evidence) => <blockquote className="mt-3 border-l-4 border-[var(--brand)] bg-slate-50 p-3 text-sm" key={`${evidence.chunk_id}-${evidence.quote}`}><p className="text-xs text-[var(--muted)]">Document {evidence.document_id} · {evidence.section ?? "section unavailable"}</p><p className="mt-1">“{evidence.quote}”</p></blockquote>)}
+                          {proposal.proposal_id ? (
+                            <form action={reviewAIRiskOfBiasAnswer.bind(null, reviewId, proposal.proposal_id, answer.question_key)} className="mt-4 grid gap-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
+                              <label className="text-xs font-semibold">Disposition<select className={field} defaultValue="UNRESOLVED" name="action"><option value="ACCEPTED">Accept</option><option value="EDITED">Edit</option><option value="REJECTED">Reject</option><option value="UNRESOLVED">Unresolved</option></select></label>
+                              <label className="text-xs font-semibold">Rationale / edited answer<input className={field} name="reason" /></label>
+                              <button className="text-sm font-semibold text-[var(--brand)]" type="submit">Record disposition</button>
+                            </form>
+                          ) : null}
+                        </div>
+                      ))}
+                      <div className="rounded-xl bg-[#edf4f0] p-4 text-sm"><p className="font-semibold">Deterministic rule output</p><p className="mt-1">Domain suggestions remain provisional: {JSON.stringify(proposal.domain_suggestions)}</p><p>Overall suggestion: {proposal.overall_suggestion ?? "not available"}</p></div>
+                    </div>
+                  ) : <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-[var(--muted)]">AI content is withheld until the governed reveal condition is met.</p>}
+                </article>
+              ))}
+              {aiResult.proposals.length === 0 ? <p className="rounded-xl border border-dashed border-[var(--line)] p-5 text-sm text-[var(--muted)]">No governed AI proposals have been created.</p> : null}
+            </div>
+            {aiResult.evaluations.length ? <pre className="mt-6 overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{JSON.stringify(aiResult.evaluations[0].metrics, null, 2)}</pre> : null}
           </section>
 
           <section className="grid gap-6 border-t border-[var(--line)] py-9 lg:grid-cols-2">
