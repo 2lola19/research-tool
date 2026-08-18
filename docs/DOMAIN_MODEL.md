@@ -176,3 +176,13 @@ missing-information reasons; missing information is not exclusion. Evidence uses
 nullable parser page/section metadata, and exact-verifiable quotes. Staleness is a derived current-view
 property over immutable history. Evaluation reference records remain distinct from ScreeningDecision,
 Article, Study, and StudyFamily.
+## Governed AI extraction assistance
+
+`AIExtractionProposal` is an immutable advisory projection over an existing human `ExtractionRun`; it
+is not an `ExtractionValue`. The authoritative contract is the exact `ExtractionSchemaVersion`.
+Proposal fields preserve reported value, normalized typed value, unit/option identity, explicit
+missingness, evidence spans, and validation state. An accepted or edited field becomes canonical only
+when the human actor calls the existing manual extraction service. Human field-review events and
+blinded reveal events are append-only, while ordinary extraction revision, verification, and
+adjudication semantics remain unchanged. Study and Article stay distinct; every source names both its
+Article and Document.

@@ -163,3 +163,11 @@ Evaluation cases pin document/version/parser/protocol/reference/evidence identit
 prompt/model/task/policy dimensions, deterministic metrics, criterion correctness, evidence issues,
 and sections. ORM guards reject update/delete. The migration upgrades linearly after
 `20260815_0025` and fully downgrades on SQLite.
+## Phase 26 AI extraction metadata
+
+Migration `20260817_0027` adds append-only extraction policy, proposal-pin, source, evidence, reveal,
+field-review, evaluation dataset/case/result, case-result, and error-classification tables. Composite
+organization/review foreign keys preserve tenant scope across AI runs/proposals, schemas, Studies,
+human extraction assignments, Documents, processing runs, parsed blocks, and evaluation records.
+Scientific field values remain exclusively in the existing manual extraction tables. AI tables never
+serve as canonical extraction, verification, or analysis input.

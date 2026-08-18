@@ -82,3 +82,9 @@ Phase 25 adds no third-party dependency. Full-text selection, Unicode/whitespace
 evidence validation, metrics, and mock fixtures are deterministic repository code. `DocumentParser`
 remains the provider boundary; the fixture parser is sufficient. Live GROBID, OCR/computer vision,
 embeddings, external retrieval, and paid AI providers remain deferred.
+## Phase 26 dependency impact
+
+Governed structured extraction adds no new third-party runtime dependency. Typed validation, hashing,
+field-aware chunk selection, evaluation, and mock fixtures use the existing Python/FastAPI/Pydantic/
+SQLAlchemy stack. No OCR, computer-vision, model-training, paid-provider, or network-retrieval package
+is introduced.

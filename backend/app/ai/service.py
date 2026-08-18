@@ -37,6 +37,7 @@ MAX_OUTPUT_BYTES = 32_768
 _GOVERNED_SCREENING_TASKS = {
     AITaskType.SCREENING_SUGGESTION,
     AITaskType.FULL_TEXT_SCREENING_SUGGESTION,
+    AITaskType.EXTRACTION_SUGGESTION,
 }
 
 
@@ -100,6 +101,7 @@ class AIExecutionService:
         await self.ensure_defaults(actor, AITaskType.SEARCH_QUERY_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.SCREENING_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.FULL_TEXT_SCREENING_SUGGESTION)
+        await self.ensure_defaults(actor, AITaskType.EXTRACTION_SUGGESTION)
         models = await self._repository.list_models(actor.organization_id)
         prompts = await self._repository.list_prompts(actor.organization_id)
         return {
@@ -284,7 +286,7 @@ class AIExecutionService:
                     target_id=target_id,
                     structured_value=result.output,
                     evidence_references=evidence_references,
-                    model_reported_confidence=result.output["model_reported_confidence"],
+                    model_reported_confidence=result.output.get("model_reported_confidence"),
                     response_hash=response_hash,
                 )
                 run = await self._repository.update_run(
@@ -424,7 +426,13 @@ class AIExecutionService:
         missing = []
         for key in task.input_contract["required"]:
             current = value.get(key)
-            if key in {"eligibility_criteria", "exclusion_criteria", "chunks"}:
+            if key in {
+                "eligibility_criteria",
+                "exclusion_criteria",
+                "schema_fields",
+                "source_documents",
+                "chunks",
+            }:
                 valid = isinstance(current, list) and bool(current)
             else:
                 valid = isinstance(current, str) and bool(current.strip())
@@ -456,6 +464,16 @@ class AIExecutionService:
                 raise ValueError("full-text screening requires selected document chunks")
             if len(chunks) > 80:
                 raise ValueError("full-text screening input exceeds the chunk limit")
+        if task.task_type is AITaskType.EXTRACTION_SUGGESTION:
+            fields = value.get("schema_fields")
+            chunks = value.get("chunks")
+            documents = value.get("source_documents")
+            if not isinstance(fields, list) or not fields or len(fields) > 200:
+                raise ValueError("structured extraction requires 1 through 200 schema fields")
+            if not isinstance(chunks, list) or not chunks or len(chunks) > 80:
+                raise ValueError("structured extraction requires 1 through 80 selected chunks")
+            if not isinstance(documents, list) or not documents or len(documents) > 8:
+                raise ValueError("structured extraction requires 1 through 8 source documents")
 
     @staticmethod
     def _sanitize_input(
@@ -472,6 +490,18 @@ class AIExecutionService:
                 "article_id": str(value["article_id"]),
                 "citation": value["citation"],
                 "document_identity": value["document_identity"],
+                "chunks": value["chunks"],
+                "input_preparation": value["input_preparation"],
+            }
+        if task.task_type is AITaskType.EXTRACTION_SUGGESTION:
+            return {
+                "review_id": str(value["review_id"]),
+                "study_id": str(value["study_id"]),
+                "assignment_id": str(value["assignment_id"]),
+                "schema_version_id": str(value["schema_version_id"]),
+                "schema_identity": value["schema_identity"],
+                "schema_fields": value["schema_fields"],
+                "source_documents": value["source_documents"],
                 "chunks": value["chunks"],
                 "input_preparation": value["input_preparation"],
             }
@@ -519,6 +549,16 @@ class AIExecutionService:
             errors.extend(
                 AIExecutionService._validate_full_text_screening_output(value, input_data)
             )
+            return errors
+        if task.task_type is AITaskType.EXTRACTION_SUGGESTION:
+            if str(value.get("schema_version_id", "")) != str(
+                (input_data or {}).get("schema_version_id", "")
+            ):
+                errors.append(
+                    {"code": "WRONG_SCHEMA_VERSION", "message": "schema version does not match"}
+                )
+            if not isinstance(value.get("fields"), list):
+                errors.append({"code": "INVALID_FIELDS", "message": "fields must be a list"})
             return errors
         if "evidence_references" in value and not isinstance(value["evidence_references"], list):
             errors.append(

@@ -93,3 +93,12 @@ accepted, overridden, disagreed, and abstained behavior without mutating AI or h
 Staleness never rewrites old records. Scientific publication exports do not use unaccepted proposals;
 accepted human-decision provenance may enter audit/reproducibility packages, while evaluation remains
 separate from effect estimates.
+## AI-assisted extraction provenance
+
+For an assisted canonical field, provenance retains the human actor and canonical extraction value,
+the ACCEPTED or EDITED field-review event, immutable AI field/proposal, AI run and attempts, model,
+prompt and task versions, exact schema/field hashes, Study and source Article/Document identities,
+processing/parser and parsed-content hashes, chunk manifests, and exact bounded evidence quote/hash.
+UNSEEN, VIEWED/REVEALED, ACCEPTED, EDITED, REJECTED, UNRESOLVED, and model abstention remain
+distinguishable. Human edits never mutate the original proposal. Unaccepted proposals remain audit and
+evaluation records only and are excluded from normal scientific exports.

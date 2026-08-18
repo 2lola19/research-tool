@@ -78,9 +78,15 @@ BLINDED_AI, human-only canonical acceptance, immutable staleness, bounded batch 
 full-text safety evaluation. Live providers, OCR, cross-report evidence, active learning, and autonomous
 exclusion remain deferred.
 
-## Recommended Phase 26
+## Phase 26 complete: governed AI structured extraction assistance
 
-Begin governed AI extraction assistance only after explicit Phase 26 authorization. Reuse the same
-run/proposal/human-acceptance laws; pin extraction schemas and document evidence; keep deterministic
-typed validation and canonical writes human-controlled. Do not broaden Phase 25 into Risk of Bias,
-GRADE, manuscript generation, or autonomous agents.
+Phase 26 adds schema-pinned typed proposals, exact document/chunk evidence, source-versus-normalized
+value semantics, explicit uncertainty/conflicts/limitations, server-side blinding, human-only writes
+through manual extraction, immutable staleness, bounded batch execution, and deterministic field-level
+safety evaluation. It does not add OCR, live providers, AI verification, or autonomous acceptance.
+
+## Recommended Phase 27
+
+Build governed, evidence-grounded AI Risk of Bias assistance against immutable instrument versions and
+human-only domain judgments. Preserve independent assessors, blinding, deterministic validation,
+Study/document evidence, formal evaluation, and no autonomous judgment or adjudication.

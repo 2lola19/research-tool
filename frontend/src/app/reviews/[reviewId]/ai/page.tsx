@@ -40,6 +40,12 @@ export default async function AIWorkspacePage({ params, searchParams }: Props) {
           AI output is never canonical scientific state. Every result is validated and requires an
           explicit human decision. This phase uses only the deterministic offline mock provider.
         </p>
+        <Link
+          className="mt-4 inline-block text-sm font-semibold text-[var(--brand)] hover:underline"
+          href={`/reviews/${reviewId}/extraction-ai`}
+        >
+          Open governed structured extraction &rarr;
+        </Link>
       </header>
 
       {query.error ? <p className="mt-6 rounded-xl bg-red-50 p-4 text-red-800">Request rejected safely.</p> : null}

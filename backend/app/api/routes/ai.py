@@ -22,6 +22,7 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 _GOVERNED_SCREENING_TASKS = {
     AITaskType.SCREENING_SUGGESTION,
     AITaskType.FULL_TEXT_SCREENING_SUGGESTION,
+    AITaskType.EXTRACTION_SUGGESTION,
 }
 
 
@@ -71,7 +72,7 @@ async def create_run(
     payload: CreateRunRequest, actor: ActorContextDependency, session: DbSessionDependency
 ) -> dict[str, Any]:
     if payload.task_type in _GOVERNED_SCREENING_TASKS:
-        raise ConflictError("screening AI runs must use the governed screening endpoints")
+        raise ConflictError("consequential AI runs must use their governed domain endpoints")
     run, proposal = await _service(session).create_and_execute(actor, **payload.model_dump())
     await session.commit()
     return {"run": asdict(run), "proposal": asdict(proposal) if proposal else None}

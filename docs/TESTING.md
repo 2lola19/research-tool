@@ -131,3 +131,12 @@ PostgreSQL, and Docker execution remain intentionally outside this phase.
   pytest/coverage, Vitest (`spawn EPERM` while loading
   Vite config), and the final Next.js post-compilation worker (`spawn EPERM`) require manual host
   validation; Ruff, formatting, strict mypy, ESLint, and TypeScript pass in the sandbox.
+## Phase 26 extraction safety coverage
+
+Focused unit and integration coverage exercises exact typed/schema validation, missingness, evidence
+quotes and numeric support, fabricated chunks/documents/pages/values, unsupported fields, conflicts,
+supplement/table limitations, prompt injection, immutable repeated proposals, schema/document
+staleness, bounded failure-isolated batches, direct-ID blinding and reveal, tenant/review boundaries,
+human accept/edit provenance through manual extraction, dual-extractor separation, unchanged PRISMA,
+downstream isolation, deterministic evaluation, hallucination/grounding queues, calibration, and
+hypothetical-only thresholds. Migration testing performs a full SQLite upgrade and downgrade.

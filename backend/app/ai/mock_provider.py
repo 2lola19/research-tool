@@ -40,6 +40,26 @@ class DeterministicMockAIProvider:
 
     @staticmethod
     def _default_output(request: ProviderRequest) -> dict[str, Any]:
+        if request.task_type == "EXTRACTION_SUGGESTION":
+            schema = request.structured_input.get("schema_identity", {})
+            fields = request.structured_input.get("schema_fields", [])
+            return {
+                "schema_version_id": str(schema.get("schema_version_id", "")),
+                "fields": [
+                    {
+                        "field_id": str(field.get("field_id", "")),
+                        "status": "ABSTAIN",
+                        "value": None,
+                        "reported_value": None,
+                        "unit": None,
+                        "option_id": None,
+                        "evidence": [],
+                        "confidence": None,
+                        "note": "Deterministic mock requires human extraction.",
+                    }
+                    for field in fields
+                ],
+            }
         if request.task_type == "FULL_TEXT_SCREENING_SUGGESTION":
             return {
                 "suggestion": "MAYBE",
@@ -144,3 +164,143 @@ class DeterministicMockAIProvider:
         if scenario == "oversized_output":
             return {**base, "rationale": "x" * 40_000}
         raise ValueError(f"unknown full-text mock fixture: {scenario}")
+
+    @staticmethod
+    def extraction_fixture(
+        scenario: str, structured_input: dict[str, Any]
+    ) -> dict[str, Any] | str | AIProviderErrorKind:
+        """Named deterministic fixtures for schema-pinned structured extraction."""
+        scenario = scenario.upper()
+        errors = {
+            "TIMEOUT": AIProviderErrorKind.TIMEOUT,
+            "RATE_LIMIT": AIProviderErrorKind.RATE_LIMIT,
+            "TRANSIENT_FAILURE": AIProviderErrorKind.UNAVAILABLE,
+            "PERMANENT_FAILURE": AIProviderErrorKind.PERMANENT,
+        }
+        if scenario in errors:
+            return errors[scenario]
+        if scenario == "MALFORMED_JSON":
+            return "not-a-structured-object"
+        schema = structured_input.get("schema_identity", {})
+        fields = structured_input.get("schema_fields", [])
+        chunks = structured_input.get("chunks", [])
+        chunk = chunks[0] if chunks else {}
+        sources = structured_input.get("source_documents", [])
+        source = sources[0] if sources else {}
+
+        def abstain(field: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "field_id": str(field.get("field_id", "")),
+                "status": "ABSTAIN",
+                "value": None,
+                "reported_value": None,
+                "unit": None,
+                "option_id": None,
+                "evidence": [],
+                "confidence": None,
+                "note": "Human extraction is required.",
+            }
+
+        output = {
+            "schema_version_id": str(schema.get("schema_version_id", "")),
+            "fields": [abstain(field) for field in fields],
+        }
+        if scenario in {"SUCCESS_PARTIAL", "ABSTAIN"}:
+            return output
+        status_map = {
+            "NOT_REPORTED": "NOT_REPORTED",
+            "UNCLEAR": "UNCLEAR",
+            "CONFLICTING_VALUES": "CONFLICTING_SOURCE_VALUES",
+            "REQUIRES_SUPPLEMENT": "REQUIRES_SUPPLEMENT",
+            "REQUIRES_TABLE": "REQUIRES_TABLE_OR_FIGURE",
+        }
+        if scenario in status_map:
+            return {
+                **output,
+                "fields": [{**abstain(field), "status": status_map[scenario]} for field in fields],
+            }
+        if not fields:
+            return output
+        field = fields[0]
+        quote = str(chunk.get("text", ""))[:120]
+        evidence = {
+            "document_id": str(source.get("document_id", chunk.get("document_id", ""))),
+            "document_version_id": str(
+                source.get("document_version_id", chunk.get("document_version_id", ""))
+            ),
+            "chunk_id": str(chunk.get("chunk_id", "")),
+            "page": chunk.get("page"),
+            "section": chunk.get("section"),
+            "table_id": chunk.get("table_id"),
+            "figure_id": chunk.get("figure_id"),
+            "quote": quote,
+        }
+        proposed = {
+            **abstain(field),
+            "status": "PROPOSED_VALUE",
+            "value": 148,
+            "reported_value": "148",
+            "unit": field.get("unit"),
+            "evidence": [evidence],
+            "confidence": 0.91,
+            "note": None,
+        }
+        result_fields = [proposed, *[abstain(item) for item in fields[1:]]]
+        if scenario in {"SUCCESS_COMPLETE", "PROMPT_INJECTION_SOURCE"}:
+            return {**output, "fields": result_fields}
+        if scenario == "UNKNOWN_FIELD":
+            return {**output, "fields": [*result_fields, {**abstain(field), "field_id": "unknown"}]}
+        if scenario == "DUPLICATE_FIELD":
+            return {**output, "fields": [proposed, proposed, *result_fields[1:]]}
+        if scenario == "WRONG_TYPE":
+            return {**output, "fields": [{**proposed, "value": "twenty"}, *result_fields[1:]]}
+        if scenario == "INVALID_OPTION":
+            return {
+                **output,
+                "fields": [
+                    {**proposed, "value": "INVENTED", "option_id": "INVENTED"},
+                    *result_fields[1:],
+                ],
+            }
+        if scenario == "INVALID_UNIT":
+            return {**output, "fields": [{**proposed, "unit": "invented"}, *result_fields[1:]]}
+        if scenario == "FABRICATED_CHUNK":
+            return {
+                **output,
+                "fields": [
+                    {**proposed, "evidence": [{**evidence, "chunk_id": "fabricated:chunk"}]},
+                    *result_fields[1:],
+                ],
+            }
+        if scenario == "WRONG_DOCUMENT":
+            return {
+                **output,
+                "fields": [
+                    {**proposed, "evidence": [{**evidence, "document_id": "wrong"}]},
+                    *result_fields[1:],
+                ],
+            }
+        if scenario == "WRONG_PAGE":
+            return {
+                **output,
+                "fields": [
+                    {**proposed, "evidence": [{**evidence, "page": 999999}]},
+                    *result_fields[1:],
+                ],
+            }
+        if scenario == "QUOTE_MISMATCH":
+            return {
+                **output,
+                "fields": [
+                    {**proposed, "evidence": [{**evidence, "quote": "fabricated quote"}]},
+                    *result_fields[1:],
+                ],
+            }
+        if scenario == "VALUE_NOT_SUPPORTED_BY_QUOTE":
+            return {
+                **output,
+                "fields": [{**proposed, "value": 999, "reported_value": "999"}, *result_fields[1:]],
+            }
+        if scenario == "OVERSIZED_OUTPUT":
+            return {**output, "fields": [{**proposed, "note": "x" * 40_000}]}
+        raise ValueError(f"unknown extraction mock fixture: {scenario}")

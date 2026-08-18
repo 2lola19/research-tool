@@ -1,5 +1,18 @@
 """Import all SQLAlchemy mappings so metadata and Alembic see every table."""
 
+from backend.app.ai.extraction_persistence import (
+    AIExtractionAccessRecord,
+    AIExtractionErrorClassificationRecord,
+    AIExtractionEvaluationCaseRecord,
+    AIExtractionEvaluationCaseResultRecord,
+    AIExtractionEvaluationDatasetRecord,
+    AIExtractionEvaluationResultRecord,
+    AIExtractionEvidenceRecord,
+    AIExtractionFieldReviewRecord,
+    AIExtractionPolicyRecord,
+    AIExtractionProposalLinkRecord,
+    AIExtractionSourceRecord,
+)
 from backend.app.ai.full_text_persistence import (
     AIFullTextAccessRecord,
     AIFullTextDecisionLinkRecord,
@@ -142,6 +155,17 @@ from backend.app.workflow.persistence import (
 
 __all__ = [
     "AIExecutionRunRecord",
+    "AIExtractionAccessRecord",
+    "AIExtractionErrorClassificationRecord",
+    "AIExtractionEvaluationCaseRecord",
+    "AIExtractionEvaluationCaseResultRecord",
+    "AIExtractionEvaluationDatasetRecord",
+    "AIExtractionEvaluationResultRecord",
+    "AIExtractionEvidenceRecord",
+    "AIExtractionFieldReviewRecord",
+    "AIExtractionPolicyRecord",
+    "AIExtractionProposalLinkRecord",
+    "AIExtractionSourceRecord",
     "AIFullTextAccessRecord",
     "AIFullTextDecisionLinkRecord",
     "AIFullTextProposalLinkRecord",

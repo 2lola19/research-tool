@@ -130,3 +130,12 @@ information, selected chunk IDs, and selection method. Direct IDs are scoped by 
 assignment, and reviewer. Evaluation refuses unrevealed BLINDED_AI proposals and labels metrics
 `FULL_TEXT`. No route auto-excludes, changes PRISMA, merges reports, or treats an AI proposal as a
 canonical decision.
+## Phase 26 AI extraction API
+
+All routes are organization- and review-scoped under `/api/v1/ai/extraction/reviews/{review_id}` and
+reuse centralized AI permissions. The API supports versioned policies, readiness, bounded independent
+batch generation, proposal list/assignment/direct-ID inspection, field review, reference-dataset
+creation, evaluation, and high-risk result queues. No route accepts an arbitrary prompt or provider
+call. Direct-ID responses enforce the same BLINDED_AI withholding as assignment responses; generic AI
+endpoints exclude structured extraction content. Accept/edit requests invoke the normal manual
+extraction service and attribute the canonical value to the authenticated human.

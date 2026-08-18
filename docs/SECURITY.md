@@ -103,3 +103,12 @@ Providers receive bounded structured data with no tools, filesystem, shell, brow
 database, or arbitrary retrieval. Paper instructions and URLs remain inert quoted data. Secret
 markers, oversized input/output, unknown criteria, foreign IDs, fabricated chunks/pages/sections, and
 non-verbatim quotes fail deterministically. PDF bytes and storage paths are not prompt input.
+## Phase 26 extraction isolation and disclosure controls
+
+Every schema, assignment, Study, Article, Document, processing run, block, proposal, reference case,
+and evaluation lookup is scoped to organization and review before use. Allowed source documents are
+explicit; cross-report use additionally requires a canonical shared Study. Foreign IDs fail closed.
+BLINDED_AI withholds values, missingness, confidence, evidence, and validation through assignment,
+direct proposal, generic AI, and evaluation paths until human submission. Prompt framing treats paper
+instructions as inert content, inputs are bounded, secret markers remain blocked, and providers have no
+filesystem, network, browser, database, shell, or arbitrary tools.

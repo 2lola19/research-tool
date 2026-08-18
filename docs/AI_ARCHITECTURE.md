@@ -55,3 +55,22 @@ Full-text evaluation remains labeled separately from title/abstract evaluation. 
 AI EXCLUDE/reference RETAIN is the false-negative safety event. Metrics include criterion correctness,
 evidence validation, section analysis, calibration, simulations, and high-risk disagreements. The
 offline deterministic mock remains the only provider.
+## Phase 26: governed structured extraction assistance
+
+`STRUCTURED_EXTRACTION_SUGGESTION` reuses the Phase 23 run, attempt, model, prompt, provider, usage,
+and immutable proposal substrate. An extraction-specific link pins the human assignment,
+`ExtractionSchemaVersion`, Study, explicit report/document set, processing/parser identities, parsed
+hashes, selected and omitted chunk manifests, and validation results. Field-aware source selection is
+deterministic and versioned; document content is untrusted data and the provider receives no tools.
+
+Every requested schema field has one proposal envelope. Non-missing fields require exact grounded
+evidence, and deterministic validation separately checks the schema envelope, field uniqueness and
+completeness, value types/options/units, missingness consistency, document/chunk/page/section/quote,
+and value support. Source text and normalized value are preserved separately. No model calculation or
+unit conversion is accepted.
+
+OFF, BLINDED_AI, and ASSISTED are server policies. BLINDED_AI serializers withhold field output and
+validation until human submission and record reveal access. Only ASSISTED valid/current fields can be
+accepted or edited, always through `ManualExtractionService`. Generic run/proposal endpoints exclude
+the task. Evaluations use deterministic field metrics, explicit reference standards, calibration bins,
+hypothetical-only thresholds, and high-risk hallucination/evidence queues.

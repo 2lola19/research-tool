@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 
 ## Status by milestone
 
@@ -33,8 +33,25 @@ Last updated: 2026-08-16
 | AI Provider Foundation (Phase 23) | VERIFIED | Provider-neutral task execution, immutable model/prompt versions, bounded runs, structured validation, append-only proposals/acceptance, deterministic mock execution, and provenance. |
 | Governed AI Screening Assistance (Phase 24) | IMPLEMENTED | Versioned screening policy, assignment-scoped title/abstract suggestions, server-enforced blinded/assisted reveal, deterministic evaluation metrics, case-level error taxonomy, migration, API, UI, provenance, audit, and tenant tests. |
 | Governed AI Full-Text Screening (Phase 25) | IMPLEMENTED | Document/version/parser-pinned bounded suggestions, exact evidence/criterion validation, structured uncertainty, direct-ID blinding, human-only canonical acceptance, staleness, batch isolation, full-text evaluation, migration, API, UI, and tenant tests. |
+| Governed AI Structured Extraction (Phase 26) | IMPLEMENTED | ExtractionSchemaVersion-pinned typed field proposals, exact report/document/chunk evidence, source/normalized value separation, explicit missingness/conflicts/limitations, direct-ID blinding, human-only manual-service acceptance/editing, staleness, batch isolation, field-level safety evaluation, migration, API, UI, and tenant tests. |
 
 ## Validation evidence
+
+### Phase 26 validation (2026-08-17)
+
+- Backend Ruff check and scoped format check pass; strict mypy passes for 201 source files. Eight
+  focused unit tests, the Phase 26 assignment-scoped integration test, and the full migration test
+  pass. Completed coverage shards retain the repository threshold at 85% (16,648 statements); AI,
+  downstream science, and canonical extraction regression shards pass.
+- SQLite upgrades through `20260817_0027` and downgrades fully to base. Composite tenant/review foreign
+  keys cover schemas, assignments, Studies, reports/Documents, processing runs, blocks, proposals,
+  human reviewers, reference datasets, evaluation cases, and classifications.
+- Frontend ESLint and TypeScript pass. The Next.js production bundle compiles successfully before its
+  TypeScript worker is blocked by Windows `spawn EPERM`; Vitest is blocked at Vite config startup by
+  the same host restriction.
+- `ENVIRONMENT_BLOCKED`: the monolithic pytest invocation exceeded its bounded ten-minute run without
+  emitting a failure, so deterministic repository-local shards were used. Some filesystem/temp shards
+  cannot traverse pytest-created directories due Windows `Access denied`; no ACL changes were made.
 
 - Backend: repository Ruff check/format and strict mypy pass; Phase 24-focused unit and integration tests pass. The full pytest run was attempted with a repository-local temp workaround but exceeded the unelevated fallback command limit without a test failure report.
 - Frontend: TypeScript passes. ESLint, Vitest, and the Next.js 16 production build were attempted; the unelevated fallback blocked their subprocess/config work with timeout or `spawn EPERM` errors.
@@ -159,3 +176,16 @@ Phase 23 adds a provider-neutral, task-oriented AI execution substrate with immu
   Vitest fails before loading tests at Vite config startup with `spawn EPERM`; the Next.js build compiles
   successfully, then its TypeScript worker hits `spawn EPERM`. PostgreSQL, live GROBID, Docker, and
   paid/live AI providers remain unexecuted.
+## Phase 26 governed AI structured extraction assistance
+
+Phase 26 implements schema-pinned typed extraction proposals over explicit Study/report/document
+inputs. Deterministic source preparation persists selected and omitted chunk manifests; field-level
+validation enforces exact schema IDs, types, options, units, missingness, source/report scope, chunks,
+metadata, quotes, and value support. Conflicts and table/supplement/parser limitations are explicit.
+OFF/BLINDED_AI/ASSISTED behavior is server-enforced, human accept/edit goes through the existing
+manual extraction service, and AI does not count as an extractor or change canonical completion.
+
+Field-level evaluation supports qualified human/curated reference standards, numeric error and
+explicit tolerances, categorical confusion, missingness, hallucination and grounding metrics,
+calibration bins, hypothetical thresholds, and high-risk queues. Repeated runs are immutable and
+schema/document/parser/task/prompt changes report staleness without rerun.
