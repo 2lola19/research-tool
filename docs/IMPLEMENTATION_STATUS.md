@@ -40,6 +40,8 @@ Last updated: 2026-08-19
 | Production AI Provider Integrations and Governance (Phase 34) | IMPLEMENTED | Fixed OpenAI/Anthropic/Gemini adapters behind a bounded transport; explicit live opt-in; deterministic task/model routing and allowlists; normalized usage, exact known-cost accounting, tenant budget/circuit checks, usage API, and deterministic no-network coverage. Live credentials/network and PostgreSQL concurrency remain deployment gates. |
 | Document Processing/Object Storage/PDF Hardening (Phase 35) | IMPLEMENTED | Verified local/S3-compatible storage contracts, atomic/checksum-checked PDF acquisition, parser limits/timeouts, append-only retry/failure metadata, deterministic chunk manifests, restricted-content authorization, read-only reconciliation, migration `20260819_0035`, and tenant/security coverage. Live GROBID/S3/malware scanning/PostgreSQL remain deployment gates. |
 
+| End-to-End V1 Validation and Launch Gate (Phase 38) | READY_WITH_DOCUMENTED_LIMITATIONS | Deterministic scientific benchmark, focused full-lifecycle integration, tenant/security/provenance review, backend/frontend/configuration gates, release report, and launch classification pass locally. Full pytest, live PostgreSQL, Docker/image/scanner, OIDC, external storage/malware scanning, shared rate limiting, and backup/restore remain controlled-deployment gates. |
+
 ## Validation evidence
 
 ### Phase 26 validation (2026-08-17)
@@ -316,3 +318,13 @@ container installation, image health checks, and deployment/backup/incident runb
 schema or provenance model changed. The controlled-deployment package remains environment-limited
 until PostgreSQL, Docker/image/dependency scans, OIDC, external object storage/malware scanning,
 TLS/proxy, shared rate limiting, secret management, and backup/restore evidence are available.
+
+## Phase 38 end-to-end V1 validation and launch gate
+
+Phase 38 validates the repository-controlled V1 lifecycle and records
+`READY_WITH_DOCUMENTED_LIMITATIONS` in `V1_RELEASE_REPORT.md`. Deterministic scientific benchmarks,
+focused lifecycle integrations, tenant/security/provenance review, backend/frontend gates, and
+configuration/artifact audits pass. Full pytest, broad tenant execution, live PostgreSQL, Docker
+build/health, Python/image scanners, OIDC, external storage/malware scanning, shared rate limiting,
+and backup/restore remain explicit controlled-deployment evidence gates; no production readiness is
+inferred from their absence.

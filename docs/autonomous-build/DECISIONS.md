@@ -174,3 +174,15 @@ by default; live providers and arbitrary retrieval remain deferred.
 - No migration or scientific model changed. PostgreSQL, Docker image builds, dependency scans,
   OIDC, TLS/proxy, external storage/malware scanning, shared throttling, and backup/restore are
   explicitly environment/deployment gates rather than inferred readiness.
+
+## 2026-08-19 - Phase 38 V1 release classification
+
+- The repository-controlled V1 lifecycle is classified `READY_WITH_DOCUMENTED_LIMITATIONS` after
+  deterministic scientific, focused integration, tenant/security/provenance, backend/frontend, and
+  artifact validation.
+- Full pytest, broad tenant execution, live PostgreSQL, Docker/image/scanner, OIDC, TLS/proxy,
+  shared rate limiting, external storage/malware scanning, and backup/restore evidence remain
+  controlled-deployment gates. No live-provider or production claim is inferred from offline
+  fixtures.
+- No Phase 38 scientific schema or migration change was necessary. The release report is a
+  documentation and evidence artifact; scientific safeguards remain unchanged.

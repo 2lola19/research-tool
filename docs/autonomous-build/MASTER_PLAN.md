@@ -455,5 +455,7 @@ truthfully documented. The validated Phase 33 implementation checkpoint is local
 checkpointed locally at `e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7`. Phase 35 implementation and
 focused validation are checkpointed locally at `05787fc4cf180ddb51c22c9c7b55f96c6d6e4a6b`. Phase 36
 is checkpointed locally at `55fc1404b5fb9b0103b32521ade4ffd0cc11058d`; Phase 37 is checkpointed
-locally at `4a002a45a054eb1987c6e9ae7df1df0a2e9d634f`. Phase 38 is the next phase after metadata
-reconciliation. No GitHub operation is authorized.
+locally at `4a002a45a054eb1987c6e9ae7df1df0a2e9d634f`, with control-plane reconciliation commit
+`22265e499353e57597e0bd42208e3bcaca3f0785`. Phase 38 validation is complete with its release
+classification recorded in `V1_RELEASE_REPORT.md`; its local checkpoint remains pending. No GitHub
+operation is authorized.

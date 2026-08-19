@@ -241,5 +241,33 @@ without ACL or lock-file surgery.
 
 - PASS - local implementation commit `4a002a45a054eb1987c6e9ae7df1df0a2e9d634f` exists with the
   truthful phase-specific message and contains only the validated Phase 37 scope. Execution state
-  records `CHECKPOINTED`; the metadata reconciliation commit is being finalized before Phase 38.
-  No GitHub operation was authorized.
+  records `CHECKPOINTED`; control-plane reconciliation commit
+  `22265e499353e57597e0bd42208e3bcaca3f0785` exists, `HEAD` is its descendant, and the worktree is
+  clean. No GitHub operation was authorized.
+
+## Phase 38 validation conditions
+
+- PASS - deterministic scientific benchmark (76 tests), all unit tests (190), all API tests (9),
+  deterministic AI unit tests (70), and 59 focused lifecycle integration tests pass with
+  `--no-cov`. The focused tenant-boundary sample passes 5 tests.
+- PASS - backend Ruff/format/strict mypy/compileall, frontend lint/typecheck/Vitest/build, Compose
+  config, Alembic head inspection, npm audit, secret audit, generated-artifact audit, and
+  scientific/security/provenance/tenant review pass.
+- ENVIRONMENT_BLOCKED - repository-wide pytest emitted no output and timed out after 424 seconds;
+  exact descendants were inspected and terminated safely. No full coverage result is claimed.
+- ENVIRONMENT_BLOCKED - the broad tenant-isolation module emitted no output and timed out after 300
+  seconds; focused tenant tests pass and no tenant failure is inferred from the timeout.
+- ENVIRONMENT_BLOCKED - PostgreSQL `alembic check` emitted no output after 90 seconds and Docker
+  Compose build emitted no output after 180 seconds; exact processes were inspected/stopped safely.
+  No live database, image, container health, backup/restore, or concurrency pass is claimed.
+- ENVIRONMENT_BLOCKED - `pip-audit` and Trivy are unavailable. OIDC, TLS/proxy, external storage/
+  malware scanning, shared rate limiting, and backup/restore remain controlled-deployment gates.
+- PASS - no critical/high scientific, security, provenance, tenant, secret, artifact, or scope
+  finding remains. Release classification is `READY_WITH_DOCUMENTED_LIMITATIONS` in
+  `V1_RELEASE_REPORT.md`.
+
+## Phase 38 local checkpoint
+
+- READY_FOR_CHECKPOINT - release report, phase report, state, validation log, blockers, decisions,
+  implementation status, and master-plan updates are prepared for the required final local Git
+  audit. No GitHub operation is authorized.

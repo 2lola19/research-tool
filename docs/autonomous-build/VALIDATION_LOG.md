@@ -331,4 +331,38 @@ This log records commands, results, and honest environment blockers for the V1 c
 - Local checkpoint: PASS - implementation commit
   `4a002a45a054eb1987c6e9ae7df1df0a2e9d634f` was created after the required status, unstaged/staged
   diff, diff-check, secret, artifact, intended-scope, commit, and worktree audits. Execution state
-  records `CHECKPOINTED`; the metadata reconciliation commit is being finalized before Phase 38.
+  records `CHECKPOINTED`; metadata reconciliation commit
+  `22265e499353e57597e0bd42208e3bcaca3f0785` was then created and verified, with Phase 38 as the
+  current resume point.
+
+## 2026-08-19 - Phase 38 end-to-end V1 validation and launch gate
+
+- Deterministic scientific benchmark: PASS - 76 tests covering citation/search fixtures,
+  deduplication, screening, documents, exports, RoB, outcomes, synthesis, reporting, and
+  certainty.
+- Backend behavior: PASS - all unit tests (190), all API tests (9), deterministic AI unit tests
+  (70), and 59 focused lifecycle integration tests across migrations/identity, search, PRISMA,
+  exports, documents, Studies, extraction, RoB, outcomes, analysis, certainty, reporting,
+  workflow, and governed AI.
+- Tenant boundary sample: PASS - 5 focused cross-tenant, provenance, blinding, protocol, and audit
+  tests. The complete tenant module is recorded separately as an environment timeout.
+- Static/frontend/config gates: PASS - Ruff, format (384 files), mypy (236 files), compileall,
+  frontend ESLint/typecheck/Vitest (10)/Next build, Compose config, and one Alembic head
+  (`20260819_0035`).
+- Security/artifact gates: PASS - npm audit found 0 high-or-higher vulnerabilities; high-risk
+  secret and generated-artifact audits found no issue.
+- Full repository pytest: ENVIRONMENT_BLOCKED - no output after 424 seconds; exact pytest/Python
+  descendants were inspected and safely terminated. No full-suite assertion or coverage result is
+  claimed.
+- Broad tenant module: ENVIRONMENT_BLOCKED - no output after 300 seconds; exact descendants were
+  inspected and safely terminated. Focused tenant evidence remains passing.
+- PostgreSQL/Docker: ENVIRONMENT_BLOCKED - `alembic check` no-output timeout after 90 seconds and
+  `docker compose build` no-output timeout after 180 seconds. No live database/image/health,
+  backup/restore, or concurrency pass is claimed.
+- Dependency scanners: ENVIRONMENT_BLOCKED - `pip-audit` and Trivy are unavailable; npm audit
+  passes. OIDC, TLS/proxy, external storage/malware scanning, shared rate limiting, and backup/
+  restore remain deployment gates.
+- Scientific/security/provenance/tenant review: PASS - no critical/high finding; deterministic
+  scientific operations remain non-LLM, AI remains advisory/human-governed, and Article/Study,
+  workflow, provenance, audit, and protocol immutability boundaries remain intact.
+- Release decision: `READY_WITH_DOCUMENTED_LIMITATIONS`; see `V1_RELEASE_REPORT.md`.
