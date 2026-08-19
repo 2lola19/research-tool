@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 from contextlib import suppress
 
 from backend.app.core.config import get_settings
@@ -25,6 +26,7 @@ async def run_worker_once() -> int:
             max_concurrency=settings.worker_max_concurrency,
             lease_seconds=settings.worker_lease_seconds,
         ).run_once()
+        await execution.stop_worker(settings.worker_id)
         await session.commit()
         return processed
 
@@ -41,6 +43,9 @@ async def worker_main(*, run_once: bool = False, recover_expired: bool = False) 
     settings = get_settings()
     configure_logging(settings.app_log_level)
     logger.info("worker_started", extra={"orchestration_adapter": "foundation"})
+    shutdown_event = asyncio.Event()
+    signal_cleanup = _install_shutdown_handlers(shutdown_event)
+    poll_interval = getattr(settings, "worker_poll_interval_seconds", 1.0)
     try:
         if recover_expired:
             recovered = await recover_expired_once()
@@ -51,9 +56,21 @@ async def worker_main(*, run_once: bool = False, recover_expired: bool = False) 
             return
         if recover_expired:
             return
-        shutdown_event = asyncio.Event()
-        await shutdown_event.wait()
+        while True:
+            processed = await run_worker_once()
+            if processed:
+                logger.info("worker_cycle_completed", extra={"processed_jobs": processed})
+            else:
+                logger.debug("worker_cycle_idle")
+            try:
+                await asyncio.wait_for(shutdown_event.wait(), timeout=poll_interval)
+            except TimeoutError:
+                continue
+            break
     finally:
+        for loop, signum in signal_cleanup:
+            with suppress(NotImplementedError, RuntimeError, ValueError):
+                loop.remove_signal_handler(signum)
         await dispose_database()
         logger.info("worker_stopped")
 
@@ -61,3 +78,18 @@ async def worker_main(*, run_once: bool = False, recover_expired: bool = False) 
 def run(*, run_once: bool = False, recover_expired: bool = False) -> None:
     with suppress(KeyboardInterrupt):
         asyncio.run(worker_main(run_once=run_once, recover_expired=recover_expired))
+
+
+def _install_shutdown_handlers(
+    event: asyncio.Event,
+) -> list[tuple[asyncio.AbstractEventLoop, signal.Signals]]:
+    loop = asyncio.get_running_loop()
+    callback = getattr(event, "set", None)
+    if callback is None:
+        return []
+    registered: list[tuple[asyncio.AbstractEventLoop, signal.Signals]] = []
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        with suppress(NotImplementedError, RuntimeError, ValueError):
+            loop.add_signal_handler(signum, callback)
+            registered.append((loop, signum))
+    return registered

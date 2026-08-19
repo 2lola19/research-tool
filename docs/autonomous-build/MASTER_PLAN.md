@@ -386,6 +386,16 @@ Security/scientific/tests: threat/tenant/reproducibility review, migration upgra
 PostgreSQL if available plus SQLite chain, secret audit, health exercises, backup artifact checks,
 and documented blockers. ADR-035/docs.
 
+Implementation status: complete for the repository-controlled operational boundary. Production
+configuration now fails closed for local auth, SQLite, debug logging, insecure CORS, and missing
+migration-head readiness; API security headers, bounded trace/request correlation, low-cardinality
+metrics, structured request logs, auth throttling, graceful worker polling/shutdown, reproducible
+container installation, health checks, Compose grace periods, and deployment/backup/incident
+runbooks are in place. Focused backend, migration, frontend, static, and Compose-config checks pass.
+Live PostgreSQL, image build, dependency scanners, OIDC, external storage/malware scanning,
+TLS/proxy, shared rate limiting, and backup/restore remain environment/deployment gates and are
+not claimed as passes.
+
 ## Phase 38 — End-to-End V1 Validation, Scientific Benchmarking, Release Hardening and Launch Gate
 
 Objective: validate the complete supported lifecycle and classify the release honestly.
@@ -444,5 +454,6 @@ truthfully documented. The validated Phase 33 implementation checkpoint is local
 `1687da9d5f4da9332786692e5085a856848b9c99`. Phase 34 implementation and focused validation are
 checkpointed locally at `e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7`. Phase 35 implementation and
 focused validation are checkpointed locally at `05787fc4cf180ddb51c22c9c7b55f96c6d6e4a6b`. Phase 36
-is checkpointed locally at `55fc1404b5fb9b0103b32521ade4ffd0cc11058d`; Phase 37 is the next safe
-action. No GitHub operation is authorized.
+is checkpointed locally at `55fc1404b5fb9b0103b32521ade4ffd0cc11058d`. Phase 37 implementation is
+validated and awaiting its local checkpoint; Phase 38 is the next phase after that checkpoint. No
+GitHub operation is authorized.

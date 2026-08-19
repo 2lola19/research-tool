@@ -300,3 +300,32 @@ This log records commands, results, and honest environment blockers for the V1 c
 - Local implementation checkpoint: PASS - commit
   `55fc1404b5fb9b0103b32521ade4ffd0cc11058d` was created after the required pre-commit and staged-
   scope audits. `HEAD` is verified, the worktree is clean, and Phase 37 is the next resume point.
+
+## 2026-08-19 - Phase 37 production deployment and operational readiness
+
+- Backend static gates: PASS - Ruff check, Ruff format (383 files), strict mypy (236 source files),
+  and compileall.
+- Backend/API behavior: PASS - 17 focused configuration, health, migration-readiness, logging,
+  metrics, rate-limit, worker, and API security tests. The full SQLite migration test passes its
+  upgrade through `20260819_0035` and downgrade to base (3 tests including health readiness).
+- Frontend gates: PASS - ESLint, TypeScript, Vitest (10 tests), and Next.js production build.
+- Compose/config: PASS - `docker compose config --quiet`; Alembic reports one head,
+  `20260819_0035`.
+- PostgreSQL: ENVIRONMENT_BLOCKED - `alembic check` waited 124 seconds on the configured local
+  endpoint after the Windows selector-loop compatibility fix; exact descendants were inspected
+  and terminated safely. No PostgreSQL lock, concurrency, or production backup claim is made.
+- Containers/scanners: ENVIRONMENT_BLOCKED - Docker image build produced no output within the
+  bounded window and services were not started; `pip-audit` and Trivy are unavailable; npm audit
+  produced no output before its bounded offline attempt ended. No image/dependency scan pass is
+  claimed.
+- Security/scientific/provenance/tenant review: PASS - production defaults fail closed, operational
+  diagnostics redact identifiers and secrets, worker recovery remains bounded, and no scientific
+  schema or provenance boundary changed. OIDC, TLS/proxy, external storage/malware scanning,
+  shared rate limiting, and backup/restore remain deployment gates.
+- Regression environment: ENVIRONMENT_BLOCKED - the broader workflow/API shard timed out after 244
+  seconds with no output; exact Python descendants were inspected and safely terminated. This is
+  not a test pass.
+- Full repository pytest: ENVIRONMENT_BLOCKED - no output after 424 seconds. Exact pytest/Python
+  descendants were inspected and safely terminated; no full-suite assertion or coverage result is
+  claimed.
+- Local checkpoint: READY_FOR_CHECKPOINT - pending final pre-commit scope/secret/worktree audit.

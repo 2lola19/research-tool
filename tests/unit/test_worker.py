@@ -24,6 +24,7 @@ async def test_worker_lifecycle_disposes_database(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(worker, "configure_logging", lambda _: None)
     monkeypatch.setattr(worker.asyncio, "Event", ImmediateEvent)
     monkeypatch.setattr(worker, "dispose_database", dispose_database)
+    monkeypatch.setattr(worker, "run_worker_once", AsyncMock(return_value=0))
 
     await worker.worker_main()
 
@@ -49,6 +50,7 @@ def test_worker_emits_lifecycle_logs(
         monkeypatch.setattr(worker, "configure_logging", lambda _: None)
         monkeypatch.setattr(worker.asyncio, "Event", ImmediateEvent)
         monkeypatch.setattr(worker, "dispose_database", AsyncMock())
+        monkeypatch.setattr(worker, "run_worker_once", AsyncMock(return_value=0))
         await worker.worker_main()
 
     with caplog.at_level(logging.INFO, logger=worker.__name__):

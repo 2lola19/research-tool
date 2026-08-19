@@ -269,3 +269,22 @@ reveals peer decisions, or performs consensus/scientific calculations in the bro
 payloads are not displayed; operational failure messages are presented as bounded status metadata.
 Loading, service errors, stale reconciliation warnings, and mutation rejection are explicit, and no
 failed read is rendered as a successful scientific state.
+
+## Phase 37 deployment and operational security
+
+Staging and production settings fail closed unless they use a non-local authentication provider,
+PostgreSQL, an explicit migration-head readiness check, non-debug logging, and HTTPS non-wildcard
+CORS origins. API responses add baseline security headers; production adds HSTS under the assumption
+that TLS is terminated by an approved proxy. The application does not trust arbitrary forwarded
+headers from clients.
+
+Request middleware validates bounded request IDs, accepts only a valid W3C `traceparent` trace ID,
+and emits structured method/route/status/duration logs without bodies, bearer tokens, tenant IDs,
+query strings, or provider responses. The metrics endpoint uses route labels with UUID/numeric
+segments redacted and is intended for an internal scrape path.
+
+Password-token issuance has a bounded process-local rate limiter. It is an additional safeguard,
+not distributed abuse prevention; multi-replica deployment must add an edge or shared-store limit.
+Worker termination preserves durable lease/recovery semantics and never turns operational retry into
+an automatic scientific replay. Secret management, OIDC, TLS, malware scanning, object storage,
+dependency/image scanning, and backup encryption remain controlled-deployment gates.

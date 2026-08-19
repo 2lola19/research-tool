@@ -301,3 +301,15 @@ grant itself a role, reveal blinded data, finalize a scientific decision, or rec
 The workspace provides explicit loading, error, stale-reconciliation, mutation-error, and live-read
 timestamps, plus safe links to existing AI, reporting, and authenticated download surfaces. It does
 not calculate scientific values or export raw workflow payloads.
+
+## Phase 37 operational endpoints and transport requirements
+
+`GET /health/live` is process liveness. `GET /health/ready` is dependency readiness and, when
+configured, migration-head readiness; it returns `503` without exposing connection strings or
+schema details. `GET /health/metrics` is a low-cardinality operational scrape response and must be
+network-restricted by deployment policy. Metrics route labels redact UUID and numeric identifiers.
+
+Every response receives the generated or validated `X-Request-ID` and a bounded `X-Trace-ID`.
+Structured completion logs contain only method, route template, status, and duration. The token
+issuance endpoint returns `429` with `Retry-After` and rate-limit headers after its configured
+process-local bound; a production edge/shared-store limiter remains required for multiple replicas.

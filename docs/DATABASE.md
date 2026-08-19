@@ -297,3 +297,12 @@ and provenance retain their separate scientific and audit responsibilities.
 Storage keys are opaque relative paths and are not persisted as filesystem paths. No database row
 stores object-storage credentials, external retrieval secrets, raw parser output beyond the
 bounded manifest, or a claim that live S3/GROBID/PostgreSQL behavior has been validated.
+
+## Phase 37 operational database readiness
+
+Phase 37 adds no migration. The expected deployment head remains `20260819_0035`; when
+`DATABASE_REQUIRE_MIGRATIONS=true`, `/health/ready` requires both a successful `SELECT 1` and an
+exact `alembic_version` match. SQLite upgrade/downgrade tests validate the linear chain, but
+PostgreSQL constraint, lock, concurrency, backup, and restore evidence remains a deployment gate.
+Operational backups must preserve the database and object-storage checksum boundary; restoration
+must be verified before traffic resumes and must not rewrite append-only audit/provenance history.

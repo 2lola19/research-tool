@@ -264,3 +264,14 @@ test through the repository's default coverage gate is not a full-suite coverage
 fails the 85% threshold by design. The full pytest command emitted no output and timed out after
 424 seconds; exact descendants were inspected and terminated safely, so this is recorded as an
 environment limitation rather than a test pass.
+
+## Phase 37 deployment and operational coverage
+
+Unit/API coverage verifies production configuration rejection for local auth/SQLite/debug or
+insecure CORS, migration-head readiness, correlation-ID and traceparent bounds, redacted metrics,
+security headers, authentication `429` behavior, and worker disposal/poll shutdown. Existing
+Alembic coverage upgrades the full linear SQLite chain through `20260819_0035` and downgrades to
+base. `docker compose config`, PostgreSQL migration/constraint/concurrency checks, image and
+dependency scanners, TLS/proxy behavior, OIDC, external object storage/malware scanning, and
+backup/restore remain environment/deployment gates and must be recorded as blocked rather than
+claimed as passes when unavailable.

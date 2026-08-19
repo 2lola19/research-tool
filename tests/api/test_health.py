@@ -17,6 +17,9 @@ def test_liveness_returns_request_id(client: TestClient) -> None:
     assert response.status_code == 200
     assert response.json() == {"status": "healthy", "checks": None}
     assert response.headers["X-Request-ID"] == "test-request"
+    assert response.headers["X-Trace-ID"]
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
 
 
 def test_readiness_reports_database_up(client: TestClient) -> None:
@@ -35,3 +38,14 @@ def test_readiness_reports_database_down(client: TestClient) -> None:
 
     assert response.status_code == 503
     assert response.json() == {"status": "unhealthy", "checks": {"database": "down"}}
+
+
+def test_metrics_are_low_cardinality_and_operational_only(client: TestClient) -> None:
+    client.get("/health/live")
+
+    response = client.get("/health/metrics")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert "review_http_requests_total" in response.text
+    assert "/health/live" in response.text

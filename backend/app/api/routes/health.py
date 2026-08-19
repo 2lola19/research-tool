@@ -1,7 +1,7 @@
 from typing import Literal
 
-from fastapi import APIRouter, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request, status
+from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
 from backend.app.api.dependencies import HealthServiceDependency
@@ -17,6 +17,17 @@ class HealthResponse(BaseModel):
 @router.get("/health/live", response_model=HealthResponse)
 async def liveness() -> HealthResponse:
     return HealthResponse(status="healthy")
+
+
+@router.get("/health/metrics", response_class=PlainTextResponse)
+async def metrics(request: Request) -> PlainTextResponse:
+    settings = request.app.state.settings
+    if not settings.app_metrics_enabled:
+        return PlainTextResponse("metrics are disabled\n", status_code=status.HTTP_404_NOT_FOUND)
+    return PlainTextResponse(
+        request.app.state.request_metrics.render_prometheus(),
+        media_type="text/plain; version=0.0.4",
+    )
 
 
 @router.get(

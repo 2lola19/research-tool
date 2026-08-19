@@ -3,7 +3,7 @@ FROM node:24-alpine AS base
 FROM base AS deps
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm install
+RUN npm ci
 
 FROM base AS builder
 WORKDIR /app
@@ -26,3 +26,4 @@ USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]
 
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 CMD wget -q --spider http://localhost:3000/api/health || exit 1

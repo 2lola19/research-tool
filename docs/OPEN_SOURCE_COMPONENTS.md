@@ -153,3 +153,12 @@ canonical validation, and deterministic manifests use the existing Python/FastAP
 SQLAlchemy stack. No S3 vendor SDK, GROBID client SDK, OCR/computer-vision package, malware scanner,
 cloud credential, or live external service was introduced. GROBID and production S3 remain explicit
 deployment choices behind the repository-owned protocols.
+
+## Phase 37 dependency impact
+
+Operational hardening adds no runtime dependency. Security headers, bounded process-local rate
+limiting, migration readiness, request metrics, trace correlation, worker signal handling, and
+backup/recovery procedures use the existing Python/FastAPI/SQLAlchemy/Uvicorn, Node/Next.js, and
+standard-library stack. No OpenTelemetry, Prometheus client, Redis, OIDC SDK, cloud storage SDK,
+secret manager, image scanner, or backup service was introduced; those remain deployment choices
+behind future provider/infrastructure boundaries.

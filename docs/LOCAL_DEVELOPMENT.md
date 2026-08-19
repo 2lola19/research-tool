@@ -8,8 +8,14 @@ Useful endpoints:
 
 - `GET http://localhost:8000/health/live`: process liveness.
 - `GET http://localhost:8000/health/ready`: database readiness.
+- `GET http://localhost:8000/health/metrics`: local low-cardinality request metrics.
 - `GET http://localhost:8000/api/v1/system/info`: non-secret runtime metadata.
 - `GET http://localhost:3000/api/health`: frontend liveness.
+
+Compose enables migration-head readiness, JSON request logs, security headers, and a small
+process-local authentication limiter. These are development safeguards, not substitutes for a
+production edge limiter, TLS termination, external secret manager, OIDC provider, or PostgreSQL
+backup/restore process.
 
 ## Local identity bootstrap
 

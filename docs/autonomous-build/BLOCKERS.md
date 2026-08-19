@@ -210,3 +210,35 @@ without ACL or lock-file surgery.
   truthful phase-specific message and contains only the validated Phase 36 scope. Execution state
   records `CHECKPOINTED`, `HEAD` is its descendant, the worktree is clean, and Phase 37 is next.
   No GitHub operation was performed.
+
+## Phase 37 validation conditions
+
+- PASS - repository Ruff, format (383 files), strict mypy (236 source files), compileall, focused
+  operational/API tests (17), and the complete SQLite migration upgrade/downgrade test (3) pass.
+- PASS - frontend ESLint, TypeScript, Vitest (10 tests), and Next.js production build pass.
+- PASS - `docker compose config --quiet`, a single Alembic head (`20260819_0035`), production
+  configuration fail-closed tests, migration-head readiness, security headers, redacted metrics,
+  authentication throttling, and worker poll/disposal behavior pass.
+- ENVIRONMENT_BLOCKED - live `alembic check` waited 124 seconds on the unavailable configured
+  PostgreSQL endpoint; exact Alembic descendants were inspected and terminated safely. SQLite
+  migration evidence does not claim PostgreSQL constraint/lock/concurrency compatibility.
+- ENVIRONMENT_BLOCKED - Docker image build produced no output within the bounded validation window;
+  no Compose services were started and no container health pass is claimed. `pip-audit` and Trivy
+  are unavailable; npm audit produced no output before its bounded offline attempt ended. OIDC,
+  TLS/proxy, external object storage/malware scanning, shared rate limiting, and backup/restore
+  evidence remain deployment gates.
+- PASS - scientific, security, provenance, tenant-boundary, secret, generated-artifact, and scope
+  review found no critical/high blocker. Phase 37 changes are operational and introduce no schema,
+  Article/Study, scientific-calculation, approved-protocol, or provenance-model mutation.
+- ENVIRONMENT_BLOCKED - the broader workflow/API regression shard timed out after 244 seconds with
+  no output; exact Python descendants were inspected and terminated safely. No full-suite pass is
+  inferred from that timeout.
+- ENVIRONMENT_BLOCKED - the repository-wide `pytest` gate emitted no output and timed out after 424
+  seconds; exact pytest/Python descendants were inspected and terminated safely. No full-suite pass
+  is claimed.
+
+## Phase 37 local checkpoint
+
+- READY_FOR_CHECKPOINT - implementation and documentation are validated locally, with the truthful
+  phase-specific commit still pending the final unstaged/staged diff, secret, scope, and worktree
+  audit. No GitHub operation is authorized.

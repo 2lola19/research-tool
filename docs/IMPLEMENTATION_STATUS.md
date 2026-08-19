@@ -306,3 +306,13 @@ tenant-boundary screening integration passes with `--no-cov`; the narrow default
 cannot satisfy the repository-wide 85% coverage threshold by itself. The full repository pytest
 invocation emitted no output and timed out after 424 seconds; exact descendants were terminated
 safely and this remains an environment limitation, not a pass.
+
+## Phase 37 production deployment and operational readiness
+
+Implemented fail-closed staging/production settings, migration-head readiness, baseline API
+security headers, bounded request/trace correlation, low-cardinality request metrics, structured
+completion logs, authentication throttling, graceful worker polling/shutdown, reproducible npm
+container installation, image health checks, and deployment/backup/incident runbooks. No scientific
+schema or provenance model changed. The controlled-deployment package remains environment-limited
+until PostgreSQL, Docker/image/dependency scans, OIDC, external object storage/malware scanning,
+TLS/proxy, shared rate limiting, secret management, and backup/restore evidence are available.

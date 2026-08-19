@@ -244,3 +244,13 @@ service, which appends the required audit/provenance events.
 The UI's live-read timestamp and stale-reconciliation notice describe read freshness only. They are
 not scientific evidence, do not alter immutable snapshots, and do not make an operational status a
 claim about the truth of an Article, Study, screening decision, or analysis.
+
+## Phase 37 operational boundary
+
+Request IDs, trace IDs, durations, rate-limit decisions, health results, metrics, worker lifecycle,
+backup checksums, and migration-head observations are operational diagnostics. They do not become
+scientific provenance, evidence, Article/Study state, or audit events merely because they are logged.
+The API avoids placing bearer tokens, provider response bodies, tenant identifiers, or object keys in
+these diagnostics. Consequential workflow recovery, document repair, assignment, and adjudication
+continue through the existing tenant-scoped services that append their required scientific or audit
+records.

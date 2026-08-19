@@ -157,3 +157,20 @@ by default; live providers and arbitrary retrieval remain deferred.
 - Operational freshness, loading, error, and stale-reconciliation labels are explicitly non-
   scientific metadata. No new UI ADR is needed because the design follows the existing Next.js
   server-component boundary. Phase 37 now owns deployment and observability readiness.
+
+## 2026-08-19 - Phase 37 controlled-deployment and operational boundary
+
+- Production safety is implemented at the configuration and operational boundary: local auth,
+  SQLite, debug logging, insecure CORS, and disabled migration-head readiness are rejected in
+  staging/production. No production credential or infrastructure is introduced.
+- Request IDs and valid W3C trace IDs are bounded and logged with low-cardinality route/status/
+  duration fields; metrics redact UUID/numeric path identifiers and remain operational metadata.
+  Authentication throttling is process-local and must be complemented by an edge/shared-store
+  policy for multiple replicas.
+- The worker polls the existing durable job service and drains on supported termination signals;
+  leases, retry policy, checkpoints, and scientific writes remain owned by the workflow layer.
+  Health/readiness, Compose grace periods, non-root images, reproducible npm installation, and
+  backup/incident runbooks form the controlled-deployment package.
+- No migration or scientific model changed. PostgreSQL, Docker image builds, dependency scans,
+  OIDC, TLS/proxy, external storage/malware scanning, shared throttling, and backup/restore are
+  explicitly environment/deployment gates rather than inferred readiness.
