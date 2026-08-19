@@ -75,6 +75,17 @@ class DeterministicMockAIProvider:
                 dict[str, Any],
                 DeterministicMockAIProvider.certainty_fixture("ABSTAIN", request.structured_input),
             )
+        if request.task_type == "REVIEW_COPILOT":
+            return {
+                "answer": (
+                    "The deterministic copilot abstains; review the cited canonical records "
+                    "directly."
+                ),
+                "citations": [],
+                "abstention": "NEEDS_HUMAN_REVIEW",
+                "uncertainty_reason": "The offline fixture does not make project-status claims.",
+                "model_reported_confidence": None,
+            }
         if request.task_type == "FULL_TEXT_SCREENING_SUGGESTION":
             return {
                 "suggestion": "MAYBE",

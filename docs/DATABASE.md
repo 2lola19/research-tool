@@ -216,3 +216,16 @@ cover policy bounds, task/hash versions, access types, and human review actions;
 updates/deletes across certainty assistance history. Canonical certainty tables remain unchanged:
 accepted or edited proposals call the existing service, while evaluation records are not scientific
 inputs. The migration is linear after `20260818_0029`; SQLite upgrade/downgrade coverage passes.
+
+## Phase 30 read-only copilot metadata
+
+Migration `20260819_0031` adds append-only `ai_copilot_policy_versions` and `ai_copilot_queries`.
+Policies version query/context bounds per Review. Query rows preserve the task key, bounded query,
+deterministic context snapshot/hash, available citations, optional AI run/proposal links, answer and
+validation snapshots, status, failure reason, and requester.
+
+Composite organization/Review foreign keys scope every row and link optional AI records to the same
+tenant/Review. Membership foreign keys preserve requester identity; checks constrain task keys,
+statuses, hashes, and bounds; indexes support Review history. ORM mutation guards reject updates and
+deletes. Copilot rows are navigation/audit metadata only and are not canonical scientific,
+workflow, Article, or Study records. SQLite upgrade/downgrade coverage passes through `0031`.

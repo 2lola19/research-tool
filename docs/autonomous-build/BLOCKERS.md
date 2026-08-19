@@ -61,3 +61,17 @@ Under the current full-access execution mode, the validated local checkpoint exi
 No GitHub operation was performed. Future sessions must attempt normal local checkpointing after
 validated phases; if an actual lock failure recurs, diagnose safely and record `CHECKPOINT_PENDING`
 without ACL or lock-file surgery.
+
+## Phase 30 validation conditions
+
+- Focused copilot unit and integration tests pass, including viewer/foreign-review boundaries,
+  generic-route closure, policy-before-query, bounded abstention, query history, and stale-context
+  detection.
+- SQLite migration, repository Ruff/format, strict mypy, compile/import, and all frontend lint,
+  typecheck, Vitest, and build gates pass.
+- The configured full `pytest -q` invocation produced no output and timed out after 364 seconds in
+  the Windows process environment. This is `ENVIRONMENT_BLOCKED`, not a test pass or code failure;
+  exact processes were terminated after safe inspection.
+- No active scientific, security, provenance, tenant, migration, or data-loss blocker remains.
+  Live PostgreSQL, Docker, external parser/storage, and paid/live provider validation remain later
+  environment/authorization gates.

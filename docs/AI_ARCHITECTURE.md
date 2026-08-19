@@ -136,3 +136,18 @@ with an explicit human payload; AI never saves final certainty, calculates a can
 assessment, adjudicates, or creates a Summary-of-Findings decision. Evaluation datasets and
 descriptive grounding/agreement, abstention, unsupported-adjustment, high-risk, and calibration
 metrics remain outside canonical certainty data.
+
+## Phase 30: read-only evidence-aware Review copilot
+
+`REVIEW_COPILOT` is a moderate-risk, read-only task over a deterministic allowlisted context
+assembler. Explicit task keys cover project status, workflow blockers, and provenance navigation.
+The context snapshot contains bounded Review metadata, PRISMA summary/readiness, workflow run/job
+state metadata, derived blockers, and source-reference counts. Workflow job payloads, arbitrary
+retrieval, provider tools, and canonical writes are excluded.
+
+Every non-abstaining response must cite exact IDs from the supplied context. Deterministic output
+validation rejects fabricated citations, unbounded answers, missing abstention reasons, invalid
+confidence, and unsupported workflow/scientific/manuscript actions. Versioned policy limits,
+context hashes, citations, AI run/proposal links, validation, query status, and append-only audit
+records preserve the read-only interaction history. The offline deterministic provider remains the
+only executable provider; the copilot is not a scientific calculation or source of truth.

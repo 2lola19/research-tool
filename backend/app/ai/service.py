@@ -41,6 +41,7 @@ _GOVERNED_SCREENING_TASKS = {
     AITaskType.ROB_SUGGESTION,
     AITaskType.OUTCOME_MAPPING_SUGGESTION,
     AITaskType.CERTAINTY_SUGGESTION,
+    AITaskType.REVIEW_COPILOT,
 }
 
 
@@ -108,6 +109,7 @@ class AIExecutionService:
         await self.ensure_defaults(actor, AITaskType.ROB_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.OUTCOME_MAPPING_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.CERTAINTY_SUGGESTION)
+        await self.ensure_defaults(actor, AITaskType.REVIEW_COPILOT)
         models = await self._repository.list_models(actor.organization_id)
         prompts = await self._repository.list_prompts(actor.organization_id)
         return {
@@ -449,9 +451,10 @@ class AIExecutionService:
                 "framework_definition",
                 "assessment_snapshot",
                 "evidence_profile",
+                "context",
             }:
                 valid = isinstance(current, dict) and bool(current)
-            elif key in {"included_studies"}:
+            elif key in {"included_studies", "citations"}:
                 valid = isinstance(current, list) and bool(current)
             else:
                 valid = isinstance(current, str) and bool(current.strip())
@@ -526,6 +529,11 @@ class AIExecutionService:
                 raise ValueError("certainty assistance requires 1 through 80 selected chunks")
             if not isinstance(documents, list) or not documents or len(documents) > 8:
                 raise ValueError("certainty assistance requires 1 through 8 source documents")
+        if task.task_type is AITaskType.REVIEW_COPILOT:
+            if len(value["query"].strip()) > 4_000:
+                raise ValueError("review copilot query exceeds the maximum length")
+            if len(value["citations"]) > 200:
+                raise ValueError("review copilot citation context exceeds the limit")
 
     @staticmethod
     def _sanitize_input(
@@ -533,6 +541,14 @@ class AIExecutionService:
     ) -> dict[str, Any]:
         if task.task_type is AITaskType.SEARCH_QUERY_SUGGESTION:
             return {"query": value["query"].strip(), "objective": value["objective"].strip()}
+        if task.task_type is AITaskType.REVIEW_COPILOT:
+            return {
+                "review_id": str(value["review_id"]),
+                "task_key": value["task_key"].strip(),
+                "query": value["query"].strip(),
+                "context": value["context"],
+                "citations": value["citations"],
+            }
         if task.task_type is AITaskType.FULL_TEXT_SCREENING_SUGGESTION:
             return {
                 "review_id": str(value["review_id"]),
@@ -689,6 +705,11 @@ class AIExecutionService:
             from backend.app.ai.certainty_domain import validate_certainty_output
 
             errors.extend(validate_certainty_output(value, input_data or {}))
+            return errors
+        if task.task_type is AITaskType.REVIEW_COPILOT:
+            from backend.app.ai.copilot_domain import validate_copilot_output
+
+            errors.extend(validate_copilot_output(value, input_data or {}))
             return errors
         if "evidence_references" in value and not isinstance(value["evidence_references"], list):
             errors.append(

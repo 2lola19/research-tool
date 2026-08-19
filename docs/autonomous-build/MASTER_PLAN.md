@@ -1,7 +1,8 @@
 # Research Tool V1 Completion — Master Plan
 
 Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpointed locally at
-`f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 is next
+`f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 implementation is complete and
+validation/checkpointing is in progress
 
 ## Reconciled baseline and sequencing
 
@@ -209,8 +210,10 @@ unreviewed manuscript generation, cross-tenant context, or treating conversation
 
 Architecture/security: read-only use-case service over allowlisted repositories; provider receives
 bounded structured context and no tools. Store minimal immutable task/output metadata, never secrets
-or full restricted documents. Tests cover query authorization, citations, staleness, prompt injection,
-tenant isolation, and no-write invariants. ADR-029/docs as needed.
+or full restricted documents. Workflow payloads are never exposed. Context hashes are compared on
+read and responses label changed canonical context as stale. Tests cover query authorization,
+citations, staleness, prompt injection, tenant isolation, and no-write invariants. ADR-029/docs as
+needed.
 
 ## Phase 31 — Durable Background Jobs and Worker Execution
 
@@ -376,11 +379,10 @@ skipped.
 
 ## Current execution status
 
-Phase 27 is locally checkpointed at `995c5af78996410ef9a04ddbe93b00ed3c52f79e`, and Phase 28 is
-locally checkpointed at `f47561973e697ac30a87c41a865d146b18e11246`. Phase 29 is locally
-checkpointed at `df0a74fd2231e76d61f248b0e1fad398e7ee1566`. It passed its focused
-backend/frontend/migration gates, with the full pytest timeout truthfully recorded as an environment
-limitation. Its canonical boundary is the existing `CertaintyService`; AI only proposes grounded
-evidence and framework-permitted domain suggestions and requires an explicit human payload for
-canonical writes. The next safe action is Phase 30 planning for the read-only evidence-aware Review
-copilot.
+Phase 27 is locally checkpointed at `995c5af78996410ef9a04ddbe93b00ed3c52f79e`, Phase 28 is
+locally checkpointed at `f47561973e697ac30a87c41a865d146b18e11246`, and Phase 29 is locally
+checkpointed at `df0a74fd2231e76d61f248b0e1fad398e7ee1566`. Phase 30 implementation now includes
+the bounded read-only copilot, explicit citations, immutable query/policy metadata, read-time
+staleness labels, tenant boundaries, and no canonical scientific/workflow writes. Its focused
+validation and frontend gates are being completed before the required local checkpoint; no GitHub
+operation is authorized.

@@ -190,3 +190,18 @@ prompt provenance. The task may draft evidence and framework-permitted domain su
 invokes `CertaintyService`, which rechecks framework choices, evidence, tenant scope, and
 immutability. No AI route writes candidate/final certainty, thresholds, publication-bias
 decisions, upgrades/downgrades, comparisons, adjudications, or Summary-of-Findings records.
+
+## Phase 30 read-only Review copilot API
+
+Authenticated Review-scoped routes under `/api/v1/ai/copilot` expose the explicit read-only task
+registry, versioned policy limits, policy reads, query creation, immutable query history, and
+direct query reads. Query creation requires `REVIEW_AI_PROPOSALS`, active organization membership,
+Review access, a configured policy, a bounded task key/query, and the deterministic context
+assembler. Policy creation requires `MANAGE_AI`.
+
+The context is limited to Review metadata, deterministic PRISMA summary/readiness, workflow
+run/job state metadata, derived blockers, and source-reference counts. Job payloads are never
+returned to the provider or UI. Responses retain context hashes, available source citations,
+selected citation claims, AI run/proposal identity, validation status, and abstention. The generic
+`/ai/runs` endpoint rejects `REVIEW_COPILOT`; no copilot route changes scientific or workflow state,
+performs arbitrary search/retrieval, or generates manuscript content.

@@ -392,6 +392,18 @@ class SqlAlchemyWorkflowRepository:
         record = (await self._session.execute(statement)).scalar_one_or_none()
         return _run_to_domain(record) if record is not None else None
 
+    async def list_runs(self, organization_id: UUID, review_id: UUID) -> list[WorkflowRun]:
+        statement = (
+            select(WorkflowRunRecord)
+            .where(
+                WorkflowRunRecord.organization_id == organization_id,
+                WorkflowRunRecord.review_id == review_id,
+            )
+            .order_by(WorkflowRunRecord.created_at, WorkflowRunRecord.id)
+        )
+        records = (await self._session.scalars(statement)).all()
+        return [_run_to_domain(record) for record in records]
+
     async def get_job_by_idempotency(
         self,
         organization_id: UUID,
@@ -413,6 +425,18 @@ class SqlAlchemyWorkflowRepository:
         )
         record = (await self._session.execute(statement)).scalar_one_or_none()
         return _job_to_domain(record) if record is not None else None
+
+    async def list_jobs(self, organization_id: UUID, review_id: UUID) -> list[WorkflowJob]:
+        statement = (
+            select(WorkflowJobRecord)
+            .where(
+                WorkflowJobRecord.organization_id == organization_id,
+                WorkflowJobRecord.review_id == review_id,
+            )
+            .order_by(WorkflowJobRecord.created_at, WorkflowJobRecord.id)
+        )
+        records = (await self._session.scalars(statement)).all()
+        return [_job_to_domain(record) for record in records]
 
     async def transition_job(
         self,

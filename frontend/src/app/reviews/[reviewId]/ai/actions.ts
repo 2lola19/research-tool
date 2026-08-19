@@ -41,6 +41,26 @@ export async function createSearchSuggestion(reviewId: string, formData: FormDat
   redirect(`/reviews/${reviewId}/ai?proposal=${payload.proposal?.id ?? ""}`);
 }
 
+export async function createCopilotPolicy(reviewId: string, formData: FormData) {
+  const response = await post(`/api/v1/ai/copilot/reviews/${reviewId}/policies`, {
+    maximum_query_characters: Number(formData.get("maximum_query_characters") ?? 2_000),
+    maximum_context_items: Number(formData.get("maximum_context_items") ?? 50),
+  });
+  if (!response?.ok) redirect(`/reviews/${reviewId}/ai?copilot_error=policy_rejected`);
+  revalidatePath(`/reviews/${reviewId}/ai`);
+  redirect(`/reviews/${reviewId}/ai?copilot=policy_recorded`);
+}
+
+export async function createCopilotQuery(reviewId: string, formData: FormData) {
+  const response = await post(`/api/v1/ai/copilot/reviews/${reviewId}/queries`, {
+    task_key: String(formData.get("task_key") ?? "PROJECT_STATUS"),
+    query: String(formData.get("copilot_query") ?? ""),
+  });
+  if (!response?.ok) redirect(`/reviews/${reviewId}/ai?copilot_error=query_rejected`);
+  revalidatePath(`/reviews/${reviewId}/ai`);
+  redirect(`/reviews/${reviewId}/ai?copilot=query_recorded`);
+}
+
 export async function decideProposal(
   reviewId: string,
   proposalId: string,

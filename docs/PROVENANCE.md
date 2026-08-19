@@ -147,3 +147,16 @@ edited domain judgments are created only by the existing `CertaintyService` from
 payload and receive human `AI_PROPOSAL` provenance plus the normal audit event. AI abstention,
 staleness, validation errors, evaluation results, and high-risk/error classifications remain
 distinct and cannot enter scientific exports as canonical certainty state.
+
+## AI-assisted Review copilot provenance
+
+Each copilot query preserves the requesting Review/member scope, explicit task key, bounded query,
+deterministic context snapshot and hash, available citation locators, AI run/proposal identifiers,
+prompt/model/task history through the existing AI substrate, response/validation snapshot, and
+abstention or failure status. An append-only audit event records query creation and the cited
+context hash.
+
+Copilot answers are navigation assistance, not scientific evidence or canonical workflow state.
+Workflow payloads are excluded; source citations point to allowlisted Review/PRISMA/workflow record
+locators. No copilot response is exported as a scientific result, and no copilot route creates a
+canonical write or substitutes for domain-service provenance.

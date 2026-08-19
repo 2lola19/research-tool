@@ -102,6 +102,30 @@ This log records commands, results, and honest environment blockers for the V1 c
   the required scope, diff, secret, staged-stat, staged-content, and staged-diff checks. The
   worktree is clean and no GitHub operation was performed.
 
+## 2026-08-19 - Phase 30 read-only evidence-aware Review copilot
+
+- Focused unit tests: PASS - `tests/unit/test_ai_review_copilot.py` passed 3 tests with
+  `pytest --no-cov`; deterministic context, payload redaction, citation validation, abstention,
+  and unsupported-action checks are covered.
+- Focused integration tests: PASS - `tests/integration/test_ai_copilot.py` passed 4 tests with
+  `pytest --no-cov`, including viewer denial, foreign-review non-enumeration, generic-route
+  closure, policy-before-query, deterministic abstention, query history, and stale-context
+  detection.
+- Migration: PASS - `tests/integration/test_migrations.py` upgraded and downgraded the SQLite
+  chain through `20260819_0031`.
+- Backend gates: PASS - repository Ruff, format, strict mypy (217 files), and compile/import.
+- Frontend gates: PASS - `npm run lint`, `npm run typecheck`, `npm test` (9 tests), and
+  `npm run build`.
+- Full backend suite: ENVIRONMENT_BLOCKED - `pytest -q` emitted no output for 364 seconds; exact
+  pytest processes were inspected and terminated. No assertion result is claimed.
+- Secret/credential and artifact audit: PASS - no secrets, credentials, caches, generated runtime
+  artifacts, or host files are in the intended phase scope.
+- Scientific/security/provenance review: PASS - read-only bounded context, exact citations,
+  stale-context labeling, tenant scope, no workflow payload exposure, and no canonical scientific
+  or workflow writes.
+- Local checkpoint: READY_FOR_CHECKPOINT - implementation and required reviews are complete; the
+  mandated local Git checklist is being executed. No GitHub operation is authorized.
+
 ## 2026-08-18 — baseline
 
 - `git status --short --branch`: PASS — clean `master`, tracking `origin/master`.

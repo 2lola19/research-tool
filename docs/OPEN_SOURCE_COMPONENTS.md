@@ -107,3 +107,10 @@ Phase 29 adds no third-party runtime dependency. Certainty assistance uses the e
 Python/FastAPI/Pydantic/SQLAlchemy substrate, immutable certainty rules, deterministic evidence
 validation, and offline mock fixtures. No complete published GRADE instrument, statistical engine,
 retrieval/embedding service, paid AI SDK, external provider, or credential was introduced.
+
+## Phase 30 dependency impact
+
+The read-only Review copilot adds no third-party runtime dependency. Context assembly, citation
+validation, hashing, policy/query persistence, and deterministic mock output use the existing
+Python/FastAPI/Pydantic/SQLAlchemy stack and Next.js frontend. No embedding/retrieval service,
+workflow SDK, paid AI SDK, external provider, manuscript generator, or credential was introduced.

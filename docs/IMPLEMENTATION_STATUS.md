@@ -221,3 +221,18 @@ schema/document/parser/task/prompt changes report staleness without rerun.
 - Focused backend unit/integration/migration tests, Ruff, format, strict mypy, frontend ESLint,
   TypeScript, Vitest, and production build pass. Live PostgreSQL, Docker, external parser/storage,
   and paid/live provider checks remain deferred as documented environment gates.
+
+## Phase 30 read-only evidence-aware Review copilot
+
+Implemented the `REVIEW_COPILOT` task with explicit project-status, workflow-blocker, and
+provenance-navigation task keys. Deterministic context assembly reads only bounded Review metadata,
+PRISMA summary/readiness, workflow run/job state metadata, derived blockers, and source-reference
+counts; workflow payloads and canonical writes are excluded. Exact citation IDs, bounded answers,
+abstention, and unsupported-action validation are enforced before an immutable query record is
+created.
+
+Added versioned copilot policies, tenant/Review-scoped append-only query history, context hashes,
+AI run/proposal links, audit records, workflow read-list methods, migration `20260819_0031`,
+dedicated API routes, frontend activity/policy/query UI, and focused scientific/security/tenant
+tests. The deterministic offline mock abstains by default. No scientific, workflow, manuscript, or
+retrieval authority was added.

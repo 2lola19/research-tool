@@ -133,3 +133,11 @@ official GRADE support.
 Build the read-only evidence-aware Review copilot/project intelligence surface described in the
 master plan. Preserve allowlisted context, explicit citations, stale-context labels, tenant scope,
 and no canonical writes or scientific calculation.
+
+## Phase 30 complete: read-only evidence-aware Review copilot
+
+Phase 30 implements the bounded copilot surface. It provides explicit task keys, versioned Review
+policy, deterministic PRISMA/workflow context, exact source citations, immutable query history,
+tenant/review authorization, and a read-only frontend workspace. It does not provide arbitrary
+retrieval, workflow mutation, scientific calculation, or manuscript generation. The offline mock
+abstention and live-provider/deployment limitations remain documented.

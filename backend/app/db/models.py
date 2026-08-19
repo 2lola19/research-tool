@@ -9,6 +9,7 @@ from backend.app.ai.certainty_persistence import (
     AICertaintyProposalLinkRecord,
     AICertaintyReviewRecord,
 )
+from backend.app.ai.copilot_persistence import AICopilotPolicyRecord, AICopilotQueryRecord
 from backend.app.ai.extraction_persistence import (
     AIExtractionAccessRecord,
     AIExtractionErrorClassificationRecord,
@@ -192,6 +193,8 @@ __all__ = [
     "AICertaintyPolicyRecord",
     "AICertaintyProposalLinkRecord",
     "AICertaintyReviewRecord",
+    "AICopilotPolicyRecord",
+    "AICopilotQueryRecord",
     "AIExecutionRunRecord",
     "AIExtractionAccessRecord",
     "AIExtractionErrorClassificationRecord",

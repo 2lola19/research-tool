@@ -228,3 +228,15 @@ explicit human domain payload can invoke `CertaintyService.save_domain`; AI cann
 certainty, calculate thresholds, infer publication bias, adjudicate, or submit an assessment.
 Evaluation datasets/results and error classifications are separate quality records. Certainty
 framework versions and canonical assessments remain immutable and tenant/review scoped.
+
+## Read-only Review copilot
+
+`AICopilotPolicy` versions bounded query/context limits for a Review. `AICopilotQuery` is an
+append-only advisory interaction containing an explicit task key, user query, deterministic context
+snapshot/hash, source citations, optional AI run/proposal links, validated answer snapshot, status,
+and audit-facing requester identity. It is not a Review, workflow transition, scientific judgment,
+Article, Study, evidence value, or report artifact.
+
+The context assembler consumes allowlisted Review, PRISMA, and workflow read models. It omits
+workflow payloads and does not create a second project-status or scientific state machine. Exact
+citation IDs resolve only to the snapshot's canonical source locators; abstention is a valid result.

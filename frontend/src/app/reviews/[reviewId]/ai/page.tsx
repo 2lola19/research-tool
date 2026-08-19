@@ -3,12 +3,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAIProposal, getAIWorkspace } from "@/lib/ai-api";
+import { getAICopilotWorkspace } from "@/lib/ai-copilot-api";
 
-import { createSearchSuggestion, decideProposal } from "./actions";
+import { createCopilotPolicy, createCopilotQuery, createSearchSuggestion, decideProposal } from "./actions";
 
 type Props = {
   params: Promise<{ reviewId: string }>;
-  searchParams: Promise<{ proposal?: string; error?: string; updated?: string }>;
+  searchParams: Promise<{
+    proposal?: string;
+    error?: string;
+    updated?: string;
+    copilot?: string;
+    copilot_error?: string;
+  }>;
 };
 
 const field = "mt-1 w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm";
@@ -20,10 +27,11 @@ export default async function AIWorkspacePage({ params, searchParams }: Props) {
   const organizationId = store.get("review_organization_id")?.value;
   if (!token || !organizationId) redirect("/login");
   const workspacePromise = getAIWorkspace(token, organizationId, reviewId);
+  const copilotPromise = getAICopilotWorkspace(token, organizationId, reviewId);
   const proposalPromise = query.proposal
     ? getAIProposal(token, organizationId, reviewId, query.proposal)
     : Promise.resolve(null);
-  const [workspace, proposal] = await Promise.all([workspacePromise, proposalPromise]);
+  const [workspace, proposal, copilot] = await Promise.all([workspacePromise, proposalPromise, copilotPromise]);
   if (workspace.status === "unauthorized") redirect("/login?error=session_expired");
 
   return (
@@ -50,6 +58,49 @@ export default async function AIWorkspacePage({ params, searchParams }: Props) {
 
       {query.error ? <p className="mt-6 rounded-xl bg-red-50 p-4 text-red-800">Request rejected safely.</p> : null}
       {query.updated ? <p className="mt-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">Decision recorded.</p> : null}
+      {query.copilot_error ? <p className="mt-6 rounded-xl bg-red-50 p-4 text-red-800">Copilot request rejected safely.</p> : null}
+      {query.copilot ? <p className="mt-6 rounded-xl bg-emerald-50 p-4 text-emerald-900">Copilot activity recorded.</p> : null}
+
+      <section className="grid gap-6 border-b border-[var(--line)] py-9 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-[var(--line)] bg-white p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--brand)]">Read-only project intelligence</p>
+          <h2 className="mt-2 text-2xl font-semibold">Review copilot</h2>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Ask navigation and workflow-status questions against a bounded snapshot of canonical review metadata. Answers cannot change scientific or workflow state.
+          </p>
+          <form action={createCopilotQuery.bind(null, reviewId)} className="mt-5">
+            <label className="block text-xs font-semibold">Task<select className={field} name="task_key" defaultValue="PROJECT_STATUS">
+              {copilot.tasks.map((task) => <option key={task.task_key} value={task.task_key}>{task.label}</option>)}
+            </select></label>
+            <label className="mt-4 block text-xs font-semibold">Question<textarea className={field} name="copilot_query" required rows={3} placeholder="What is blocking this review?" /></label>
+            <button className={`${button} mt-5`} type="submit" disabled={!copilot.policy}>Ask copilot</button>
+            {!copilot.policy ? <p className="mt-2 text-xs text-amber-800">A review lead must configure the copilot policy first.</p> : null}
+          </form>
+        </div>
+        <form action={createCopilotPolicy.bind(null, reviewId)} className="rounded-2xl border border-[var(--line)] bg-white p-6">
+          <h2 className="text-xl font-semibold">Copilot policy</h2>
+          <p className="mt-2 text-sm text-[var(--muted)]">Versioned limits bound query text and canonical context size.</p>
+          <label className="mt-4 block text-xs font-semibold">Maximum query characters<input className={field} name="maximum_query_characters" type="number" defaultValue={copilot.policy?.maximum_query_characters ?? 2000} min={100} max={4000} /></label>
+          <label className="mt-4 block text-xs font-semibold">Maximum context items<input className={field} name="maximum_context_items" type="number" defaultValue={copilot.policy?.maximum_context_items ?? 50} min={2} max={200} /></label>
+          <button className={`${button} mt-5`} type="submit">Save policy version</button>
+          {copilot.policy ? <p className="mt-2 text-xs text-[var(--muted)]">Current version: {copilot.policy.version}</p> : null}
+        </form>
+      </section>
+
+      <section className="border-b border-[var(--line)] py-9">
+        <h2 className="text-2xl font-semibold">Copilot activity</h2>
+        <div className="mt-5 space-y-3">
+          {copilot.queries.map((item) => (
+            <article className="rounded-xl border border-[var(--line)] bg-white p-4" key={item.id}>
+              <p className="font-semibold">{item.task_key} · {item.status}</p>
+              <p className="mt-1 text-sm">{item.query}</p>
+              {item.answer?.abstention ? <p className="mt-2 text-sm text-amber-800">Abstained: {item.answer.uncertainty_reason}</p> : item.answer ? <p className="mt-2 text-sm">{item.answer.answer}</p> : null}
+              <p className="mt-2 text-xs text-[var(--muted)]">Context hash {item.context_hash} · {item.citations.length} available citations</p>
+            </article>
+          ))}
+          {!copilot.queries.length ? <p className="text-sm text-[var(--muted)]">No copilot queries recorded yet.</p> : null}
+        </div>
+      </section>
 
       <section className="grid gap-6 py-9 lg:grid-cols-2">
         <div className="rounded-2xl border border-[var(--line)] bg-white p-6">

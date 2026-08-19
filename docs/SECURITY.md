@@ -129,6 +129,20 @@ cannot be accepted. Source text is untrusted, bounded, secret-screened, and pass
 provider adapter. AI cannot satisfy dual assessment, adjudicate disagreement, or mutate canonical RoB
 state.
 
+## Phase 30 read-only copilot security
+
+Copilot task registry, policy, query, and direct-object routes require active organization
+membership, Review access, and the existing AI review permission; policy creation additionally
+requires AI-management permission. Foreign organization/Review/query identifiers fail closed.
+Composite foreign keys and path-scoped reads prevent cross-tenant enumeration.
+
+The assembler allowlists Review metadata, deterministic PRISMA values/readiness, workflow states,
+and source-reference counts; workflow job payloads and arbitrary retrieval are excluded. User query
+and project/source text are framed as untrusted data, secret markers and size limits remain active,
+and providers receive no tools. Exact supplied citation IDs are required for non-abstaining answers.
+The generic AI route rejects the task, and no copilot endpoint can transition workflow state, write
+scientific data, calculate statistics, or generate manuscript content.
+
 ## Phase 28 AI outcome security
 
 Outcome assistance uses active organization membership and Review-scoped authorization for every

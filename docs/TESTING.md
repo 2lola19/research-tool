@@ -177,3 +177,16 @@ non-enumeration. Migration coverage upgrades and downgrades the seven certainty-
 Backend Ruff, format, strict mypy, import, focused unit/integration, and migration checks pass.
 Frontend ESLint, TypeScript, Vitest, and production build pass for the certainty workspace. Live
 PostgreSQL, Docker, parser, external storage, and paid/live provider execution remain deferred.
+
+## Phase 30 read-only copilot coverage
+
+Unit coverage verifies deterministic bounded context hashing, workflow payload redaction, exact
+citation validation, fabricated-citation rejection, explicit abstention reasons, and unsupported
+action rejection. Integration coverage verifies viewer denial, foreign-Review non-enumeration,
+generic AI route closure, policy-before-query enforcement, successful deterministic abstention,
+query history, and context hashes. Migration coverage upgrades and downgrades the linear SQLite
+chain through `20260819_0031`.
+
+Repository Ruff, formatting, strict mypy, compile/import, and the focused copilot unit/integration
+and migration checks pass. Frontend lint/typecheck/test/build remain required phase gates; live
+PostgreSQL, Docker, external providers, and arbitrary retrieval remain deferred.

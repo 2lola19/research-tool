@@ -50,6 +50,21 @@ relevant phase report or ADR.
   high-risk metrics outside canonical certainty state. The workspace exposes pinned proposals and
   requires a human disposition; no browser-side scientific calculation was added.
 
+## 2026-08-19 - Phase 30 read-only Review copilot boundary
+
+- The Review copilot is a read-only advisory projection over allowlisted Review, deterministic
+  PRISMA, and workflow read models. It does not create a second workflow/scientific state machine,
+  expose job payloads, retrieve arbitrary content, or write canonical state.
+- Explicit task keys cover project status, workflow blockers, and provenance navigation. The
+  context assembler is deterministic, bounded, hashed, and citation-indexed before provider
+  execution; user/source text is untrusted data and providers have no tools.
+- Non-abstaining output must cite exact supplied citation IDs. Fabricated citations, unsupported
+  actions, oversized answers, invalid confidence, and unexplained abstention are rejected. Query
+  and policy records are append-only and tenant/Review scoped.
+- The frontend exposes policy, query, and immutable activity history while directing users to the
+  existing canonical domain surfaces for any action. The offline deterministic provider abstains
+  by default; live providers and arbitrary retrieval remain deferred.
+
 ## 2026-08-18 — baseline and control plane
 
 - Observed the expected clean Phase 26 baseline at `ff5e1bb`; no newer valid work needed

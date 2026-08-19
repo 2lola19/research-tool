@@ -39,6 +39,8 @@ class WorkflowRepository(Protocol):
         workflow_run_id: UUID,
     ) -> WorkflowRun | None: ...
 
+    async def list_runs(self, organization_id: UUID, review_id: UUID) -> list[WorkflowRun]: ...
+
     async def create_job(
         self,
         *,
@@ -60,6 +62,8 @@ class WorkflowRepository(Protocol):
     ) -> WorkflowJob | None: ...
 
     async def get_job(self, organization_id: UUID, job_id: UUID) -> WorkflowJob | None: ...
+
+    async def list_jobs(self, organization_id: UUID, review_id: UUID) -> list[WorkflowJob]: ...
 
     async def transition_job(
         self,
