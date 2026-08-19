@@ -46,8 +46,14 @@ Summary-of-Findings state.
 
 ## Checkpoint
 
-The phase is `READY_FOR_CHECKPOINT`. The local commit has not yet been created in this report;
-after the required pre-commit scope, diff, secret, staging, and staged-diff checks, record the
-resulting local SHA here and in `EXECUTION_STATE.json`. No GitHub operation is authorized.
+The validated local Phase 29 implementation checkpoint exists:
 
-Expected commit message: `feat: add governed AI certainty-of-evidence/GRADE assistance`
+- Commit: `df0a74fd2231e76d61f248b0e1fad398e7ee1566`
+- Message: `feat: add governed AI certainty-of-evidence/GRADE assistance`
+- Parent: `f47561973e697ac30a87c41a865d146b18e11246`
+- Worktree after verification: clean
+- GitHub operation: none
+
+This SHA is the durable Phase 29 recovery checkpoint. A separate local metadata commit records
+the resulting SHA in the execution state and this report; the phase checkpoint remains the commit
+above.

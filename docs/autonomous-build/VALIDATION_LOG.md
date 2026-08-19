@@ -98,8 +98,9 @@ This log records commands, results, and honest environment blockers for the V1 c
 - Scientific/security/provenance review: PASS - certainty writes remain in `CertaintyService`,
   AI cannot produce final certainty or statistical decisions, proposals are stale/tenant scoped,
   and all accepted/edited writes require explicit human payloads and provenance.
-- Local checkpoint: READY_FOR_CHECKPOINT - full-access local Git checkpoint procedure is pending
-  after final scope and staged-diff inspection. No GitHub operation is authorized.
+- Local checkpoint: PASS - commit `df0a74fd2231e76d61f248b0e1fad398e7ee1566` was created after
+  the required scope, diff, secret, staged-stat, staged-content, and staged-diff checks. The
+  worktree is clean and no GitHub operation was performed.
 
 ## 2026-08-18 — baseline
 
