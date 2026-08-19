@@ -187,3 +187,26 @@ without ACL or lock-file surgery.
   truthful Phase 35 message and contains only the validated phase scope. Execution state records
   `CHECKPOINTED`, `HEAD` is its descendant, the worktree is clean, and Phase 36 is next. No GitHub
   operation was performed.
+
+## Phase 36 validation conditions
+
+- Repository gates pass: `ruff check .`, `ruff format --check .` (374 files), strict
+  `mypy backend workers` (234 source files), compileall, frontend ESLint, TypeScript, Vitest (10
+  tests), and the Next.js production build.
+- Focused behavior: the tenant-boundary screening integration passes 1 test with `--no-cov`,
+  including ordered round listing for an authorized Review member and foreign-organization
+  not-found behavior. The narrow default pytest invocation is not a full coverage measurement and
+  fails the repository-wide 85% threshold when run alone.
+- Full pytest: `ENVIRONMENT_BLOCKED_TIMEOUT_NO_OUTPUT_424_SECONDS`; exact pytest/Python descendants
+  were inspected and terminated safely. This is not a pass or a scientific blocker.
+- Scientific/security/provenance/tenant review passes. The UI remains server-authorized, blinded
+  queue data is assignment-scoped, workflow data remains operational, and assignment/adjudication
+  writes use existing canonical services. No critical/high blocker remains.
+- Secret/credential/generated-artifact/scope audit passes. No GitHub operation is authorized.
+
+## Phase 36 local checkpoint
+
+- PASS - local implementation commit `55fc1404b5fb9b0103b32521ade4ffd0cc11058d` exists with the
+  truthful phase-specific message and contains only the validated Phase 36 scope. Execution state
+  records `CHECKPOINTED`, `HEAD` is its descendant, the worktree is clean, and Phase 37 is next.
+  No GitHub operation was performed.

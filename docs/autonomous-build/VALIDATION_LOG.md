@@ -278,3 +278,25 @@ This log records commands, results, and honest environment blockers for the V1 c
   diff, diff-check, secret, artifact, intended-scope, commit, and worktree audits. Execution state
   records `CHECKPOINTED`, `HEAD` is its descendant, the worktree is clean, and Phase 36 is next. No
   GitHub operation was authorized.
+
+## 2026-08-19 - Phase 36 collaboration, assignment, quality control, and operational UX
+
+- Backend repository gates: PASS - `ruff check .`, `ruff format --check .` (374 files), strict
+  `mypy backend workers` (234 source files), and compileall passed.
+- Frontend gates: PASS - ESLint, TypeScript, Vitest (10 tests), and the Next.js 16.3 production
+  build passed.
+- Focused backend behavior: PASS - the tenant-boundary screening integration passed 1 test with
+  `--no-cov`, verifying ordered Review-scoped round listing and foreign-organization not-found
+  behavior alongside the existing blinded screening lifecycle. Running that single test through the
+  default repository coverage gate fails the 85% threshold because it is intentionally narrow; no
+  full-suite coverage claim is made from it.
+- Full repository pytest: ENVIRONMENT_BLOCKED - no output after 424 seconds. Exact pytest/Python
+  descendants were inspected and safely terminated; no full-suite assertion result is claimed.
+- Scientific/security/provenance/tenant review: PASS - the backend remains the authorization and
+  blinding authority; assignment and adjudication use canonical screening services; workflow state,
+  provenance, scientific data, Article/Study boundaries, and read-only reporting remain separate.
+- Secret/credential/generated-artifact/scope audit: PASS - no secrets, caches, runtime data, host
+  files, or unrelated files were staged. No GitHub operation was authorized.
+- Local implementation checkpoint: PASS - commit
+  `55fc1404b5fb9b0103b32521ade4ffd0cc11058d` was created after the required pre-commit and staged-
+  scope audits. `HEAD` is verified, the worktree is clean, and Phase 37 is the next resume point.

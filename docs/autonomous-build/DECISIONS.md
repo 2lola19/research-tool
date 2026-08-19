@@ -114,7 +114,9 @@ by default; live providers and arbitrary retrieval remain deferred.
 - Observed the expected clean Phase 26 baseline at `ff5e1bb`; no newer valid work needed
   reconciliation.
 - Created a durable autonomous-build control plane before Phase 27 implementation. The definitive
-- remaining roadmap was written after inspecting the actual repository rather than copying the
+  remaining roadmap was written after inspecting the actual repository rather than copying the
+  provisional phase list. The envelope remains Phases 27–38, with durable jobs and recovery split
+  across Phases 31–32 and offline-safe provider/storage/parser hardening in Phases 33–35.
 
 ## 2026-08-19 — Phase 32 recovery boundary
 
@@ -142,5 +144,16 @@ by default; live providers and arbitrary retrieval remain deferred.
 - External source URLs are HTTPS/private-host validated but not fetched in this phase. GROBID,
   OCR, malware scanning, live S3/PostgreSQL, and production retrieval remain deployment gates.
   ADR-034 records the decision.
-  provisional phase list. The envelope remains Phases 27–38, with durable jobs and recovery split
-  across Phases 31–32 and offline-safe provider/storage/parser hardening in Phases 33–35.
+
+## 2026-08-19 - Phase 36 collaboration and operational UX boundary
+
+- The Review operations surface is a server-rendered read model over existing Review, screening,
+  workflow, PRISMA, provenance, and membership APIs. It does not create a browser-side workflow
+  state machine or authorization model.
+- The screening-round index is Review-access scoped; reviewer queue reads remain assignment-scoped,
+  QC outcomes remain manager-scoped, and unrevealed peer/AI content is never reconstructed by the
+  UI. Assignment and conflict adjudication are forwarded through authenticated server actions to
+  the existing screening service.
+- Operational freshness, loading, error, and stale-reconciliation labels are explicitly non-
+  scientific metadata. No new UI ADR is needed because the design follows the existing Next.js
+  server-component boundary. Phase 37 now owns deployment and observability readiness.

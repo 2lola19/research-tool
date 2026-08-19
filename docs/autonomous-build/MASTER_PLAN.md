@@ -357,6 +357,16 @@ Security/tests: server remains authority; test direct route/API leakage, role bo
 isolation, stale banners, mutation error handling, lint/typecheck/Vitest/build. ADR/docs only if a
 new UI architectural decision is needed.
 
+Implementation status: complete and checkpointed locally at
+`55fc1404b5fb9b0103b32521ade4ffd0cc11058d`. The tenant-scoped screening-round index, accessible
+Review workspace shell, server-rendered operations dashboard, role-aware assignment and QC views,
+blinded queue boundaries, workflow/reconciliation/error status, provenance display, safe reporting
+links, explicit loading/error/stale states, authenticated server actions, and frontend API tests are
+implemented. Repository and frontend static gates pass; the focused tenant-boundary test passes,
+while the full pytest invocation is truthfully recorded as an environment-blocked 424-second
+no-output timeout. No new UI ADR was needed because the implementation follows the existing
+server-rendered Next.js boundary and does not introduce a new state/authorization architecture.
+
 ## Phase 37 — Production Deployment, PostgreSQL Validation, Security, Observability, Backups and
 Operational Readiness
 
@@ -433,5 +443,6 @@ imports, raw artifacts, and provider-attempt provenance; the full-suite no-outpu
 truthfully documented. The validated Phase 33 implementation checkpoint is local commit
 `1687da9d5f4da9332786692e5085a856848b9c99`. Phase 34 implementation and focused validation are
 checkpointed locally at `e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7`. Phase 35 implementation and
-focused validation are checkpointed locally at `05787fc4cf180ddb51c22c9c7b55f96c6d6e4a6b`; Phase 36
-is the next safe action. No GitHub operation is authorized.
+focused validation are checkpointed locally at `05787fc4cf180ddb51c22c9c7b55f96c6d6e4a6b`. Phase 36
+is checkpointed locally at `55fc1404b5fb9b0103b32521ade4ffd0cc11058d`; Phase 37 is the next safe
+action. No GitHub operation is authorized.
