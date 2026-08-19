@@ -1,15 +1,15 @@
 {
   "program": "Research Tool V1 Completion",
   "baseline_commit": "ff5e1bb",
-  "current_phase": 34,
-  "current_step": "READY_FOR_CHECKPOINT",
-  "last_completed_phase": 33,
-  "last_local_commit": "1687da9d5f4da9332786692e5085a856848b9c99",
-  "expected_phase_commit_message": "feat: add production AI provider integrations, routing, usage and cost governance",
+  "current_phase": 35,
+  "current_step": "PLANNING",
+  "last_completed_phase": 34,
+  "last_local_commit": "e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7",
+  "expected_phase_commit_message": "feat: harden document processing and object storage pipeline",
   "commit_pending": false,
-  "checkpoint_status": "READY_FOR_CHECKPOINT",
+  "checkpoint_status": "NOT_READY",
   "status": "READY_TO_RESUME",
-  "completed_phases": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33],
+  "completed_phases": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
   "phase_checkpoints": [
     {
       "phase": 27,
@@ -52,12 +52,18 @@
       "commit": "1687da9d5f4da9332786692e5085a856848b9c99",
       "message": "feat: add provider-neutral scholarly search integrations",
       "status": "CHECKPOINTED"
+    },
+    {
+      "phase": 34,
+      "commit": "e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7",
+      "message": "feat: add production AI provider integrations, routing, usage and cost governance",
+      "status": "CHECKPOINTED"
     }
   ],
   "validation_status": {
     "last_completed_phase": "PASS_WITH_DOCUMENTED_ENVIRONMENT_LIMITATIONS",
-    "current_phase": "READY_FOR_CHECKPOINT",
-    "checkpoint_reconciliation": "PASS"
+    "current_phase": "NOT_STARTED",
+    "checkpoint_reconciliation": "PASS_HEAD_E70E18C"
   },
   "validation": {
     "phase27_targeted_ruff": "PASS",
@@ -178,7 +184,7 @@
     "phase34_security_review": "PASS",
     "phase34_provenance_review": "PASS",
     "phase34_tenant_boundary_review": "PASS",
-    "phase34_checkpoint": "READY_FOR_CHECKPOINT"
+    "phase34_checkpoint": "CHECKPOINTED_E70E18C"
   },
   "blockers": [],
   "known_environment_limitations": [
@@ -187,9 +193,9 @@
     "The full pytest invocation emitted no output and timed out after 394 seconds in this environment; exact pytest descendants were inspected and terminated safely. Focused Phase 34 AI, provider, regression, and migration shards pass.",
     "Live PostgreSQL/Docker/GROBID/external storage and paid-provider validation remain deferred without the required environment or authorization."
   ],
-  "last_completed_action": "Completed Phase 34 implementation, focused validation, scientific/security/provenance review, and scope audit; the validated local checkpoint is ready.",
-  "next_action": "Run the validated local Phase 34 checkpoint with message 'feat: add production AI provider integrations, routing, usage and cost governance'; preserve all work and never push to GitHub.",
+  "last_completed_action": "Created and verified the Phase 34 local implementation checkpoint e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7 after all required validation, review, and scope checks.",
+  "next_action": "Begin Phase 35 planning for production document processing, object storage, and PDF pipeline hardening; reconcile Git HEAD and preserve Phase 34 without pushing to GitHub.",
   "files_in_progress": [],
-  "updated_at": "2026-08-19T14:05:00+01:00",
-  "resume_note": "Phase 31 is checkpointed locally at 65de1a90ffbc81f3ed3ca1ac5f4ba030648f76d9, Phase 32 at b5039cd456caf2f36e10716c29aaccde4e3fa175, and Phase 33 at 1687da9d5f4da9332786692e5085a856848b9c99. Phase 34 is implementation-complete and READY_FOR_CHECKPOINT. Reconcile Git HEAD before the local commit and never push to GitHub."
+  "updated_at": "2026-08-19T14:55:53+01:00",
+  "resume_note": "Phase 31 is checkpointed locally at 65de1a90ffbc81f3ed3ca1ac5f4ba030648f76d9, Phase 32 at b5039cd456caf2f36e10716c29aaccde4e3fa175, Phase 33 at 1687da9d5f4da9332786692e5085a856848b9c99, and Phase 34 at e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7. Reconcile Git HEAD before Phase 35 work; never push to GitHub."
 }
