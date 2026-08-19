@@ -46,6 +46,8 @@ separate from workflow and scientific state.
 
 ## Checkpoint
 
-Implementation and required reviews are complete. The validated local Git checkpoint checklist is
-ready; the implementation commit SHA and final execution-state metadata will be recorded after
-scoped Git verification. No GitHub operation is authorized or performed.
+Implementation and required reviews are complete. The validated local Phase 31 implementation
+checkpoint exists at `65de1a90ffbc81f3ed3ca1ac5f4ba030648f76d9` with message `feat: add durable
+background jobs and worker execution`. The execution state and phase report were reconciled after
+the scoped Git verification in the follow-on metadata checkpoint. No GitHub operation is
+authorized or performed.

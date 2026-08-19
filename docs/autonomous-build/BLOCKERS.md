@@ -90,3 +90,6 @@ without ACL or lock-file surgery.
 - No active scientific, security, migration, data-loss, or destructive-operation blocker remains.
   PostgreSQL lock contention, multi-process crash timing, live handlers/providers, and Phase 32
   retry/resume/reconciliation remain later gates.
+- Phase 31 local checkpoint: PASS - commit
+  `65de1a90ffbc81f3ed3ca1ac5f4ba030648f76d9` exists locally after the required validation and scope
+  checks; the worktree is clean and GitHub remains out of scope.
