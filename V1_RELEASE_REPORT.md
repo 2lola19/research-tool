@@ -107,9 +107,9 @@ switch or escalation was attempted; no unresolved scientific, security, migratio
 issue required `MODEL_ESCALATION_RECOMMENDED`.
 
 Phase 37’s validated implementation checkpoint is local commit
-`4a002a45a054eb1987c6e9ae7df1df0a2e9d634f`; the current local HEAD also contains its metadata
-reconciliation commit. No GitHub push, release publication, remote change, or prohibited Git
-operation was performed.
+`4a002a45a054eb1987c6e9ae7df1df0a2e9d634f`; Phase 38’s validated release checkpoint is local
+commit `add938ce0c118b56362f754d93452fa402da0870`. No GitHub push, release publication, remote
+change, or prohibited Git operation was performed.
 
 ## Decision
 
