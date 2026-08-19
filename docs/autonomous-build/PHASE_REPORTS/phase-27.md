@@ -111,6 +111,6 @@ limitations require host-side validation before controlled deployment.
 
 ## Checkpoint and next phase
 
-This report is written at the ready-for-checkpoint boundary. The local commit hash is recorded in
-the control-plane state after the explicit diff/secret/staging review. The next implementation
-phase is Phase 28, governed AI outcome/effect-estimate harmonization assistance.
+This report is checkpointed at local commit `995c5af` after the explicit diff/secret/staging
+review. The next implementation phase is Phase 28, governed AI outcome/effect-estimate
+harmonization assistance.

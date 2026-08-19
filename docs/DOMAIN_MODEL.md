@@ -200,3 +200,17 @@ accepted or edited signalling answer calls the existing `RiskOfBiasService`; AI 
 canonical domain judgment, overall judgment, assessment submission, comparison, or adjudication.
 `AIRobEvaluationDataset` and its immutable results are separate from Studies, Articles, assessments,
 and canonical RoB decisions. The demonstration instrument remains explicitly incomplete.
+
+## Governed AI outcome harmonization assistance
+
+`AIOutcomeProposalLink` is an immutable advisory bridge between one AI proposal and a verified
+extraction value, Study, immutable OutcomeDefinitionVersion, and explicitly scoped processed
+Documents. It records source/parser/chunk snapshots, validation results, and staleness inputs; it
+is not an `OutcomeMapping` or `EffectEstimate`.
+
+`AIOutcomeReviewRecord` stores a human disposition and optional canonical subject link. Only an
+explicit human payload can call `OutcomeService.create_mapping` or
+`OutcomeService.create_effect_estimate`; AI never performs conversion, derivation, pooling, or
+analysis readiness. Evaluation datasets/results and error classifications are independent
+quality records. Outcome and extraction versions remain immutable, and Study and Article remain
+distinct entities.

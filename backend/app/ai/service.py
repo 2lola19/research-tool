@@ -39,6 +39,7 @@ _GOVERNED_SCREENING_TASKS = {
     AITaskType.FULL_TEXT_SCREENING_SUGGESTION,
     AITaskType.EXTRACTION_SUGGESTION,
     AITaskType.ROB_SUGGESTION,
+    AITaskType.OUTCOME_MAPPING_SUGGESTION,
 }
 
 
@@ -104,6 +105,7 @@ class AIExecutionService:
         await self.ensure_defaults(actor, AITaskType.FULL_TEXT_SCREENING_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.EXTRACTION_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.ROB_SUGGESTION)
+        await self.ensure_defaults(actor, AITaskType.OUTCOME_MAPPING_SUGGESTION)
         models = await self._repository.list_models(actor.organization_id)
         prompts = await self._repository.list_prompts(actor.organization_id)
         return {
@@ -437,7 +439,12 @@ class AIExecutionService:
                 "questions",
             }:
                 valid = isinstance(current, list) and bool(current)
-            elif key in {"instrument_definition"}:
+            elif key in {
+                "instrument_definition",
+                "outcome_definition",
+                "extraction_value",
+                "allowed_mappings",
+            }:
                 valid = isinstance(current, dict) and bool(current)
             else:
                 valid = isinstance(current, str) and bool(current.strip())
@@ -489,6 +496,16 @@ class AIExecutionService:
                 raise ValueError("Risk of Bias assistance requires 1 through 80 selected chunks")
             if not isinstance(documents, list) or not documents or len(documents) > 8:
                 raise ValueError("Risk of Bias assistance requires 1 through 8 source documents")
+        if task.task_type is AITaskType.OUTCOME_MAPPING_SUGGESTION:
+            mappings = value.get("allowed_mappings")
+            chunks = value.get("chunks")
+            documents = value.get("source_documents")
+            if not isinstance(mappings, dict) or not mappings:
+                raise ValueError("outcome assistance requires an allowed mapping manifest")
+            if not isinstance(chunks, list) or not chunks or len(chunks) > 80:
+                raise ValueError("outcome assistance requires 1 through 80 selected chunks")
+            if not isinstance(documents, list) or not documents or len(documents) > 8:
+                raise ValueError("outcome assistance requires 1 through 8 source documents")
 
     @staticmethod
     def _sanitize_input(
@@ -528,6 +545,19 @@ class AIExecutionService:
                 "instrument_version_id": str(value["instrument_version_id"]),
                 "instrument_definition": value["instrument_definition"],
                 "questions": value["questions"],
+                "source_documents": value["source_documents"],
+                "chunks": value["chunks"],
+                "input_preparation": value["input_preparation"],
+            }
+        if task.task_type is AITaskType.OUTCOME_MAPPING_SUGGESTION:
+            return {
+                "review_id": str(value["review_id"]),
+                "study_id": str(value["study_id"]),
+                "extraction_value_id": str(value["extraction_value_id"]),
+                "outcome_version_id": str(value["outcome_version_id"]),
+                "outcome_definition": value["outcome_definition"],
+                "extraction_value": value["extraction_value"],
+                "allowed_mappings": value["allowed_mappings"],
                 "source_documents": value["source_documents"],
                 "chunks": value["chunks"],
                 "input_preparation": value["input_preparation"],
@@ -615,6 +645,11 @@ class AIExecutionService:
                         "message": "model confidence must be from 0 through 1",
                     }
                 )
+            return errors
+        if task.task_type is AITaskType.OUTCOME_MAPPING_SUGGESTION:
+            from backend.app.ai.outcome_domain import validate_outcome_output
+
+            errors.extend(validate_outcome_output(value, input_data or {}))
             return errors
         if "evidence_references" in value and not isinstance(value["evidence_references"], list):
             errors.append(

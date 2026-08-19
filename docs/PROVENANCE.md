@@ -118,3 +118,17 @@ identities. REJECTED/UNRESOLVED and abstention remain distinct. Domain and overa
 derived by the existing declarative instrument rules only. Evaluation datasets/results and
 high-risk/error classifications carry separate human/system provenance and never enter scientific
 exports as canonical RoB state.
+
+## AI-assisted outcome harmonization provenance
+
+Each outcome proposal retains the human-owned Study and verified extraction snapshot, immutable
+OutcomeDefinitionVersion/content hash, allowed mapping references, Article/Document identities,
+successful parser/version and parsed-content hashes, selected/omitted chunk manifest, input hash,
+task/prompt/model versions, attempt history, response/validation hashes, and exact evidence quote.
+The proposal is never a canonical mapping or effect estimate.
+
+`ACCEPTED`, `EDITED`, `REJECTED`, and `UNRESOLVED` dispositions remain append-only. Accepted or
+edited canonical records are created only by the existing `OutcomeService` from an explicit human
+payload and receive human provenance with `AI_PROPOSAL` source identity. The canonical record
+retains its normal extraction/mapping/effect trace; the AI proposal, evaluation, and error records
+remain separate and are not used as analysis inputs merely because they were validated.

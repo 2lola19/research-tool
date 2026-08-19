@@ -157,3 +157,19 @@ access/disposition. Generic `/ai/runs`, run lists, and direct proposal reads rej
 `ROB_SUGGESTION`. Human dispositions invoke the existing Risk-of-Bias answer service and never
 create a domain/overall judgment or submit an assessment. Evaluation routes cannot evaluate an
 unrevealed blinded proposal and expose only deterministic descriptive metrics.
+
+## Phase 28 AI outcome harmonization API
+
+The `/api/v1/ai/outcomes/reviews/{review_id}` routes provide policy creation, readiness checks,
+bounded proposal generation, proposal reads, human dispositions, evaluation dataset/result
+management, and append-only error classification. Requests explicitly identify a verified
+extraction value, immutable outcome version, and one through eight processed Documents linked to
+the Study's Article. Responses preserve source manifests, selected/omitted chunks, validation
+errors, staleness, and task/model/prompt provenance through the existing AI run.
+
+The generic AI routes reject `OUTCOME_MAPPING_SUGGESTION`. Proposals cannot write mappings or
+effect estimates. `ACCEPTED` and `EDITED` require a human canonical action and payload; the
+service invokes `OutcomeService`, which performs the final compatibility, evidence, tenant, and
+immutability checks. The API never performs unit conversion, effect calculation, imputation,
+pooling, or analysis-state mutation. Direct proposal/evaluation/error identifiers are scoped by
+the path Review and active organization membership.

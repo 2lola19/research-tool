@@ -109,3 +109,11 @@ neither mode lets AI submit answers, satisfy independent dual assessment, adjudi
 submitted records. Evaluation results are immutable/descriptive, include signalling/domain/overall
 agreement, evidence grounding, abstention/coverage, confusion counts, calibration status, and a
 dangerous-underestimation queue. The demonstration instrument is not complete RoB 2.
+
+## Phase 28 governed outcome/effect harmonization assistance
+
+The next scientific AI surface is an advisory projection over verified extraction values and
+immutable OutcomeDefinitionVersions. It may suggest an evidence-grounded mapping or a reported
+effect candidate, but cannot convert values, calculate effects, impute components, pool studies, or
+change analysis readiness. Human dispositions call the existing canonical outcome service with an
+explicit payload. Evaluation remains descriptive and separate from canonical outcome data.

@@ -128,3 +128,17 @@ assignment-scoped and audited. Stale instrument, assessment, parser, block, or s
 cannot be accepted. Source text is untrusted, bounded, secret-screened, and passed to a no-tools
 provider adapter. AI cannot satisfy dual assessment, adjudicate disagreement, or mutate canonical RoB
 state.
+
+## Phase 28 AI outcome security
+
+Outcome assistance uses active organization membership and Review-scoped authorization for every
+policy, readiness, proposal, review, evaluation, and error operation. Proposal links require the
+source Document to belong to the Review and its Article to be linked to the target Study. Composite
+foreign keys and path-scoped direct-object reads prevent cross-tenant and cross-review access.
+
+Generic AI endpoints reject the outcome task. The frontend cannot write canonical scientific state
+through an AI route: explicit human dispositions are passed to `OutcomeService`, which rechecks
+Study, extraction, OutcomeDefinitionVersion, allowed references, source mappings, evidence, and
+immutability. Invalid or stale proposals cannot be accepted; edited dispositions must include a
+human canonical payload. AI cannot calculate, convert, infer missing components, pool, or alter
+analysis readiness.

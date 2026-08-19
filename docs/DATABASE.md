@@ -187,3 +187,18 @@ source/evidence ordinals. Check constraints cover policy modes, task versions, s
 reference standards, review actions, and error categories. ORM guards reject updates/deletes across
 the AI scientific history. The migration is linear after `20260817_0027` and upgrades/downgrades
 fully on SQLite; PostgreSQL-specific validation remains a later production gate.
+
+## Phase 28 AI outcome harmonization metadata
+
+Migration `20260818_0029` adds append-only `ai_outcome_policy_versions`,
+`ai_outcome_proposal_links`, access events, human review records, evaluation datasets/results, and
+error classifications. Proposal links repeat Organization and Review scope across the AI run,
+proposal, Study, verified extraction value, and immutable outcome version. They retain outcome and
+extraction hashes, source/parser manifests, selected/omitted chunk manifests, task version, and
+validation results.
+
+Composite foreign keys and scoped indexes prevent cross-tenant/review composition. Check and
+uniqueness constraints cover policy bounds, hashes, task versions, reference standards, review
+actions, and access types. ORM guards reject updates/deletes across the AI outcome history. The
+migration is linear after `20260818_0028` and was manually upgraded through `0029` and downgraded
+to the base SQLite schema. PostgreSQL-specific validation remains a later production gate.

@@ -23,6 +23,15 @@ from backend.app.ai.full_text_persistence import (
     FullTextEvaluationDatasetRecord,
     FullTextEvaluationResultRecord,
 )
+from backend.app.ai.outcome_persistence import (
+    AIOutcomeAccessRecord,
+    AIOutcomeErrorClassificationRecord,
+    AIOutcomeEvaluationDatasetRecord,
+    AIOutcomeEvaluationResultRecord,
+    AIOutcomePolicyRecord,
+    AIOutcomeProposalLinkRecord,
+    AIOutcomeReviewRecord,
+)
 from backend.app.ai.persistence import (
     AIExecutionRunRecord,
     AIModelVersionRecord,
@@ -183,6 +192,13 @@ __all__ = [
     "AIFullTextDecisionLinkRecord",
     "AIFullTextProposalLinkRecord",
     "AIModelVersionRecord",
+    "AIOutcomeAccessRecord",
+    "AIOutcomeErrorClassificationRecord",
+    "AIOutcomeEvaluationDatasetRecord",
+    "AIOutcomeEvaluationResultRecord",
+    "AIOutcomePolicyRecord",
+    "AIOutcomeProposalLinkRecord",
+    "AIOutcomeReviewRecord",
     "AIOutputProposalRecord",
     "AIPromptTemplateVersionRecord",
     "AIReviewDecisionRecord",

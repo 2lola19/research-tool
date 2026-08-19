@@ -151,3 +151,17 @@ BLINDED_AI withholding and generic-route closure, ASSISTED question dispositions
 assessment immutability, post-submission reveal, evaluation abstention/high-risk records, audit links,
 and tenant/assessor direct-ID non-enumeration. The `20260818_0028` migration upgrades and downgrades
 fully on SQLite. PostgreSQL and live provider execution remain production-phase gates.
+
+## Phase 28 outcome assistance validation
+
+Focused unit coverage verifies identity pinning, exact evidence grounding, fabricated chunk and
+quote rejection, unsupported conversion/calculation rejection, allowed-reference filtering,
+reported-effect numeric/variance safeguards, descriptive evaluation metrics, and governed task
+registration. Integration coverage verifies generic-route closure, Review-scoped proposal reads,
+and foreign-tenant non-enumeration. The `20260818_0029` migration was manually upgraded and
+downgraded through the base SQLite schema.
+
+Targeted Ruff, format, strict mypy, frontend lint, and TypeScript pass. The Windows pytest temp-root
+cleanup remains environment-blocked for the dedicated integration shard; broad frontend lint also
+timed out without output while the changed frontend files pass direct ESLint. Vitest/build and live
+PostgreSQL/provider execution remain production-phase gates.

@@ -20,6 +20,21 @@ relevant phase report or ADR.
   coverage, confusion, calibration description, and dangerous-underestimation queues; they do not
   create thresholds or scientific decisions.
 
+## 2026-08-18 - Phase 28 canonical outcome boundary
+
+- Outcome assistance is an advisory projection over the existing `OutcomeService`; no parallel
+  mapping, conversion, effect-calculation, pooling, or analysis substrate was created.
+- The task accepts only a mapping candidate, a reported-effect candidate, or abstention. Exact
+  source chunks and bounded quotes are mandatory for non-abstaining output. Canonical outcome
+  version allowlists are filtered before the provider sees them, and deterministic validation
+  rejects identity changes, unsupported references, calculations, and unsafe effect metadata.
+- Human `ACCEPTED` dispositions require a valid candidate of the matching canonical kind. Invalid
+  proposals require `EDITED` plus an explicit human payload; both routes call the existing
+  `OutcomeService`, preserving its tenant, evidence, compatibility, and immutable-write rules.
+- The UI extends the existing outcomes workspace with typed API access and explicit payload-based
+  human disposition. It does not present AI output as canonical or let the browser calculate
+  scientific values.
+
 ## 2026-08-18 — baseline and control plane
 
 - Observed the expected clean Phase 26 baseline at `ff5e1bb`; no newer valid work needed

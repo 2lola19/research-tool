@@ -65,6 +65,11 @@ class DeterministicMockAIProvider:
                 dict[str, Any],
                 DeterministicMockAIProvider.rob_fixture("ABSTAIN", request.structured_input),
             )
+        if request.task_type == "OUTCOME_MAPPING_SUGGESTION":
+            return cast(
+                dict[str, Any],
+                DeterministicMockAIProvider.outcome_fixture("ABSTAIN", request.structured_input),
+            )
         if request.task_type == "FULL_TEXT_SCREENING_SUGGESTION":
             return {
                 "suggestion": "MAYBE",
@@ -410,3 +415,115 @@ class DeterministicMockAIProvider:
         if scenario == "OVERSIZED_OUTPUT":
             return {**base, "rationale": "x" * 40_000}
         raise ValueError(f"unknown Risk of Bias mock fixture: {scenario}")
+
+    @staticmethod
+    def outcome_fixture(
+        scenario: str, structured_input: dict[str, Any]
+    ) -> dict[str, Any] | str | AIProviderErrorKind:
+        """Named offline fixtures for governed outcome harmonization assistance."""
+        scenario = scenario.upper()
+        errors = {
+            "TIMEOUT": AIProviderErrorKind.TIMEOUT,
+            "RATE_LIMIT": AIProviderErrorKind.RATE_LIMIT,
+            "TRANSIENT_FAILURE": AIProviderErrorKind.UNAVAILABLE,
+            "PERMANENT_FAILURE": AIProviderErrorKind.PERMANENT,
+        }
+        if scenario in errors:
+            return errors[scenario]
+        if scenario == "MALFORMED_JSON":
+            return "not-a-structured-object"
+        base: dict[str, Any] = {
+            "outcome_version_id": str(structured_input.get("outcome_version_id", "")),
+            "extraction_value_id": str(structured_input.get("extraction_value_id", "")),
+            "candidate_type": "ABSTAIN",
+            "mapping": None,
+            "effect": None,
+            "evidence": [],
+            "rationale": "The deterministic mock abstains pending human harmonization.",
+            "model_reported_confidence": 0.5,
+            "abstention": "HUMAN_HARMONIZATION_REQUIRED",
+        }
+        if scenario in {"ABSTAIN", "SUCCESS_ABSTAIN"}:
+            return base
+        chunks = structured_input.get("chunks", [])
+        first = chunks[0] if chunks else {}
+        outcome = structured_input.get("outcome_definition", {})
+        measures = list(outcome.get("compatible_effect_measures", []))
+        mapping = {
+            "reported_value": structured_input.get("extraction_value", {}).get("reported_value"),
+            "reported_unit_id": None,
+            "normalized_unit_id": None,
+            "reported_time_value": None,
+            "reported_time_unit": None,
+            "reported_time_anchor": None,
+            "timepoint_window_id": None,
+            "measurement_scale_id": None,
+            "direction_transformation": "NONE",
+            "transformation_reason": None,
+        }
+        evidence = {
+            "document_id": str(first.get("document_id", "")),
+            "document_version_id": str(first.get("document_version_id", "")),
+            "chunk_id": str(first.get("chunk_id", "")),
+            "source_block_id": str(first.get("source_block_id", "")),
+            "page": first.get("page"),
+            "section": first.get("section"),
+            "quote": str(first.get("text", ""))[:120],
+        }
+        proposed = {
+            **base,
+            "candidate_type": "MAPPING",
+            "mapping": mapping,
+            "evidence": [evidence],
+            "rationale": "Deterministic outcome mapping fixture for human review.",
+            "model_reported_confidence": 0.8,
+            "abstention": None,
+        }
+        if scenario in {"SUCCESS", "SUCCESS_MAPPING"}:
+            return proposed
+        if scenario == "UNSUPPORTED_MEASURE":
+            return {
+                **proposed,
+                "candidate_type": "EFFECT_ESTIMATE",
+                "mapping": None,
+                "effect": {"effect_measure": "INVENTED", "estimate": "2"},
+            }
+        if scenario == "WRONG_VERSION":
+            return {**proposed, "outcome_version_id": "wrong-version"}
+        if scenario == "WRONG_EXTRACTION":
+            return {**proposed, "extraction_value_id": "wrong-extraction"}
+        if scenario == "FABRICATED_CHUNK":
+            return {**proposed, "evidence": [{**evidence, "chunk_id": "fabricated"}]}
+        if scenario == "QUOTE_MISMATCH":
+            return {**proposed, "evidence": [{**evidence, "quote": "fabricated quote"}]}
+        if scenario == "WRONG_DOCUMENT":
+            return {**proposed, "evidence": [{**evidence, "document_id": "wrong"}]}
+        if scenario == "CALCULATION_ATTEMPT":
+            return {
+                **proposed,
+                "mapping": {**mapping, "normalized_unit_id": "invented-conversion"},
+                "rationale": "Converted 10 mg to 0.01 g automatically.",
+            }
+        if scenario == "OVERSIZED_OUTPUT":
+            return {**base, "rationale": "x" * 40_000}
+        if scenario == "EFFECT_REPORTED":
+            measure = measures[0] if measures else "RR"
+            return {
+                **proposed,
+                "candidate_type": "EFFECT_ESTIMATE",
+                "mapping": None,
+                "effect": {
+                    "effect_measure": measure,
+                    "estimate": "1.2",
+                    "standard_error": "0.2",
+                    "variance": "0.04",
+                    "variance_scale": "LOG" if measure in {"RR", "OR", "HR"} else "NATURAL",
+                    "ci_lower": None,
+                    "ci_upper": None,
+                    "confidence_level": None,
+                    "adjustment": "UNADJUSTED",
+                    "analysis_population": "UNCLEAR",
+                    "components": {},
+                },
+            }
+        raise ValueError(f"unknown outcome mock fixture: {scenario}")

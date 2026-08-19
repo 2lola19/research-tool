@@ -1,6 +1,6 @@
 # Research Tool V1 Completion — Master Plan
 
-Status: definitive plan; Phase 27 implementation and validation complete; local checkpoint pending
+Status: definitive plan; Phase 27 checkpointed at 995c5af; Phase 28 local checkpoint pending
 
 ## Reconciled baseline and sequencing
 
@@ -326,3 +326,11 @@ files, next action, and checkpoint state. `RECOVERY.md` requires a fresh session
 architecture, domain/security/AI/testing documents, current state, relevant ADRs, and Git status/log;
 inspect partial files and resume from the first incomplete durable step. `VALIDATION_LOG.md`,
 `DECISIONS.md`, `BLOCKERS.md`, and `PHASE_REPORTS/phase-XX.md` are the human-auditable trail.
+
+## Current execution status
+
+Phase 27 is locally checkpointed at `995c5af`. Phase 28 implementation is complete pending its
+final documentation/checkpoint review. The Phase 28 canonical boundary is the existing
+`OutcomeService`; AI only proposes grounded mapping or reported-effect candidates and requires an
+explicit human payload for any canonical write. After the Phase 28 checkpoint, the next safe action
+is Phase 29 planning over the existing certainty/GRADE service.

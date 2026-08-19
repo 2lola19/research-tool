@@ -184,3 +184,61 @@ export async function evaluateCandidate(reviewId: string, candidateId: string) {
   });
   await finish(reviewId, response, "readiness_evaluated");
 }
+
+export async function createAIOutcomePolicy(reviewId: string, formData: FormData) {
+  const response = await post(`/api/v1/ai/outcomes/reviews/${reviewId}/policies`, {
+    maximum_batch_size: Number(value(formData, "maximum_batch_size") || "20"),
+  });
+  await finish(reviewId, response, "ai_outcome_policy_saved");
+}
+
+export async function generateAIOutcomeProposal(reviewId: string, formData: FormData) {
+  const documents = value(formData, "document_ids")
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map((document_id, index) => ({
+      document_id,
+      document_role: index === 0 ? "PRIMARY_FULL_TEXT" : "SUPPLEMENT",
+    }));
+  const response = await post(`/api/v1/ai/outcomes/reviews/${reviewId}/proposals`, {
+    items: [
+      {
+        extraction_value_id: value(formData, "extraction_value_id"),
+        outcome_version_id: value(formData, "outcome_version_id"),
+        documents,
+      },
+    ],
+  });
+  await finish(reviewId, response, "ai_outcome_proposal_created");
+}
+
+export async function reviewAIOutcomeProposal(
+  reviewId: string,
+  proposalId: string,
+  formData: FormData,
+) {
+  const action = value(formData, "action");
+  const rawPayload = value(formData, "human_payload");
+  let humanPayload: Record<string, unknown> | null = null;
+  if (rawPayload) {
+    try {
+      const parsed: unknown = JSON.parse(rawPayload);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("payload must be an object");
+      }
+      humanPayload = parsed as Record<string, unknown>;
+    } catch {
+      redirect(`/reviews/${reviewId}/outcomes?error=invalid_human_payload`);
+    }
+  }
+  const response = await post(
+    `/api/v1/ai/outcomes/reviews/${reviewId}/proposals/${proposalId}/review`,
+    {
+      action,
+      canonical_action: optional(formData, "canonical_action"),
+      human_payload: humanPayload,
+      reason: optional(formData, "reason"),
+    },
+  );
+  await finish(reviewId, response, "ai_outcome_proposal_reviewed");
+}

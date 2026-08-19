@@ -3,9 +3,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getOutcomeWorkspace } from "@/lib/api";
+import { getAIOutcomeWorkspace } from "@/lib/ai-outcomes-api";
 
 import {
   createCandidate,
+  createAIOutcomePolicy,
   createMapping,
   createOutcome,
   createScale,
@@ -13,6 +15,8 @@ import {
   createUnit,
   deriveEffect,
   evaluateCandidate,
+  generateAIOutcomeProposal,
+  reviewAIOutcomeProposal,
 } from "./actions";
 
 type Props = {
@@ -28,7 +32,10 @@ export default async function OutcomesPage({ params, searchParams }: Props) {
   const accessToken = cookieStore.get("review_access_token")?.value;
   const organizationId = cookieStore.get("review_organization_id")?.value;
   if (!accessToken || !organizationId) redirect("/login");
-  const result = await getOutcomeWorkspace(accessToken, organizationId, reviewId);
+  const [result, aiResult] = await Promise.all([
+    getOutcomeWorkspace(accessToken, organizationId, reviewId),
+    getAIOutcomeWorkspace(accessToken, organizationId, reviewId),
+  ]);
   if (result.status === "unauthorized") redirect("/login?error=session_expired");
   const versions = result.outcomes.flatMap((outcome) => outcome.versions);
   const versionById = Object.fromEntries(versions.map((version) => [version.id, version]));
@@ -64,6 +71,90 @@ export default async function OutcomesPage({ params, searchParams }: Props) {
         <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           {query.updated.replaceAll("_", " ")}.
         </p>
+      ) : null}
+
+      <section className="mt-8 grid gap-6 border-y border-[var(--line)] py-8 lg:grid-cols-[1fr_1.4fr]">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--brand)]">
+            Governed assistance
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold">Outcome harmonization assistant</h2>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            The assistant proposes only evidence-grounded mappings or reported effect candidates.
+            It cannot convert values, calculate effects, pool studies, or write a canonical record.
+            A human must review the proposal and provide the explicit canonical payload.
+          </p>
+          <form action={createAIOutcomePolicy.bind(null, reviewId)} className="mt-5 space-y-3 rounded-xl bg-[#edf4f0] p-4">
+            <label className="block text-xs font-semibold">Maximum proposal batch size
+              <input className={field} defaultValue="20" min="1" max="100" name="maximum_batch_size" type="number" />
+            </label>
+            <button className={button} type="submit">Save governed policy</button>
+          </form>
+        </div>
+        <div>
+          <form action={generateAIOutcomeProposal.bind(null, reviewId)} className="rounded-xl border border-[var(--line)] bg-white p-5">
+            <h3 className="font-semibold">Prepare a document-grounded proposal</h3>
+            <p className="mt-1 text-xs text-[var(--muted)]">Only verified extraction values and processed Documents linked to the Study are eligible. The first Document is the primary full text.</p>
+            <label className="mt-4 block text-xs font-semibold">Verified extraction value UUID
+              <input className={field} name="extraction_value_id" placeholder="Extraction value UUID" required />
+            </label>
+            <label className="mt-4 block text-xs font-semibold">Outcome version
+              <select className={field} name="outcome_version_id" required>
+                <option value="">Select outcome version</option>
+                {versions.map((version) => <option key={version.id} value={version.id}>{version.definition.name} v{version.version}</option>)}
+              </select>
+            </label>
+            <label className="mt-4 block text-xs font-semibold">Processed Document UUIDs
+              <textarea className={field} name="document_ids" placeholder="Document UUIDs separated by spaces or commas" required />
+            </label>
+            <button className={`${button} mt-4`} type="submit">Generate proposal</button>
+          </form>
+          {aiResult.status === "unauthorized" ? <p className="mt-3 text-sm text-[var(--muted)]">Outcome assistance is restricted to authorized review roles.</p> : null}
+          {aiResult.status === "unavailable" ? <p className="mt-3 text-sm text-amber-800">Outcome assistance is temporarily unavailable; canonical outcome records are unaffected.</p> : null}
+        </div>
+      </section>
+
+      {aiResult.status === "ready" && aiResult.proposals.length > 0 ? (
+        <section className="border-b border-[var(--line)] py-8">
+          <h2 className="text-2xl font-semibold">AI proposals awaiting human disposition</h2>
+          <div className="mt-5 space-y-5">
+            {aiResult.proposals.map((proposal) => (
+              <article className="rounded-2xl border border-[var(--line)] bg-white p-5" key={proposal.proposal_id ?? `${proposal.extraction_value_id}-${proposal.outcome_version_id}`}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold">{String(proposal.structured_value?.candidate_type ?? proposal.status)}</h3>
+                    <p className="mt-1 break-all font-mono text-xs text-[var(--muted)]">Extraction {proposal.extraction_value_id} &middot; outcome {proposal.outcome_version_id}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${proposal.stale ? "bg-amber-100 text-amber-900" : "bg-[#edf4f0]"}`}>
+                    {proposal.stale ? "STALE" : proposal.validation_results?.aggregate_valid ? "VALIDATED" : "REVIEW REQUIRED"}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-[var(--muted)]">{String(proposal.structured_value?.rationale ?? proposal.failure_reason ?? "No rationale returned.")}</p>
+                <details className="mt-4 rounded-xl bg-[#f7f8f6] p-3">
+                  <summary className="cursor-pointer text-xs font-semibold">Inspect pinned proposal and evidence</summary>
+                  <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words text-[11px]">{JSON.stringify({ structured_value: proposal.structured_value, validation_results: proposal.validation_results, source_manifest: proposal.source_manifest, selected_chunk_ids: proposal.selected_chunk_ids }, null, 2)}</pre>
+                </details>
+                {proposal.proposal_id ? (
+                  <form action={reviewAIOutcomeProposal.bind(null, reviewId, proposal.proposal_id)} className="mt-5 grid gap-3 border-t border-[var(--line)] pt-4 lg:grid-cols-4">
+                    <label className="text-xs font-semibold">Human disposition
+                      <select className={field} name="action"><option>REJECTED</option><option>UNRESOLVED</option><option>ACCEPTED</option><option>EDITED</option></select>
+                    </label>
+                    <label className="text-xs font-semibold">Canonical action
+                      <select className={field} name="canonical_action"><option value="">No canonical write</option><option>CREATE_MAPPING</option><option>CREATE_EFFECT_ESTIMATE</option></select>
+                    </label>
+                    <label className="text-xs font-semibold lg:col-span-2">Human canonical payload (JSON)
+                      <textarea className={`${field} font-mono text-[11px]`} name="human_payload" placeholder='{"rationale":"..."}' />
+                    </label>
+                    <label className="text-xs font-semibold lg:col-span-3">Reason
+                      <input className={field} name="reason" />
+                    </label>
+                    <button className={`${button} self-end`} type="submit">Record disposition</button>
+                  </form>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       {result.status === "unavailable" ? (

@@ -98,3 +98,23 @@ selected-text hashes. Evaluation is deterministic and descriptive only: signalli
 agreement, grounding, abstention, coverage, confusion counts, calibration status, and dangerous
 underestimation/high-risk queues. The bundled instrument remains a demonstration framework and is
 not a claim of complete RoB 2 support.
+
+## Phase 28: governed outcome and effect-estimate harmonization assistance
+
+`OUTCOME_MAPPING_SUGGESTION` is an advisory task over the existing canonical `OutcomeService`.
+The deterministic preparation layer pins a verified extraction value, immutable OutcomeDefinition
+Version, compatible effect measures, version-permitted units/windows/scales, Study-linked processed
+Documents, parser metadata, selected/omitted chunks, and hashes. The provider receives bounded
+structured input and no tools.
+
+The output is exactly a mapping candidate, a reported-effect candidate, or an abstention. Evidence
+must resolve to a supplied Document/chunk/source block and exact bounded quote. Validation rejects
+identity changes, fabricated evidence, unsupported conversions, calculations, incompatible
+measures, unsafe numbers, and incomplete variance/interval metadata. AI cannot normalize a value,
+derive an effect, impute a component, pool estimates, or change analysis readiness.
+
+Human `EDITED` dispositions supply an explicit canonical payload; `ACCEPTED` requires a valid
+candidate of the matching canonical kind. Both call the existing `OutcomeService`, and accepted
+records receive human provenance. Evaluation datasets and descriptive agreement/grounding,
+abstention, unsupported-conversion, high-risk, and calibration-status metrics remain separate from
+canonical outcomes. No automatic acceptance or official statistical harmonization is claimed.
