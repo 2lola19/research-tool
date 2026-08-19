@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260819_0031",)
+    assert version == ("20260819_0032",)
     assert {
         "users",
         "organizations",
@@ -43,6 +43,8 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "review_memberships",
         "workflow_runs",
         "workflow_jobs",
+        "workflow_job_attempts",
+        "workflow_workers",
         "job_events",
         "human_checkpoints",
         "prompt_versions",
@@ -236,5 +238,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert "ai_certainty_evaluation_results" not in remaining_tables
     assert "ai_copilot_policy_versions" not in remaining_tables
     assert "ai_copilot_queries" not in remaining_tables
+    assert "workflow_job_attempts" not in remaining_tables
+    assert "workflow_workers" not in remaining_tables
     assert "report_snapshots" not in remaining_tables
     assert "report_artifacts" not in remaining_tables

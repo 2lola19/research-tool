@@ -13,3 +13,18 @@ A human checkpoint can be requested only from `RUNNING`. The job moves to `AWAIT
 Temporal integration remains deferred and will be evaluated against these concrete semantics before adoption.
 
 Activities must be small, retry-safe, and idempotent. Scientific writes and workflow transitions occur through explicit transactions and append events for diagnosis.
+
+## Phase 31 durable execution
+
+Jobs now carry an explicit payload schema/version and bounded maximum-attempt policy. A registered
+local handler is the only task eligible for claiming. `workflow_job_attempts` records the worker,
+lease token, expiry, heartbeat, result/failure snapshot, and terminal attempt state; worker health
+is separate in `workflow_workers`.
+
+Claims are tenant/review scoped and capacity bounded. Completion, failure, explicit requeue, and
+lease-expiry recovery update the workflow job through the existing deterministic transition table and
+append operational job events. API claim responses use the handler's allowlisted redacted payload;
+raw operational payloads are never exposed in history or to the copilot. The local runner executes
+the deterministic registry through `python -m workers.review_worker --once`. Scientific handlers
+must call their existing domain services and carry their own provenance; this worker layer does not
+make scientific decisions or accept proposals.

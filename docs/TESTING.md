@@ -190,3 +190,14 @@ chain through `20260819_0031`.
 Repository Ruff, formatting, strict mypy, compile/import, and the focused copilot unit/integration
 and migration checks pass. Frontend lint/typecheck/test/build remain required phase gates; live
 PostgreSQL, Docker, external providers, and arbitrary retrieval remain deferred.
+
+## Phase 31 durable workflow execution coverage
+
+Unit coverage verifies exact handler signatures, bounded payload validation, payload redaction, and
+the deterministic local runner. Integration coverage verifies worker registration, capacity-bounded
+claiming, lease heartbeat, completion, redacted claim responses, append-only attempt event order,
+failure/requeue behavior, Review/tenant boundaries, and attempt-history token withholding. Migration
+coverage upgrades and downgrades the SQLite chain through `20260819_0032`. Existing workflow
+transition/idempotency and worker lifecycle tests continue to pass. PostgreSQL lock contention,
+multi-process crash timing, live provider handlers, and production worker orchestration remain later
+environment or Phase 32 gates.

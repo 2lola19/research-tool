@@ -78,3 +78,15 @@ without ACL or lock-file surgery.
 - Phase 30 local checkpoint: PASS - commit
   `c59a340839c6fa12f2717681fa19ab41e3671ea1` exists locally after the required validation and scope
   checks; the worktree is clean and GitHub remains out of scope.
+
+## Phase 31 validation conditions
+
+- Repository Ruff/format, strict mypy, compile/import, focused worker unit/integration, existing
+  workflow compatibility, and SQLite migration gates pass through `20260819_0032`.
+- Scientific, security, provenance, tenant-boundary, payload-redaction, and no-new-dependency
+  reviews pass. The full `pytest -q` invocation produced no output and timed out after 364 seconds;
+  this is `ENVIRONMENT_BLOCKED`, not a test pass or code failure. Exact processes were inspected and
+  terminated safely.
+- No active scientific, security, migration, data-loss, or destructive-operation blocker remains.
+  PostgreSQL lock contention, multi-process crash timing, live handlers/providers, and Phase 32
+  retry/resume/reconciliation remain later gates.

@@ -88,7 +88,9 @@ Last updated: 2026-08-17
 - MEDIUM resolved: AnalysisSet creation now requires a current Phase 19 READY evaluation and then independently rechecks the selected live estimates; execution repeats that check and compares the canonical input hash, preventing stale-ready reuse.
 - MEDIUM resolved: completed/failed statistical runs and result children are immutable, every consequential method is explicit, ratio measures use a versioned log transform, no continuity correction is hidden, and unsupported dependent multi-arm/cluster/crossover inputs block safely.
 - MEDIUM resolved: all read-maximum-plus-one allocators now use scoped database uniqueness and bounded savepoint retries; PostgreSQL remains the production concurrency validation target.
-- LOW: worker dispatch remains a lifecycle shell. Phase 11 keeps processing synchronous behind a parser/service boundary; durable claiming and retries remain deferred.
+- RESOLVED in Phase 31: worker dispatch now has durable payload metadata, bounded claims, leases,
+  heartbeats, attempt history, failure/requeue, and a deterministic local runner. Phase 32 still
+  owns richer resumability, retry taxonomy, and operational reconciliation.
 - Unblinded screening remains rejected until an explicit reveal policy exists.
 - GROBID is evaluated and adapter-ready, but its live service and resource profile are not validated on this host.
 
@@ -236,3 +238,13 @@ AI run/proposal links, audit records, workflow read-list methods, migration `202
 dedicated API routes, frontend activity/policy/query UI, and focused scientific/security/tenant
 tests. The deterministic offline mock abstains by default. No scientific, workflow, manuscript, or
 retrieval authority was added.
+
+## Phase 31 durable workflow jobs and worker execution
+
+Implemented the provider-neutral local execution layer behind the existing workflow contracts.
+Jobs now carry explicit payload schema/version and bounded attempts; PostgreSQL-backed attempt rows
+persist leases, heartbeats, result/failure state, and worker health. The exact handler registry,
+capacity-bounded claim/complete/fail/requeue/lease-expiry flows, deterministic local runner, worker
+endpoints, redacted claim payloads, migration `20260819_0032`, and tenant/security tests are in
+place. Scientific decisions remain in specialized domain services; Temporal, production worker
+deployment, and Phase 32 resumability/retry taxonomy remain deferred.

@@ -229,3 +229,18 @@ tenant/Review. Membership foreign keys preserve requester identity; checks const
 statuses, hashes, and bounds; indexes support Review history. ORM mutation guards reject updates and
 deletes. Copilot rows are navigation/audit metadata only and are not canonical scientific,
 workflow, Article, or Study records. SQLite upgrade/downgrade coverage passes through `0031`.
+
+## Phase 31 durable workflow execution metadata
+
+Migration `20260819_0032` adds explicit `payload_schema`, `payload_version`, and `max_attempts`
+columns to `workflow_jobs`, then creates `workflow_job_attempts` and `workflow_workers`.
+Attempt rows preserve tenant/Review/job identity, attempt number, worker identity, unique lease
+token, lease expiry, heartbeat, result/failure metadata, and terminal attempt state. Worker rows
+track bounded capacity, active leases, lifecycle status, and health timestamps separately from
+tenant scientific data.
+
+Composite foreign keys and scoped indexes prevent cross-tenant/review attempt composition. Job
+events remain the append-only operational history for claims, heartbeats, completion, failure,
+requeue, and lease expiry; result and failure snapshots are bounded JSON operational metadata.
+The linear migration upgrades and downgrades through `0032` on SQLite; PostgreSQL row-lock and
+`SKIP LOCKED` behavior remains a production infrastructure gate.

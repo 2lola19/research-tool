@@ -55,6 +55,10 @@ class InvalidCitationImportError(DomainError):
     code = "invalid_citation_import"
 
 
+class InvalidJobPayloadError(DomainError):
+    code = "invalid_job_payload"
+
+
 def install_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
     async def handle_domain_error(_: Request, exc: DomainError) -> JSONResponse:

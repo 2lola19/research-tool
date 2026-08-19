@@ -160,3 +160,14 @@ Copilot answers are navigation assistance, not scientific evidence or canonical 
 Workflow payloads are excluded; source citations point to allowlisted Review/PRISMA/workflow record
 locators. No copilot response is exported as a scientific result, and no copilot route creates a
 canonical write or substitutes for domain-service provenance.
+
+## Workflow execution provenance boundary
+
+Phase 31 separates operational execution history from scientific provenance. Job attempts preserve
+the task payload schema, worker/lease lifecycle, attempt result or failure, and ordered operational
+events needed to reconstruct execution. These records do not assert why a scientific claim is true.
+
+When a future scientific handler performs a consequential write, it must call the existing domain
+service and append its normal human/system/AI provenance and audit records in that service's
+transaction. Worker claim, heartbeat, completion, failure, requeue, and expiry events never serve
+as substitutes for evidence source identity, method version, actor, verification, or human approval.

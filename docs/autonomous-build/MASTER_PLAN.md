@@ -2,7 +2,7 @@
 
 Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpointed locally at
 `f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 checkpointed locally at
-`c59a340`; Phase 31 is next
+`c59a340`; Phase 31 implementation is complete and validation/checkpointing is in progress
 
 ## Reconciled baseline and sequencing
 
@@ -384,5 +384,9 @@ locally checkpointed at `f47561973e697ac30a87c41a865d146b18e11246`, Phase 29 is 
 checkpointed at `df0a74fd2231e76d61f248b0e1fad398e7ee1566`, and Phase 30 is locally checkpointed
 at `c59a340839c6fa12f2717681fa19ab41e3671ea1`. Phase 30 passed its focused backend, migration,
 frontend, scientific, security, provenance, secret, and artifact gates; the full pytest no-output
-timeout remains truthfully recorded as an environment limitation. The next safe action is Phase 31
-planning for durable background jobs and worker execution. No GitHub operation is authorized.
+timeout remains truthfully recorded as an environment limitation. Phase 31 implementation now
+includes versioned payload metadata, durable attempts/leases/heartbeats, bounded worker capacity,
+claim/complete/fail/requeue/expiry recovery, redacted claim responses, worker health, and the
+deterministic local runner. Its focused backend/migration/security/provenance gates pass and the
+full-suite timeout is documented; the required local checkpoint is next. No GitHub operation is
+authorized.

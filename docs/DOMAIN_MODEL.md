@@ -240,3 +240,15 @@ Article, Study, evidence value, or report artifact.
 The context assembler consumes allowlisted Review, PRISMA, and workflow read models. It omits
 workflow payloads and does not create a second project-status or scientific state machine. Exact
 citation IDs resolve only to the snapshot's canonical source locators; abstention is a valid result.
+
+## Phase 31 durable workflow execution
+
+`WorkflowJob` now includes an explicit operational payload schema/version and bounded attempt limit.
+`WorkflowJobAttempt` records one worker claim, lease, heartbeat, result/failure snapshot, and
+terminal attempt state. `WorkflowWorker` is a separate operational health record for worker
+capacity and lifecycle; it is not an Organization, Review, scientific actor, or provenance subject.
+
+The deterministic handler registry resolves exact task/version/schema signatures. Claims and attempt
+events remain workflow state, while scientific handlers must call the existing specialized domain
+service and provenance boundary. No worker result is a canonical Article, Study, evidence value,
+scientific judgment, report artifact, or human checkpoint decision.

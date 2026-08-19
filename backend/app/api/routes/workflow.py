@@ -56,6 +56,9 @@ class JobSubmissionRequest(BaseModel):
     task_version: str = Field(min_length=1, max_length=50)
     idempotency_key: str = Field(min_length=1, max_length=200)
     payload: dict[str, object] = Field(default_factory=dict)
+    payload_schema: str = Field(default="workflow.generic", min_length=1, max_length=120)
+    payload_version: int = Field(default=1, ge=1, le=100)
+    max_attempts: int = Field(default=3, ge=1, le=100)
 
 
 class JobTransitionRequest(BaseModel):
@@ -73,6 +76,9 @@ class WorkflowJobResponse(BaseModel):
     state: JobState
     paused_from_state: JobState | None
     attempt: int
+    payload_schema: str
+    payload_version: int
+    max_attempts: int
 
     @classmethod
     def from_domain(cls, job: WorkflowJob) -> WorkflowJobResponse:
@@ -86,6 +92,9 @@ class WorkflowJobResponse(BaseModel):
             state=job.state,
             paused_from_state=job.paused_from_state,
             attempt=job.attempt,
+            payload_schema=job.payload_schema,
+            payload_version=job.payload_version,
+            max_attempts=job.max_attempts,
         )
 
 
@@ -188,6 +197,9 @@ async def submit_workflow_job(
         task_version=payload.task_version,
         idempotency_key=payload.idempotency_key,
         payload=payload.payload,
+        payload_schema=payload.payload_schema,
+        payload_version=payload.payload_version,
+        max_attempts=payload.max_attempts,
     )
     await session.commit()
     return WorkflowJobResponse.from_domain(job)

@@ -114,3 +114,10 @@ The read-only Review copilot adds no third-party runtime dependency. Context ass
 validation, hashing, policy/query persistence, and deterministic mock output use the existing
 Python/FastAPI/Pydantic/SQLAlchemy stack and Next.js frontend. No embedding/retrieval service,
 workflow SDK, paid AI SDK, external provider, manuscript generator, or credential was introduced.
+
+## Phase 31 dependency impact
+
+Durable workflow execution adds no third-party runtime dependency. Leases, bounded worker capacity,
+payload validation/redaction, local handler dispatch, and deterministic runner behavior use the
+existing Python/FastAPI/Pydantic/SQLAlchemy stack. No Temporal SDK, queue broker, provider SDK,
+credential, scientific calculation package, or external worker runtime was introduced.

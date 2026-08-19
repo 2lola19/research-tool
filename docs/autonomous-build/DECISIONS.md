@@ -63,7 +63,19 @@ relevant phase report or ADR.
   and policy records are append-only and tenant/Review scoped.
 - The frontend exposes policy, query, and immutable activity history while directing users to the
   existing canonical domain surfaces for any action. The offline deterministic provider abstains
-  by default; live providers and arbitrary retrieval remain deferred.
+by default; live providers and arbitrary retrieval remain deferred.
+
+## 2026-08-19 - Phase 31 durable worker boundary
+
+- Durable execution extends the existing workflow job contract with explicit payload schema/version,
+  bounded attempts, tenant/review-scoped leases, persisted heartbeats, and separate worker health;
+  it does not create a second scientific or workflow state machine.
+- Claims require an exact allowlisted handler signature and bounded worker capacity. Completion,
+  failure, requeue, and lease expiry append operational job events; attempt history withholds lease
+  capabilities from ordinary reads and copilot context.
+- The deterministic local runner and `--once` CLI execute only registered offline handlers. Future
+  scientific handlers must call existing domain/provenance services; Temporal, live providers, and
+  richer retry/resume/reconciliation semantics remain Phase 32 or later.
 
 ## 2026-08-18 — baseline and control plane
 

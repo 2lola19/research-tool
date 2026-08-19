@@ -178,6 +178,10 @@ from backend.app.search.execution_persistence import (
 )
 from backend.app.search.persistence import SearchStrategyVersionRecord, SearchTranslationRecord
 from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
+from backend.app.workflow.execution_persistence import (
+    WorkflowJobAttemptRecord,
+    WorkflowWorkerRecord,
+)
 from backend.app.workflow.persistence import (
     HumanCheckpointRecord,
     JobEventRecord,
@@ -332,6 +336,8 @@ __all__ = [
     "TimepointWindowRecord",
     "UnitDefinitionRecord",
     "UserRecord",
+    "WorkflowJobAttemptRecord",
     "WorkflowJobRecord",
     "WorkflowRunRecord",
+    "WorkflowWorkerRecord",
 ]

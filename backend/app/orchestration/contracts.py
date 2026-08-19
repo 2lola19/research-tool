@@ -26,6 +26,9 @@ class JobSubmission:
     task_version: str
     idempotency_key: str
     payload: dict[str, Any]
+    payload_schema: str = "workflow.generic"
+    payload_version: int = 1
+    max_attempts: int = 3
 
 
 @dataclass(frozen=True, slots=True)

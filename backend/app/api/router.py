@@ -31,6 +31,7 @@ from backend.app.api.routes.search_executions import router as search_executions
 from backend.app.api.routes.studies import router as studies_router
 from backend.app.api.routes.system import router as system_router
 from backend.app.api.routes.workflow import router as workflow_router
+from backend.app.api.routes.workflow_execution import router as workflow_execution_router
 from backend.app.core.config import get_settings
 
 
@@ -49,6 +50,7 @@ def build_api_router(api_prefix: str) -> APIRouter:
     router.include_router(search_executions_router, prefix=api_prefix)
     router.include_router(screening_router, prefix=api_prefix)
     router.include_router(workflow_router, prefix=api_prefix)
+    router.include_router(workflow_execution_router, prefix=api_prefix)
     router.include_router(studies_router, prefix=api_prefix)
     router.include_router(extraction_router, prefix=api_prefix)
     router.include_router(risk_of_bias_router, prefix=api_prefix)

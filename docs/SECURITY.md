@@ -172,3 +172,18 @@ evidence, unsupported domains/magnitudes, stale inputs, candidate/final certaint
 publication-bias inference, and statistical calculations. Only an explicit human disposition can
 call the canonical certainty service; stale or invalid proposals cannot be accepted, and AI cannot
 write final certainty, submit, compare, adjudicate, or create Summary-of-Findings state.
+
+## Phase 31 durable worker security
+
+Worker claims require an exact registered task/version/payload-schema signature, tenant/Review
+scope, an active worker registration, and available bounded capacity. Lease tokens are unique
+capabilities used only for the matching worker attempt; attempt history and copilot context never
+serialize them. API claim payloads are allowlisted and redacted by the handler registry, and result
+and failure snapshots are size-bounded JSON.
+
+Foreign Review and organization identifiers fail closed before claim, attempt mutation, or requeue.
+Heartbeat, completion, failure, requeue, and expiry are operational JobEvents, not scientific
+provenance. Scientific handlers remain behind their existing service authorization and provenance
+requirements; a worker cannot autonomously approve evidence, change protocol or workflow meaning,
+or replace a human checkpoint. The local runner uses only deterministic offline handlers and no
+provider credentials.

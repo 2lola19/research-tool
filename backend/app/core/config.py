@@ -34,6 +34,9 @@ class Settings(BaseSettings):
         repr=False,
     )
     local_auth_token_ttl_seconds: int = Field(default=3600, ge=60, le=86400)
+    worker_id: str = Field(default="review-worker-local", min_length=1, max_length=160)
+    worker_max_concurrency: int = Field(default=1, ge=1, le=100)
+    worker_lease_seconds: int = Field(default=60, ge=5, le=3600)
 
     @model_validator(mode="after")
     def validate_local_authentication_scope(self) -> "Settings":

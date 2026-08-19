@@ -113,6 +113,11 @@ class WorkflowJobRecord(Base):
             name="ck_workflow_jobs_paused_from_state",
         ),
         CheckConstraint("attempt >= 0", name="ck_workflow_jobs_attempt"),
+        CheckConstraint("payload_version > 0", name="ck_workflow_jobs_payload_version"),
+        CheckConstraint(
+            "max_attempts > 0 AND max_attempts <= 100",
+            name="ck_workflow_jobs_max_attempts",
+        ),
         ForeignKeyConstraint(
             ["workflow_run_id", "organization_id", "review_id"],
             [
@@ -133,6 +138,9 @@ class WorkflowJobRecord(Base):
     task_version: Mapped[str] = mapped_column(String(50))
     idempotency_key: Mapped[str] = mapped_column(String(200))
     payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+    payload_schema: Mapped[str] = mapped_column(String(120), server_default="workflow.generic")
+    payload_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    max_attempts: Mapped[int] = mapped_column(Integer, default=3, server_default="3")
     state: Mapped[str] = mapped_column(String(20))
     paused_from_state: Mapped[str | None] = mapped_column(String(20))
     attempt: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
@@ -262,6 +270,9 @@ def _job_to_domain(record: WorkflowJobRecord) -> WorkflowJob:
         attempt=record.attempt,
         created_at=record.created_at or now,
         updated_at=record.updated_at or now,
+        payload_schema=record.payload_schema,
+        payload_version=record.payload_version,
+        max_attempts=record.max_attempts,
     )
 
 
@@ -348,6 +359,9 @@ class SqlAlchemyWorkflowRepository:
         idempotency_key: str,
         payload: dict[str, Any],
         actor_user_id: UUID | None,
+        payload_schema: str = "workflow.generic",
+        payload_version: int = 1,
+        max_attempts: int = 3,
     ) -> WorkflowJob:
         record = WorkflowJobRecord(
             workflow_run_id=workflow_run_id,
@@ -357,6 +371,9 @@ class SqlAlchemyWorkflowRepository:
             task_version=task_version,
             idempotency_key=idempotency_key,
             payload=payload,
+            payload_schema=payload_schema,
+            payload_version=payload_version,
+            max_attempts=max_attempts,
             state=JobState.QUEUED.value,
             attempt=0,
         )

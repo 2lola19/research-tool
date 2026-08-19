@@ -205,3 +205,17 @@ returned to the provider or UI. Responses retain context hashes, available sourc
 selected citation claims, AI run/proposal identity, validation status, and abstention. The generic
 `/ai/runs` endpoint rejects `REVIEW_COPILOT`; no copilot route changes scientific or workflow state,
 performs arbitrary search/retrieval, or generates manuscript content.
+
+## Phase 31 durable workflow execution API
+
+The existing `/api/v1/workflow` submission route accepts `payload_schema`, `payload_version`, and
+bounded `max_attempts` metadata. Authenticated controller routes under
+`/api/v1/workflow/execution` register and heartbeat workers, inspect worker health, claim a job for
+one Review, heartbeat/complete/fail an attempt with its lease token, list Review attempts, and
+explicitly requeue a failed job. Claim, attempt, and requeue operations require active organization
+membership, Review access, and the existing workflow-control boundary; foreign Review/job/attempt
+identifiers fail closed.
+
+Claim responses include only the handler's allowlisted redacted payload and a short-lived lease
+capability. Attempt history never returns the lease token. Worker CLI execution uses the same
+provider-neutral service and does not bypass API authorization for human workflow control.

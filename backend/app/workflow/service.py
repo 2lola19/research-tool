@@ -72,6 +72,9 @@ class WorkflowService:
         task_version: str,
         idempotency_key: str,
         payload: dict[str, object],
+        payload_schema: str = "workflow.generic",
+        payload_version: int = 1,
+        max_attempts: int = 3,
     ) -> WorkflowJob:
         review = await self._review_service.get(actor, review_id)
         self._require_controller(actor, review)
@@ -94,6 +97,9 @@ class WorkflowService:
                 existing.task_name != task_name.strip()
                 or existing.task_version != task_version.strip()
                 or existing.payload != payload
+                or existing.payload_schema != payload_schema.strip()
+                or existing.payload_version != payload_version
+                or existing.max_attempts != max_attempts
             ):
                 raise ConflictError("job idempotency key was reused with different input")
             return existing
@@ -106,6 +112,9 @@ class WorkflowService:
             idempotency_key=idempotency_key.strip(),
             payload=payload,
             actor_user_id=actor.user_id,
+            payload_schema=payload_schema.strip(),
+            payload_version=payload_version,
+            max_attempts=max_attempts,
         )
 
     async def transition_job(

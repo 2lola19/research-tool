@@ -30,6 +30,11 @@ class JobEventType(StrEnum):
     STATE_CHANGED = "STATE_CHANGED"
     CHECKPOINT_REQUESTED = "CHECKPOINT_REQUESTED"
     CHECKPOINT_RESOLVED = "CHECKPOINT_RESOLVED"
+    ATTEMPT_CLAIMED = "ATTEMPT_CLAIMED"
+    ATTEMPT_HEARTBEAT = "ATTEMPT_HEARTBEAT"
+    ATTEMPT_COMPLETED = "ATTEMPT_COMPLETED"
+    ATTEMPT_FAILED = "ATTEMPT_FAILED"
+    ATTEMPT_REQUEUED = "ATTEMPT_REQUEUED"
 
 
 ALLOWED_JOB_TRANSITIONS: dict[JobState, frozenset[JobState]] = {
@@ -94,6 +99,9 @@ class WorkflowJob:
     attempt: int
     created_at: datetime
     updated_at: datetime
+    payload_schema: str = "workflow.generic"
+    payload_version: int = 1
+    max_attempts: int = 3
 
 
 @dataclass(frozen=True, slots=True)

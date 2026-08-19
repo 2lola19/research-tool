@@ -52,6 +52,9 @@ class WorkflowRepository(Protocol):
         idempotency_key: str,
         payload: dict[str, Any],
         actor_user_id: UUID | None,
+        payload_schema: str = "workflow.generic",
+        payload_version: int = 1,
+        max_attempts: int = 3,
     ) -> WorkflowJob: ...
 
     async def get_job_by_idempotency(

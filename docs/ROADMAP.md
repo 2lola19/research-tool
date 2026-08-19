@@ -141,3 +141,12 @@ policy, deterministic PRISMA/workflow context, exact source citations, immutable
 tenant/review authorization, and a read-only frontend workspace. It does not provide arbitrary
 retrieval, workflow mutation, scientific calculation, or manuscript generation. The offline mock
 abstention and live-provider/deployment limitations remain documented.
+
+## Phase 31 complete: durable workflow jobs and worker execution
+
+Phase 31 turns the workflow lifecycle shell into a claimable local worker contract. Explicit payload
+schemas, bounded attempt limits, tenant/review-scoped leases, heartbeats, worker capacity/health,
+failure/requeue paths, lease-expiry recovery, deterministic handler registration, redacted claim
+responses, and a local `--once` runner are implemented. Scientific work remains behind existing
+domain/provenance services; Phase 32 adds richer workflow resumability, retry taxonomy, backoff,
+dead-letter handling, and operational reconciliation.
