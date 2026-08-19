@@ -1,10 +1,9 @@
 # Research Tool V1 Completion — Master Plan
 
-Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpointed locally at
-`f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 checkpointed locally at
-`c59a340`; Phase 31 checkpointed locally at `65de1a9`; Phase 32 checkpointed locally at
-`b5039cd`; Phase 33 is checkpointed locally at `1687da9`; Phase 34 is checkpointed locally at
-`e70e18c`; Phase 35 is checkpointed locally at `05787fc`; Phase 36 is next
+Status: definitive plan; Phases 27–38 are checkpointed locally through the V1 completion gate.
+Phase 38 is classified `READY_WITH_DOCUMENTED_LIMITATIONS` in `V1_RELEASE_REPORT.md`, with its
+validated phase checkpoint at `add938ce0c118b56362f754d93452fa402da0870` and final metadata
+reconciliation at the current local HEAD. The repository-controlled V1 completion loop is complete.
 
 ## Reconciled baseline and sequencing
 
