@@ -18,6 +18,7 @@ from backend.app.workflow.domain import (
     WorkflowRun,
     WorkflowRunState,
 )
+from backend.app.workflow.recovery_domain import RetryPolicy
 
 
 class WorkflowService:
@@ -75,7 +76,14 @@ class WorkflowService:
         payload_schema: str = "workflow.generic",
         payload_version: int = 1,
         max_attempts: int = 3,
+        retry_policy: RetryPolicy | None = None,
+        step_key: str | None = None,
+        step_order: int | None = None,
+        definition_hash: str | None = None,
     ) -> WorkflowJob:
+        effective_retry_policy = retry_policy or RetryPolicy(max_attempts=max_attempts)
+        if effective_retry_policy.max_attempts != max_attempts:
+            raise ConflictError("retry policy attempts must match max_attempts")
         review = await self._review_service.get(actor, review_id)
         self._require_controller(actor, review)
         run = await self._repository.get_run(
@@ -100,6 +108,10 @@ class WorkflowService:
                 or existing.payload_schema != payload_schema.strip()
                 or existing.payload_version != payload_version
                 or existing.max_attempts != max_attempts
+                or existing.retry_policy != effective_retry_policy
+                or existing.step_key != step_key
+                or existing.step_order != step_order
+                or existing.definition_hash != definition_hash
             ):
                 raise ConflictError("job idempotency key was reused with different input")
             return existing
@@ -115,6 +127,10 @@ class WorkflowService:
             payload_schema=payload_schema.strip(),
             payload_version=payload_version,
             max_attempts=max_attempts,
+            retry_policy=effective_retry_policy,
+            step_key=step_key,
+            step_order=step_order,
+            definition_hash=definition_hash,
         )
 
     async def transition_job(

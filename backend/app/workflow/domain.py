@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -8,6 +8,7 @@ from uuid import UUID
 
 from backend.app.core.errors import InvalidStateTransitionError
 from backend.app.orchestration.contracts import JobState
+from backend.app.workflow.recovery_domain import FailureClass, RetryPolicy
 
 
 class WorkflowRunState(StrEnum):
@@ -35,12 +36,21 @@ class JobEventType(StrEnum):
     ATTEMPT_COMPLETED = "ATTEMPT_COMPLETED"
     ATTEMPT_FAILED = "ATTEMPT_FAILED"
     ATTEMPT_REQUEUED = "ATTEMPT_REQUEUED"
+    ATTEMPT_DEAD_LETTERED = "ATTEMPT_DEAD_LETTERED"
+    MANUAL_RECOVERY = "MANUAL_RECOVERY"
+    STEP_CHECKPOINTED = "STEP_CHECKPOINTED"
 
 
 ALLOWED_JOB_TRANSITIONS: dict[JobState, frozenset[JobState]] = {
     JobState.NOT_STARTED: frozenset({JobState.QUEUED, JobState.CANCELLED}),
     JobState.QUEUED: frozenset(
-        {JobState.RUNNING, JobState.PAUSED, JobState.FAILED, JobState.CANCELLED}
+        {
+            JobState.RUNNING,
+            JobState.PAUSED,
+            JobState.FAILED,
+            JobState.DEAD_LETTERED,
+            JobState.CANCELLED,
+        }
     ),
     JobState.RUNNING: frozenset(
         {
@@ -57,7 +67,8 @@ ALLOWED_JOB_TRANSITIONS: dict[JobState, frozenset[JobState]] = {
     JobState.PAUSED: frozenset(
         {JobState.QUEUED, JobState.RUNNING, JobState.AWAITING_HUMAN, JobState.CANCELLED}
     ),
-    JobState.FAILED: frozenset({JobState.QUEUED, JobState.CANCELLED}),
+    JobState.FAILED: frozenset({JobState.QUEUED, JobState.DEAD_LETTERED, JobState.CANCELLED}),
+    JobState.DEAD_LETTERED: frozenset({JobState.QUEUED, JobState.CANCELLED}),
     JobState.COMPLETED: frozenset(),
     JobState.CANCELLED: frozenset(),
 }
@@ -102,6 +113,14 @@ class WorkflowJob:
     payload_schema: str = "workflow.generic"
     payload_version: int = 1
     max_attempts: int = 3
+    retry_policy: RetryPolicy = field(default_factory=RetryPolicy)
+    next_retry_at: datetime | None = None
+    failure_class: FailureClass | None = None
+    dead_lettered_at: datetime | None = None
+    recovery_count: int = 0
+    step_key: str | None = None
+    step_order: int | None = None
+    definition_hash: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -83,5 +83,17 @@ by default; live providers and arbitrary retrieval remain deferred.
   reconciliation.
 - Created a durable autonomous-build control plane before Phase 27 implementation. The definitive
 - remaining roadmap was written after inspecting the actual repository rather than copying the
+
+## 2026-08-19 — Phase 32 recovery boundary
+
+- Phase 32 keeps workflow definitions/version hashes, retry/backoff/timeout policy, dead-letter
+  state, step checkpoints, recovery idempotency, and reconciliation in operational workflow tables.
+- Automatic retries are limited to explicitly retryable transient/timeout/lease-loss classes. A
+  permanent or unknown failure is dead-lettered; manual recovery requires an authorized reason,
+  idempotency key, and an explicit bounded attempt budget when exhausted.
+- Resume is idempotent and respects pause/cancel/human-checkpoint boundaries. Reconciliation is
+  read-only diagnostics; it never replays a scientific write or resolves a human checkpoint.
+- This boundary is recorded in ADR-031. No Temporal/cloud runtime, provider credential, or new
+  scientific decision authority was introduced.
   provisional phase list. The envelope remains Phases 27–38, with durable jobs and recovery split
   across Phases 31–32 and offline-safe provider/storage/parser hardening in Phases 33–35.

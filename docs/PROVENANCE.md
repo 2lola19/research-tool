@@ -171,3 +171,15 @@ When a future scientific handler performs a consequential write, it must call th
 service and append its normal human/system/AI provenance and audit records in that service's
 transaction. Worker claim, heartbeat, completion, failure, requeue, and expiry events never serve
 as substitutes for evidence source identity, method version, actor, verification, or human approval.
+
+## Workflow recovery provenance boundary
+
+Definition hashes, retry classes, attempt deadlines, step checkpoints, reconciliation findings, and
+manual recovery reasons explain operational execution. They are not evidence, scientific values, or
+human decisions. A manual recovery operation records its authorized actor and reason but cannot
+stand in for a scientific provenance event.
+
+If a workflow step invokes a consequential domain service, that service remains responsible for the
+atomic scientific write, source/method/actor provenance, append-only audit event, idempotency key,
+and explicit human acceptance where required. Automatic retry is never permission to repeat an
+unreviewed scientific write; handlers must be designed to detect or reject duplicate side effects.

@@ -37,6 +37,13 @@ class SqlAlchemyOrchestrator(Orchestrator):
                 or existing.payload_schema != submission.payload_schema
                 or existing.payload_version != submission.payload_version
                 or existing.max_attempts != submission.max_attempts
+                or (
+                    submission.retry_policy is not None
+                    and existing.retry_policy != submission.retry_policy
+                )
+                or existing.step_key != submission.step_key
+                or existing.step_order != submission.step_order
+                or existing.definition_hash != submission.definition_hash
             ):
                 raise ConflictError("job idempotency key was reused with different input")
             return JobHandle(existing.id, existing.workflow_run_id, existing.state)
@@ -52,6 +59,10 @@ class SqlAlchemyOrchestrator(Orchestrator):
             payload_schema=submission.payload_schema,
             payload_version=submission.payload_version,
             max_attempts=submission.max_attempts,
+            retry_policy=submission.retry_policy,
+            step_key=submission.step_key,
+            step_order=submission.step_order,
+            definition_hash=submission.definition_hash,
         )
         return JobHandle(job.id, job.workflow_run_id, job.state)
 

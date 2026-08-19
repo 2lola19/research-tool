@@ -28,3 +28,22 @@ raw operational payloads are never exposed in history or to the copilot. The loc
 the deterministic registry through `python -m workers.review_worker --once`. Scientific handlers
 must call their existing domain services and carry their own provenance; this worker layer does not
 make scientific decisions or accept proposals.
+
+## Phase 32 resumability and operational recovery
+
+Workflow definitions are immutable name/version contracts with deterministic hashes. Their explicit
+step definitions carry exact task and payload versions, structured retry policy, timeout, and human
+checkpoint boundaries; a registry never silently substitutes a newer version. Jobs may carry a
+step key/order and definition hash, while `workflow_step_checkpoints` stores normalized progress
+instead of an opaque workflow state blob.
+
+Retry policy classifies transient, timeout, lease-loss, permanent, cancelled, and unknown failures.
+Backoff is bounded and scheduled through `next_retry_at`; automatic retry never replays permanent or
+unknown failures. Exhausted or non-retryable work becomes `DEAD_LETTERED`. A controller can perform
+an explicitly reasoned, bounded, idempotent manual recovery, including an explicit additional
+attempt budget. `RESUME` and `MANUAL_RETRY` operations are durable idempotency records.
+
+The recovery API exposes step checkpoints and read-only tenant/review reconciliation diagnostics;
+the local worker exposes `--recover-expired` for bounded lease/timeout recovery. Reconciliation
+reports invariant drift and never mutates scientific state or bypasses `AWAITING_HUMAN`. See
+ADR-031.

@@ -188,6 +188,10 @@ from backend.app.workflow.persistence import (
     WorkflowJobRecord,
     WorkflowRunRecord,
 )
+from backend.app.workflow.recovery_persistence import (
+    WorkflowRecoveryOperationRecord,
+    WorkflowStepCheckpointRecord,
+)
 
 __all__ = [
     "AICertaintyAccessRecord",
@@ -338,6 +342,8 @@ __all__ = [
     "UserRecord",
     "WorkflowJobAttemptRecord",
     "WorkflowJobRecord",
+    "WorkflowRecoveryOperationRecord",
     "WorkflowRunRecord",
+    "WorkflowStepCheckpointRecord",
     "WorkflowWorkerRecord",
 ]

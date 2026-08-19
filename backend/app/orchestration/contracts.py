@@ -5,6 +5,8 @@ from enum import StrEnum
 from typing import Any, Protocol
 from uuid import UUID
 
+from backend.app.workflow.recovery_domain import RetryPolicy
+
 
 class JobState(StrEnum):
     NOT_STARTED = "NOT_STARTED"
@@ -13,6 +15,7 @@ class JobState(StrEnum):
     AWAITING_HUMAN = "AWAITING_HUMAN"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    DEAD_LETTERED = "DEAD_LETTERED"
     PAUSED = "PAUSED"
     CANCELLED = "CANCELLED"
 
@@ -29,6 +32,10 @@ class JobSubmission:
     payload_schema: str = "workflow.generic"
     payload_version: int = 1
     max_attempts: int = 3
+    retry_policy: RetryPolicy | None = None
+    step_key: str | None = None
+    step_order: int | None = None
+    definition_hash: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

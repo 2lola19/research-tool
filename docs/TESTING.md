@@ -201,3 +201,15 @@ coverage upgrades and downgrades the SQLite chain through `20260819_0032`. Exist
 transition/idempotency and worker lifecycle tests continue to pass. PostgreSQL lock contention,
 multi-process crash timing, live provider handlers, and production worker orchestration remain later
 environment or Phase 32 gates.
+
+## Phase 32 recovery coverage
+
+Unit coverage verifies retry classification/backoff bounds, immutable definition hashes, and stale
+definition rejection. Integration coverage verifies permanent-failure dead-lettering, normalized
+step checkpoints, idempotent manual recovery with explicit added budget, idempotent pause resume,
+read-only reconciliation drift diagnostics, and tenant boundaries. Migration coverage upgrades and
+downgrades the linear SQLite chain through `20260819_0033`.
+
+Required follow-on coverage includes PostgreSQL concurrent claim/recovery timing and live worker
+crash/timeout behavior when that infrastructure is available. No environment timeout is recorded as
+a test pass.

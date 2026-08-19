@@ -219,3 +219,16 @@ identifiers fail closed.
 Claim responses include only the handler's allowlisted redacted payload and a short-lived lease
 capability. Attempt history never returns the lease token. Worker CLI execution uses the same
 provider-neutral service and does not bypass API authorization for human workflow control.
+
+## Phase 32 recovery API
+
+Workflow job submission may include an immutable definition hash, step key/order, and structured
+retry policy with bounded attempts, backoff, retryable failure classes, and timeout. Responses expose
+operational retry/dead-letter metadata without returning raw lease capabilities.
+
+Authenticated Review-controller routes under `/api/v1/workflow/execution` provide idempotent pause
+resume, bounded manual requeue/dead-letter recovery, normalized step-checkpoint reads, and
+read-only reconciliation diagnostics. Recovery requests carry an idempotency key and explicit reason;
+exhausted jobs require an explicit additional attempt budget. Foreign organization/Review/job
+identifiers fail closed. No recovery route accepts or writes scientific data, evidence, Article,
+Study, analysis, or human checkpoint decisions.

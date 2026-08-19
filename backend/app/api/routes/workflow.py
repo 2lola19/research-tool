@@ -18,6 +18,7 @@ from backend.app.workflow.domain import (
     WorkflowRun,
 )
 from backend.app.workflow.persistence import SqlAlchemyWorkflowRepository
+from backend.app.workflow.recovery_domain import FailureClass, RetryPolicy
 from backend.app.workflow.service import WorkflowService
 
 router = APIRouter(prefix="/workflow", tags=["workflow"])
@@ -50,6 +51,27 @@ class WorkflowRunResponse(BaseModel):
         )
 
 
+class RetryPolicyRequest(BaseModel):
+    max_attempts: int = Field(default=3, ge=1, le=100)
+    backoff_seconds: int = Field(default=0, ge=0, le=86_400)
+    max_backoff_seconds: int = Field(default=300, ge=0, le=86_400)
+    timeout_seconds: int = Field(default=300, ge=5, le=86_400)
+    retryable_failure_classes: frozenset[FailureClass] = Field(
+        default_factory=lambda: frozenset(
+            {FailureClass.TRANSIENT, FailureClass.TIMEOUT, FailureClass.LEASE_LOST}
+        )
+    )
+
+    def to_domain(self) -> RetryPolicy:
+        return RetryPolicy(
+            max_attempts=self.max_attempts,
+            backoff_seconds=self.backoff_seconds,
+            max_backoff_seconds=self.max_backoff_seconds,
+            timeout_seconds=self.timeout_seconds,
+            retryable_failure_classes=self.retryable_failure_classes,
+        )
+
+
 class JobSubmissionRequest(BaseModel):
     review_id: UUID
     task_name: str = Field(min_length=1, max_length=120)
@@ -59,6 +81,10 @@ class JobSubmissionRequest(BaseModel):
     payload_schema: str = Field(default="workflow.generic", min_length=1, max_length=120)
     payload_version: int = Field(default=1, ge=1, le=100)
     max_attempts: int = Field(default=3, ge=1, le=100)
+    retry_policy: RetryPolicyRequest | None = None
+    step_key: str | None = Field(default=None, min_length=1, max_length=120)
+    step_order: int | None = Field(default=None, ge=0, le=10_000)
+    definition_hash: str | None = Field(default=None, min_length=64, max_length=64)
 
 
 class JobTransitionRequest(BaseModel):
@@ -79,6 +105,14 @@ class WorkflowJobResponse(BaseModel):
     payload_schema: str
     payload_version: int
     max_attempts: int
+    retry_policy: dict[str, object]
+    next_retry_at: str | None
+    failure_class: FailureClass | None
+    dead_lettered_at: str | None
+    recovery_count: int
+    step_key: str | None
+    step_order: int | None
+    definition_hash: str | None
 
     @classmethod
     def from_domain(cls, job: WorkflowJob) -> WorkflowJobResponse:
@@ -95,6 +129,14 @@ class WorkflowJobResponse(BaseModel):
             payload_schema=job.payload_schema,
             payload_version=job.payload_version,
             max_attempts=job.max_attempts,
+            retry_policy=job.retry_policy.to_json(),
+            next_retry_at=job.next_retry_at.isoformat() if job.next_retry_at else None,
+            failure_class=job.failure_class,
+            dead_lettered_at=job.dead_lettered_at.isoformat() if job.dead_lettered_at else None,
+            recovery_count=job.recovery_count,
+            step_key=job.step_key,
+            step_order=job.step_order,
+            definition_hash=job.definition_hash,
         )
 
 
@@ -200,6 +242,10 @@ async def submit_workflow_job(
         payload_schema=payload.payload_schema,
         payload_version=payload.payload_version,
         max_attempts=payload.max_attempts,
+        retry_policy=payload.retry_policy.to_domain() if payload.retry_policy else None,
+        step_key=payload.step_key,
+        step_order=payload.step_order,
+        definition_hash=payload.definition_hash,
     )
     await session.commit()
     return WorkflowJobResponse.from_domain(job)

@@ -23,6 +23,13 @@ from backend.app.workflow.execution_domain import (
 )
 from backend.app.workflow.execution_persistence import SqlAlchemyWorkflowExecutionRepository
 from backend.app.workflow.execution_service import WorkflowExecutionService
+from backend.app.workflow.recovery_domain import (
+    FailureClass,
+    ReconciliationIssue,
+    ReconciliationReport,
+    WorkflowStepCheckpoint,
+    WorkflowStepState,
+)
 
 router = APIRouter(prefix="/workflow/execution", tags=["workflow-execution"])
 
@@ -58,12 +65,21 @@ class AttemptFailureRequest(BaseModel):
     lease_token: str = Field(min_length=20, max_length=160)
     failure_code: str = Field(min_length=1, max_length=80)
     failure_message: str = Field(min_length=1, max_length=2_000)
-    requeue: bool = True
+    failure_class: FailureClass = FailureClass.UNKNOWN
+    requeue: bool | None = None
 
 
 class JobRequeueRequest(BaseModel):
     review_id: UUID
     reason: str = Field(min_length=1, max_length=2_000)
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=200)
+    additional_attempts: int = Field(default=0, ge=0, le=100)
+
+
+class JobResumeRequest(BaseModel):
+    review_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=200)
+    reason: str = Field(default="controller resumed a paused workflow", max_length=2_000)
 
 
 class WorkerHealthResponse(BaseModel):
@@ -99,6 +115,7 @@ class AttemptResponse(BaseModel):
     state: JobAttemptState
     claimed_at: str
     lease_expires_at: str
+    deadline_at: str
     heartbeat_at: str
     started_at: str
     finished_at: str | None
@@ -117,6 +134,11 @@ class AttemptResponse(BaseModel):
             state=attempt.state,
             claimed_at=attempt.claimed_at.isoformat(),
             lease_expires_at=attempt.lease_expires_at.isoformat(),
+            deadline_at=(
+                attempt.deadline_at.isoformat()
+                if attempt.deadline_at
+                else attempt.lease_expires_at.isoformat()
+            ),
             heartbeat_at=attempt.heartbeat_at.isoformat(),
             started_at=attempt.started_at.isoformat(),
             finished_at=attempt.finished_at.isoformat() if attempt.finished_at else None,
@@ -169,6 +191,74 @@ class JobExecutionResponse(BaseModel):
             job_id=job.id,
             attempt=AttemptResponse.from_domain(attempt),
             state=job.state.value,
+        )
+
+
+class StepCheckpointResponse(BaseModel):
+    id: UUID
+    workflow_run_id: UUID
+    job_id: UUID | None
+    review_id: UUID
+    step_key: str
+    step_order: int
+    definition_hash: str | None
+    state: WorkflowStepState
+    checkpoint_version: int
+    output_digest: str | None
+    failure_class: FailureClass | None
+    checkpointed_at: str
+    updated_at: str
+
+    @classmethod
+    def from_domain(cls, checkpoint: WorkflowStepCheckpoint) -> StepCheckpointResponse:
+        return cls(
+            id=checkpoint.id,
+            workflow_run_id=checkpoint.workflow_run_id,
+            job_id=checkpoint.job_id,
+            review_id=checkpoint.review_id,
+            step_key=checkpoint.step_key,
+            step_order=checkpoint.step_order,
+            definition_hash=checkpoint.definition_hash,
+            state=checkpoint.state,
+            checkpoint_version=checkpoint.checkpoint_version,
+            output_digest=checkpoint.output_digest,
+            failure_class=checkpoint.failure_class,
+            checkpointed_at=checkpoint.checkpointed_at.isoformat(),
+            updated_at=checkpoint.updated_at.isoformat(),
+        )
+
+
+class ReconciliationIssueResponse(BaseModel):
+    code: str
+    severity: str
+    job_id: UUID
+    attempt_id: UUID | None
+    message: str
+
+    @classmethod
+    def from_domain(cls, issue: ReconciliationIssue) -> ReconciliationIssueResponse:
+        return cls(
+            code=issue.code,
+            severity=issue.severity.value,
+            job_id=issue.job_id,
+            attempt_id=issue.attempt_id,
+            message=issue.message,
+        )
+
+
+class ReconciliationResponse(BaseModel):
+    review_id: UUID
+    generated_at: str
+    healthy: bool
+    issues: list[ReconciliationIssueResponse]
+
+    @classmethod
+    def from_domain(cls, report: ReconciliationReport) -> ReconciliationResponse:
+        return cls(
+            review_id=report.review_id,
+            generated_at=report.generated_at.isoformat(),
+            healthy=report.healthy,
+            issues=[ReconciliationIssueResponse.from_domain(issue) for issue in report.issues],
         )
 
 
@@ -335,6 +425,7 @@ async def fail_attempt(
         lease_token=payload.lease_token,
         failure_code=payload.failure_code,
         failure_message=payload.failure_message,
+        failure_class=payload.failure_class,
         requeue=payload.requeue,
     )
     await session.commit()
@@ -359,6 +450,34 @@ async def list_attempts(
     return [AttemptResponse.from_domain(attempt) for attempt in attempts]
 
 
+@router.get(
+    "/reviews/{review_id}/steps",
+    response_model=list[StepCheckpointResponse],
+)
+async def list_step_checkpoints(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    review_id: Annotated[UUID, Path()],
+) -> list[StepCheckpointResponse]:
+    await _require_review_controller(actor, session, review_id)
+    checkpoints = await _service(session).list_step_checkpoints(actor.organization_id, review_id)
+    return [StepCheckpointResponse.from_domain(checkpoint) for checkpoint in checkpoints]
+
+
+@router.get(
+    "/reviews/{review_id}/reconciliation",
+    response_model=ReconciliationResponse,
+)
+async def reconcile_review_workflow(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    review_id: Annotated[UUID, Path()],
+) -> ReconciliationResponse:
+    await _require_review_controller(actor, session, review_id)
+    report = await _service(session).reconcile(actor.organization_id, review_id)
+    return ReconciliationResponse.from_domain(report)
+
+
 @router.post("/jobs/{job_id}/requeue", response_model=dict[str, object])
 async def requeue_job(
     payload: JobRequeueRequest,
@@ -374,6 +493,31 @@ async def requeue_job(
     job = await execution.requeue_job(
         organization_id=actor.organization_id,
         job_id=job_id,
+        reason=payload.reason,
+        actor_user_id=actor.user_id,
+        idempotency_key=payload.idempotency_key,
+        additional_attempts=payload.additional_attempts,
+    )
+    await session.commit()
+    return {"job_id": str(job.id), "state": job.state.value}
+
+
+@router.post("/jobs/{job_id}/resume", response_model=dict[str, object])
+async def resume_job(
+    payload: JobResumeRequest,
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    job_id: Annotated[UUID, Path()],
+) -> dict[str, object]:
+    await _require_review_controller(actor, session, payload.review_id)
+    execution = _service(session)
+    existing = await execution.get_job(actor.organization_id, job_id)
+    if existing is None or existing.review_id != payload.review_id:
+        raise ResourceNotFoundError("workflow job was not found")
+    job = await execution.resume_job(
+        organization_id=actor.organization_id,
+        job_id=job_id,
+        idempotency_key=payload.idempotency_key,
         reason=payload.reason,
         actor_user_id=actor.user_id,
     )

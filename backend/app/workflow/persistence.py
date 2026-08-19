@@ -33,6 +33,7 @@ from backend.app.workflow.domain import (
     WorkflowRunState,
     validate_job_transition,
 )
+from backend.app.workflow.recovery_domain import FailureClass, RetryPolicy
 
 
 class WorkflowRunRecord(Base):
@@ -104,7 +105,7 @@ class WorkflowJobRecord(Base):
         ),
         CheckConstraint(
             "state IN ('NOT_STARTED', 'QUEUED', 'RUNNING', 'AWAITING_HUMAN', "
-            "'COMPLETED', 'FAILED', 'PAUSED', 'CANCELLED')",
+            "'COMPLETED', 'FAILED', 'DEAD_LETTERED', 'PAUSED', 'CANCELLED')",
             name="ck_workflow_jobs_state",
         ),
         CheckConstraint(
@@ -117,6 +118,14 @@ class WorkflowJobRecord(Base):
         CheckConstraint(
             "max_attempts > 0 AND max_attempts <= 100",
             name="ck_workflow_jobs_max_attempts",
+        ),
+        CheckConstraint(
+            "timeout_seconds >= 5 AND timeout_seconds <= 86400",
+            name="ck_workflow_jobs_timeout_seconds",
+        ),
+        CheckConstraint(
+            "recovery_count >= 0",
+            name="ck_workflow_jobs_recovery_count",
         ),
         ForeignKeyConstraint(
             ["workflow_run_id", "organization_id", "review_id"],
@@ -141,6 +150,15 @@ class WorkflowJobRecord(Base):
     payload_schema: Mapped[str] = mapped_column(String(120), server_default="workflow.generic")
     payload_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     max_attempts: Mapped[int] = mapped_column(Integer, default=3, server_default="3")
+    retry_policy: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    timeout_seconds: Mapped[int] = mapped_column(Integer, default=300, server_default="300")
+    next_retry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failure_class: Mapped[str | None] = mapped_column(String(20))
+    dead_lettered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    recovery_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    step_key: Mapped[str | None] = mapped_column(String(120))
+    step_order: Mapped[int | None] = mapped_column(Integer)
+    definition_hash: Mapped[str | None] = mapped_column(String(64))
     state: Mapped[str] = mapped_column(String(20))
     paused_from_state: Mapped[str | None] = mapped_column(String(20))
     attempt: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
@@ -273,6 +291,20 @@ def _job_to_domain(record: WorkflowJobRecord) -> WorkflowJob:
         payload_schema=record.payload_schema,
         payload_version=record.payload_version,
         max_attempts=record.max_attempts,
+        retry_policy=RetryPolicy.from_json(
+            record.retry_policy,
+            fallback_max_attempts=record.max_attempts,
+            fallback_timeout_seconds=record.timeout_seconds,
+        ),
+        next_retry_at=record.next_retry_at,
+        failure_class=(
+            FailureClass(record.failure_class) if record.failure_class is not None else None
+        ),
+        dead_lettered_at=record.dead_lettered_at,
+        recovery_count=record.recovery_count,
+        step_key=record.step_key,
+        step_order=record.step_order,
+        definition_hash=record.definition_hash,
     )
 
 
@@ -362,7 +394,14 @@ class SqlAlchemyWorkflowRepository:
         payload_schema: str = "workflow.generic",
         payload_version: int = 1,
         max_attempts: int = 3,
+        retry_policy: RetryPolicy | None = None,
+        step_key: str | None = None,
+        step_order: int | None = None,
+        definition_hash: str | None = None,
     ) -> WorkflowJob:
+        policy = retry_policy or RetryPolicy(max_attempts=max_attempts)
+        if policy.max_attempts != max_attempts:
+            raise ConflictError("retry policy attempts must match max_attempts")
         record = WorkflowJobRecord(
             workflow_run_id=workflow_run_id,
             organization_id=organization_id,
@@ -374,6 +413,11 @@ class SqlAlchemyWorkflowRepository:
             payload_schema=payload_schema,
             payload_version=payload_version,
             max_attempts=max_attempts,
+            retry_policy=policy.to_json(),
+            timeout_seconds=policy.timeout_seconds,
+            step_key=step_key,
+            step_order=step_order,
+            definition_hash=definition_hash,
             state=JobState.QUEUED.value,
             attempt=0,
         )

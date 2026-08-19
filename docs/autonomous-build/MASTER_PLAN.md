@@ -2,7 +2,8 @@
 
 Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpointed locally at
 `f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 checkpointed locally at
-`c59a340`; Phase 31 checkpointed locally at `65de1a9`; Phase 32 is next
+`c59a340`; Phase 31 checkpointed locally at `65de1a9`; Phase 32 implementation is complete and
+validation/checkpointing is in progress
 
 ## Reconciled baseline and sequencing
 
@@ -387,7 +388,10 @@ frontend, scientific, security, provenance, secret, and artifact gates; the full
 timeout remains truthfully recorded as an environment limitation. Phase 31 implementation now
 includes versioned payload metadata, durable attempts/leases/heartbeats, bounded worker capacity,
 claim/complete/fail/requeue/expiry recovery, redacted claim responses, worker health, and the
-deterministic local runner. Its focused backend/migration/security/provenance gates pass, the
-full-suite timeout is documented, and the validated implementation checkpoint is local commit
-`65de1a90ffbc81f3ed3ca1ac5f4ba030648f76d9`. The next safe action is Phase 32 planning. No GitHub
-operation is authorized.
+deterministic local runner. Its validated implementation checkpoint is local commit
+`65de1a90ffbc81f3ed3ca1ac5f4ba030648f76d9`. Phase 32 now adds immutable definition/step hashes,
+bounded retry/backoff/timeout, dead-letter/manual recovery, idempotent resume, durable step
+checkpoints, and read-only reconciliation. Focused repository, migration, worker, tenant,
+scientific, security, and provenance gates pass; the full-suite no-output timeout remains
+truthfully documented. The validated Phase 32 local checkpoint is next. No GitHub operation is
+authorized.

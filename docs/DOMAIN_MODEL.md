@@ -252,3 +252,16 @@ The deterministic handler registry resolves exact task/version/schema signatures
 events remain workflow state, while scientific handlers must call the existing specialized domain
 service and provenance boundary. No worker result is a canonical Article, Study, evidence value,
 scientific judgment, report artifact, or human checkpoint decision.
+
+## Phase 32 workflow recovery
+
+`RetryPolicy` is a bounded, versioned operational value covering max attempts, exponential backoff,
+timeout, and retryable `FailureClass` values (`TRANSIENT`, `TIMEOUT`, `LEASE_LOST`, `PERMANENT`,
+`CANCELLED`, and `UNKNOWN`). `WorkflowDefinition` and `WorkflowStepDefinition` identify an exact
+immutable workflow version and deterministic hash. `WorkflowStepCheckpoint` records durable
+step-progress state and output digest without embedding scientific state in an opaque blob.
+
+`DEAD_LETTERED` is a terminal operational job state until an authorized, reasoned manual recovery
+adds a bounded attempt budget and requeues it. `WorkflowRecoveryOperation` makes resume and manual
+retry idempotent. `ReconciliationReport` is read-only diagnostics over workflow/attempt invariants;
+it does not silently replay writes or resolve a human checkpoint.

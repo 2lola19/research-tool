@@ -187,3 +187,17 @@ provenance. Scientific handlers remain behind their existing service authorizati
 requirements; a worker cannot autonomously approve evidence, change protocol or workflow meaning,
 or replace a human checkpoint. The local runner uses only deterministic offline handlers and no
 provider credentials.
+
+## Phase 32 recovery security
+
+Retry policy accepts only bounded numeric values and an explicit failure-class allowlist. Automatic
+retry is limited to transient, timeout, and lease-loss classes; permanent and unknown failures are
+dead-lettered. Manual recovery requires the existing workflow-controller authorization, tenant and
+Review scope, a reason, and a durable idempotency key. Exhausted jobs require an explicit bounded
+additional-attempt budget, and recovery operations are retained for audit.
+
+Step checkpoints and reconciliation diagnostics are scoped by organization, Review, and workflow
+run. Definition hashes prevent silent version substitution. Reconciliation is read-only, lease and
+timeout recovery is bounded, and no route returns lease capabilities or scientific payloads. The
+local `--recover-expired` worker command is operational only; it does not approve human checkpoints
+or invoke provider credentials.

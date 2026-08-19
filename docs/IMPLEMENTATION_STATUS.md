@@ -246,5 +246,14 @@ Jobs now carry explicit payload schema/version and bounded attempts; PostgreSQL-
 persist leases, heartbeats, result/failure state, and worker health. The exact handler registry,
 capacity-bounded claim/complete/fail/requeue/lease-expiry flows, deterministic local runner, worker
 endpoints, redacted claim payloads, migration `20260819_0032`, and tenant/security tests are in
-place. Scientific decisions remain in specialized domain services; Temporal, production worker
-deployment, and Phase 32 resumability/retry taxonomy remain deferred.
+place. Scientific decisions remain in specialized domain services; Temporal and production worker
+deployment remain deferred.
+
+## Phase 32 workflow resumability and recovery
+
+Implemented structured retry taxonomy/backoff/timeout, immutable workflow-definition hashes,
+dead-letter state, durable step checkpoints, idempotent pause resume/manual recovery operations,
+lease/timeout reconciliation diagnostics, migration `20260819_0033`, recovery routes, and the
+`--recover-expired` worker command. Scientific writes remain behind existing domain/provenance and
+human-acceptance boundaries; live PostgreSQL concurrency and production orchestration remain
+environment gates.

@@ -121,3 +121,10 @@ Durable workflow execution adds no third-party runtime dependency. Leases, bound
 payload validation/redaction, local handler dispatch, and deterministic runner behavior use the
 existing Python/FastAPI/Pydantic/SQLAlchemy stack. No Temporal SDK, queue broker, provider SDK,
 credential, scientific calculation package, or external worker runtime was introduced.
+
+## Phase 32 dependency impact
+
+Workflow resumability and recovery add no third-party runtime dependency. Retry policy, definition
+hashing, checkpoint persistence, reconciliation, and idempotency use the existing
+Python/FastAPI/Pydantic/SQLAlchemy stack. No Temporal SDK, queue broker, provider SDK, credential,
+scientific calculation library, or cloud orchestration runtime was introduced.

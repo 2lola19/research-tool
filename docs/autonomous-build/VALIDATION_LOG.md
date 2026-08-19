@@ -151,6 +151,30 @@ This log records commands, results, and honest environment blockers for the V1 c
   diff, diff-check, secret, artifact, and intended-scope audits. The worktree is clean and no
   GitHub operation is authorized.
 
+## 2026-08-19 - Phase 32 workflow recovery and resumability
+
+- Repository gates: PASS - `ruff check .`, `ruff format --check .` (353 files), strict
+  `mypy backend workers` (224 files), and compileall passed.
+- Focused unit/worker/workflow/recovery tests: PASS - 14 tests, including retry/backoff bounds,
+  immutable definition hashes, stale-version rejection, redaction, deterministic worker behavior,
+  and workflow transition invariants.
+- Focused integration: PASS - `tests/integration/test_workflow_execution.py` passed 5 tests for
+  durable claim/completion, permanent-failure dead-lettering, step checkpoints, idempotent manual
+  recovery, idempotent resume, reconciliation drift, and tenant boundaries.
+- Existing workflow compatibility: PASS - the workflow tenant-isolation subset passed 4 tests; the
+  combined focused integration run passed 9 tests.
+- Migration: PASS - `tests/integration/test_migrations.py` upgraded and downgraded through
+  `20260819_0033`.
+- Full backend suite: ENVIRONMENT_BLOCKED - `pytest -q` emitted no output for 364 seconds; exact
+  pytest descendants were inspected and terminated safely. No assertion result is claimed.
+- Secret/credential and generated-artifact audit: PASS - no secrets, credentials, caches, generated
+  runtime artifacts, or host files are in the intended Phase 32 scope.
+- Scientific/security/provenance review: PASS - retry/recovery remains operational, definition
+  hashes prevent silent version substitution, human checkpoints are not bypassed, reconciliation is
+  read-only, and scientific writes remain behind existing domain/provenance services.
+- Local checkpoint: READY_FOR_CHECKPOINT - implementation and required reviews are complete; the
+  validated local Git checklist is next. No GitHub operation is authorized.
+
 ## 2026-08-18 — baseline
 
 - `git status --short --branch`: PASS — clean `master`, tracking `origin/master`.

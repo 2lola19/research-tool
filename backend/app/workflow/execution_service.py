@@ -17,6 +17,11 @@ from backend.app.workflow.execution_domain import (
     validate_result_snapshot,
 )
 from backend.app.workflow.execution_persistence import SqlAlchemyWorkflowExecutionRepository
+from backend.app.workflow.recovery_domain import (
+    FailureClass,
+    ReconciliationReport,
+    WorkflowStepCheckpoint,
+)
 
 
 class WorkflowExecutionService:
@@ -145,7 +150,8 @@ class WorkflowExecutionService:
         lease_token: str,
         failure_code: str,
         failure_message: str,
-        requeue: bool,
+        failure_class: FailureClass = FailureClass.UNKNOWN,
+        requeue: bool | None = None,
     ) -> tuple[WorkflowJob, WorkflowJobAttempt]:
         if not failure_code.strip():
             raise ValueError("failure code cannot be empty")
@@ -155,6 +161,7 @@ class WorkflowExecutionService:
             lease_token=lease_token,
             failure_code=failure_code.strip(),
             failure_message=failure_message.strip(),
+            failure_class=failure_class,
             requeue=requeue,
         )
 
@@ -165,6 +172,8 @@ class WorkflowExecutionService:
         job_id: UUID,
         reason: str,
         actor_user_id: UUID | None,
+        idempotency_key: str | None = None,
+        additional_attempts: int = 0,
     ) -> WorkflowJob:
         if not reason.strip():
             raise ValueError("requeue reason cannot be empty")
@@ -173,6 +182,29 @@ class WorkflowExecutionService:
             job_id=job_id,
             reason=reason.strip(),
             actor_user_id=actor_user_id,
+            idempotency_key=idempotency_key,
+            additional_attempts=additional_attempts,
+        )
+
+    async def resume_job(
+        self,
+        *,
+        organization_id: UUID,
+        job_id: UUID,
+        idempotency_key: str,
+        reason: str,
+        actor_user_id: UUID | None,
+    ) -> WorkflowJob:
+        if not idempotency_key.strip():
+            raise ValueError("resume idempotency key cannot be empty")
+        if not reason.strip():
+            raise ValueError("resume reason cannot be empty")
+        return await self._repository.resume_job(
+            organization_id=organization_id,
+            job_id=job_id,
+            idempotency_key=idempotency_key.strip(),
+            actor_user_id=actor_user_id,
+            reason=reason.strip(),
         )
 
     async def requeue_expired(self, limit: int = 100) -> int:
@@ -192,6 +224,14 @@ class WorkflowExecutionService:
         self, organization_id: UUID, review_id: UUID
     ) -> list[WorkflowJobAttempt]:
         return await self._repository.list_attempts(organization_id, review_id)
+
+    async def list_step_checkpoints(
+        self, organization_id: UUID, review_id: UUID
+    ) -> list[WorkflowStepCheckpoint]:
+        return await self._repository.list_step_checkpoints(organization_id, review_id)
+
+    async def reconcile(self, organization_id: UUID, review_id: UUID) -> ReconciliationReport:
+        return await self._repository.reconcile(organization_id, review_id)
 
     @staticmethod
     def _validate_worker_id(worker_id: str) -> None:
@@ -274,5 +314,6 @@ class LocalWorkerRunner:
                 lease_token=claim.attempt.lease_token,
                 failure_code=type(exc).__name__.upper()[:80],
                 failure_message="worker handler failed; inspect the attempt and retry policy",
-                requeue=claim.attempt.attempt_number < claim.job.max_attempts,
+                failure_class=FailureClass.TRANSIENT,
+                requeue=None,
             )

@@ -29,14 +29,27 @@ async def run_worker_once() -> int:
         return processed
 
 
-async def worker_main(*, run_once: bool = False) -> None:
+async def recover_expired_once() -> int:
+    async with session_factory() as session:
+        execution = WorkflowExecutionService(SqlAlchemyWorkflowExecutionRepository(session))
+        recovered = await execution.requeue_expired()
+        await session.commit()
+        return recovered
+
+
+async def worker_main(*, run_once: bool = False, recover_expired: bool = False) -> None:
     settings = get_settings()
     configure_logging(settings.app_log_level)
     logger.info("worker_started", extra={"orchestration_adapter": "foundation"})
     try:
+        if recover_expired:
+            recovered = await recover_expired_once()
+            logger.info("worker_recovery_completed", extra={"recovered_attempts": recovered})
         if run_once:
             processed = await run_worker_once()
             logger.info("worker_cycle_completed", extra={"processed_jobs": processed})
+            return
+        if recover_expired:
             return
         shutdown_event = asyncio.Event()
         await shutdown_event.wait()
@@ -45,6 +58,6 @@ async def worker_main(*, run_once: bool = False) -> None:
         logger.info("worker_stopped")
 
 
-def run(*, run_once: bool = False) -> None:
+def run(*, run_once: bool = False, recover_expired: bool = False) -> None:
     with suppress(KeyboardInterrupt):
-        asyncio.run(worker_main(run_once=run_once))
+        asyncio.run(worker_main(run_once=run_once, recover_expired=recover_expired))

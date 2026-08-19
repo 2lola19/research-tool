@@ -49,6 +49,7 @@ class WorkflowJobAttempt:
     result_snapshot: dict[str, Any] | None
     failure_code: str | None
     failure_message: str | None
+    deadline_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)

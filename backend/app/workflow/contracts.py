@@ -11,6 +11,7 @@ from backend.app.workflow.domain import (
     WorkflowJob,
     WorkflowRun,
 )
+from backend.app.workflow.recovery_domain import RetryPolicy
 
 
 class WorkflowRepository(Protocol):
@@ -55,6 +56,10 @@ class WorkflowRepository(Protocol):
         payload_schema: str = "workflow.generic",
         payload_version: int = 1,
         max_attempts: int = 3,
+        retry_policy: RetryPolicy | None = None,
+        step_key: str | None = None,
+        step_order: int | None = None,
+        definition_hash: str | None = None,
     ) -> WorkflowJob: ...
 
     async def get_job_by_idempotency(

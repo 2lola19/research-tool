@@ -150,3 +150,11 @@ failure/requeue paths, lease-expiry recovery, deterministic handler registration
 responses, and a local `--once` runner are implemented. Scientific work remains behind existing
 domain/provenance services; Phase 32 adds richer workflow resumability, retry taxonomy, backoff,
 dead-letter handling, and operational reconciliation.
+
+## Phase 32 complete: workflow resumability and operational recovery
+
+Phase 32 adds immutable definition/step contracts, bounded retry taxonomy and backoff, attempt
+timeouts, dead-letter/manual recovery, normalized step checkpoints, durable idempotent resume and
+recovery operations, lease/timeout reconciliation diagnostics, tenant-scoped recovery APIs, and a
+local expired-attempt recovery command. It does not silently replay consequential writes, override
+human checkpoints, or require Temporal/cloud infrastructure.

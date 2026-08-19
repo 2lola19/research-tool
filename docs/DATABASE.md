@@ -244,3 +244,18 @@ events remain the append-only operational history for claims, heartbeats, comple
 requeue, and lease expiry; result and failure snapshots are bounded JSON operational metadata.
 The linear migration upgrades and downgrades through `0032` on SQLite; PostgreSQL row-lock and
 `SKIP LOCKED` behavior remains a production infrastructure gate.
+
+## Phase 32 workflow recovery metadata
+
+Migration `20260819_0033` adds structured retry policy, timeout/deadline scheduling, failure class,
+dead-letter timestamp, bounded manual recovery count, step identity, and definition hash columns to
+workflow jobs. `workflow_job_attempts.deadline_at` separates an attempt timeout from its worker
+lease. `workflow_step_checkpoints` stores tenant/Review/run/step progress, checkpoint version,
+definition hash, output digest, and failure class. `workflow_recovery_operations` stores durable
+`RESUME`/`MANUAL_RETRY` idempotency keys, actor/reason, added attempt budget, and resulting state.
+
+All new tables use composite tenant/Review foreign keys and scoped indexes. Retry policy JSON is a
+bounded, validated operational structure, not a hidden workflow state blob. Checkpoint and recovery
+rows are operational records; they do not replace the provenance ledger or scientific tables. The
+linear migration upgrades/downgrades through `0033`; live PostgreSQL lock/retry behavior remains an
+environment gate.
