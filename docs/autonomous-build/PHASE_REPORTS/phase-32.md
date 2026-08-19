@@ -51,5 +51,7 @@ resume/manual-recovery operations are durable and idempotent.
 ## Checkpoint
 
 Implementation, reviews, focused gates, and the documented full-suite environment limitation are
-complete. The validated local Git checkpoint checklist is ready. No GitHub operation is authorized
-or performed.
+complete. The validated local Phase 32 implementation checkpoint exists at
+`b5039cd456caf2f36e10716c29aaccde4e3fa175` with message `feat: add resumable workflow recovery
+and retry orchestration`. The execution state and phase report were reconciled in the follow-on
+metadata checkpoint. No GitHub operation is authorized or performed.
