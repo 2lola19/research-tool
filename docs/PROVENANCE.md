@@ -213,3 +213,21 @@ Provider credentials, authorization headers, arbitrary endpoint URLs, raw error 
 configuration are excluded from provenance. Usage and circuit reads repeat organization/Review
 scope; they describe operational execution and spend governance, not scientific evidence. No model
 response bypasses validation, human acceptance, or the existing canonical scientific service.
+
+## Phase 35 document processing provenance
+
+The source-document chain begins with the tenant/review/article identity, opaque object key,
+original filename/media type, byte size, and SHA-256. Upload and verified retrieval retain the
+same checksum boundary; a corrupted or missing object produces a classified failed processing
+run and does not overwrite the original artifact or prior run history.
+
+Each processing run records parser name/version, requester, start/finish times, verified content
+hash/size, bounded canonical block count and text-byte total, and a deterministic versioned chunk
+manifest/hash. Manifest entries identify block type/order/page/section and text hashes so later
+evidence can be reconstructed and compared without treating the manifest as a canonical Article,
+Study, or scientific decision. Consequential block persistence and screening continue to use the
+existing provenance and append-only audit services.
+
+Read-only storage reconciliation is operational diagnostics only. It reports tenant/review-scoped
+missing and orphan counts without deleting objects or inventing provenance. Storage credentials,
+malware-scan claims, external URL response bodies, and unbounded parser output are not persisted.

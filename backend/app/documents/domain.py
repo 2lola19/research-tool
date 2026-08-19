@@ -38,6 +38,15 @@ class ProcessingRunStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class ProcessingFailureClass(StrEnum):
+    STORAGE_MISSING = "STORAGE_MISSING"
+    STORAGE_INTEGRITY = "STORAGE_INTEGRITY"
+    PARSER_INVALID = "PARSER_INVALID"
+    PARSER_LIMIT = "PARSER_LIMIT"
+    PARSER_TIMEOUT = "PARSER_TIMEOUT"
+    UNEXPECTED = "UNEXPECTED"
+
+
 class DocumentBlockType(StrEnum):
     TITLE = "TITLE"
     ABSTRACT = "ABSTRACT"
@@ -106,6 +115,13 @@ class DocumentProcessingRun:
     started_at: datetime | None
     finished_at: datetime | None
     created_at: datetime
+    failure_class: ProcessingFailureClass | None = None
+    content_sha256: str | None = None
+    content_size: int | None = None
+    chunk_manifest_hash: str | None = None
+    chunk_manifest: list[dict[str, object]] | None = None
+    block_count: int = 0
+    text_byte_size: int = 0
 
 
 @dataclass(frozen=True, slots=True)

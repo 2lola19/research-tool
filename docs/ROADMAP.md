@@ -175,3 +175,13 @@ without silent fallback, normalized usage, exact known-cost accounting, tenant t
 provider/model circuit limits, and a Review-scoped usage endpoint. Paid credentials, live network
 behavior, and PostgreSQL concurrency remain deployment gates; canonical scientific acceptance is
 unchanged.
+
+## Phase 35 complete: document processing, object storage, and PDF pipeline hardening
+
+Phase 35 adds verified atomic local storage and a vendor-neutral S3-compatible boundary, exact PDF
+signature/media-type/size checks, stable tenant-scoped object identity, checksum-verified content
+access, bounded parser execution/output, append-only processing failures and retries, deterministic
+chunk manifests, restricted-document authorization, and read-only storage reconciliation. The
+SQLite migration through `20260819_0035` and focused backend gates pass. Live GROBID/S3/malware
+scanning, external retrieval, PostgreSQL behavior, and GitHub publication remain out of scope or
+deployment gates.

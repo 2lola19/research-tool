@@ -38,6 +38,7 @@ Last updated: 2026-08-19
 
 | Scholarly Search Provider Integrations (Phase 33) | IMPLEMENTED | Provider-neutral OpenAlex, PubMed, Europe PMC, and deterministic fixture adapters; bounded allowlisted HTTP transport; normalized citation import; raw artifact checksums; immutable provider-attempt provenance; explicit opt-in API/configuration; deterministic unit, integration, and migration coverage. Live network execution remains an environment/deployment gate. |
 | Production AI Provider Integrations and Governance (Phase 34) | IMPLEMENTED | Fixed OpenAI/Anthropic/Gemini adapters behind a bounded transport; explicit live opt-in; deterministic task/model routing and allowlists; normalized usage, exact known-cost accounting, tenant budget/circuit checks, usage API, and deterministic no-network coverage. Live credentials/network and PostgreSQL concurrency remain deployment gates. |
+| Document Processing/Object Storage/PDF Hardening (Phase 35) | IMPLEMENTED | Verified local/S3-compatible storage contracts, atomic/checksum-checked PDF acquisition, parser limits/timeouts, append-only retry/failure metadata, deterministic chunk manifests, restricted-content authorization, read-only reconciliation, migration `20260819_0035`, and tenant/security coverage. Live GROBID/S3/malware scanning/PostgreSQL remain deployment gates. |
 
 ## Validation evidence
 
@@ -279,3 +280,14 @@ provider/model circuit checks derived from append-only attempt history. The dete
 all provider tests remain offline; no credentials or paid calls are included. The full AI integration
 shard timed out without output after 300 seconds in this environment and is recorded as an
 environment limitation; focused AI unit and foundation integration tests pass.
+
+## Phase 35 document processing, storage, and PDF hardening
+
+Phase 35 adds a verified object-storage protocol with atomic local implementation and a
+vendor-neutral S3-compatible adapter, exact PDF upload validation, checksum/size-verified reads,
+bounded parser execution and canonical output, append-only processing-run failure/retry metadata,
+deterministic chunk manifests, restricted-content authorization, and read-only storage
+reconciliation. Focused storage/parser/document integration tests, migration upgrade/downgrade
+through `20260819_0035`, repository Ruff/format, strict mypy, and compile checks pass. Live GROBID,
+S3, malware scanning, external retrieval, PostgreSQL, and the monolithic full suite remain
+environment/deployment gates and are not represented as passes.

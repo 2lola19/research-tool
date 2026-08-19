@@ -41,6 +41,7 @@ class DocumentRepository(Protocol):
         file_size: int | None,
         sha256: str | None,
         uploaded_by_user_id: UUID | None,
+        id: UUID | None = None,
     ) -> Document: ...
 
     async def get_document(self, organization_id: UUID, document_id: UUID) -> Document | None: ...
@@ -74,7 +75,20 @@ class DocumentRepository(Protocol):
         status: ProcessingRunStatus,
         error_message: str | None,
         finished_at: datetime | None,
+        **values: object,
     ) -> DocumentProcessingRun: ...
+
+    async def count_processing_runs(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> int: ...
+
+    async def list_processing_runs(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> list[DocumentProcessingRun]: ...
+
+    async def list_documents_for_review(
+        self, organization_id: UUID, review_id: UUID
+    ) -> list[Document]: ...
 
     async def replace_document_blocks(
         self, document: Document, canonical: CanonicalDocument

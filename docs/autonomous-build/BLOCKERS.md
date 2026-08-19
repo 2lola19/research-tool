@@ -161,3 +161,22 @@ without ACL or lock-file surgery.
 - PASS - local implementation commit `e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7` exists and matches
   the validated Phase 34 scope. Execution state records `CHECKPOINTED`, the worktree is clean, and
   Phase 35 is the next resume point. No GitHub operation was performed.
+
+## Phase 35 validation conditions
+
+- Phase 35 implementation covers verified local/S3-compatible storage contracts, exact PDF upload
+  checks, stable document/storage identity, bounded parser output/timeouts, append-only processing
+  runs and retry taxonomy, deterministic manifests, restricted access, source URL policy, and
+  read-only reconciliation.
+- Repository Ruff/format, strict mypy, compileall, focused storage/parser/document policy,
+  document integration, and migration upgrade/downgrade through `20260819_0035` pass (24 focused
+  tests). The full pytest gate emitted no output and timed out after 424 seconds; this is
+  `ENVIRONMENT_BLOCKED_TIMEOUT_NO_OUTPUT_424_SECONDS`, not a pass.
+- Scientific review confirms Document, Article, Study, workflow, scientific evidence, provenance,
+  and audit remain separate. Security review confirms authorization before key access, checksum
+  verification, opaque keys, bounded parsing, restricted-content controls, and no automatic
+  external retrieval. No critical/high blocker remains.
+- Live GROBID, S3, malware scanner, external retrieval, PostgreSQL, Docker, and production
+  credentials remain environment/deployment gates. No GitHub operation is authorized.
+- Implementation and required reviews are complete; the validated local checkpoint checklist is
+  ready under `feat: harden document processing and object storage pipeline`.

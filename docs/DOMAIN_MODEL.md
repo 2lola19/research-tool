@@ -278,3 +278,23 @@ Provider adapters are infrastructure records behind the `AIProvider` protocol; t
 Articles, Studies, evidence values, workflow decisions, or canonical scientific outputs. A
 validated proposal remains separate from human acceptance and the existing scientific domain
 service.
+
+## Phase 35 document acquisition and processing hardening
+
+`Document` remains distinct from Article and Study and retains the immutable source-artifact
+identity: tenant/review/article scope, opaque storage key, media type, byte size, SHA-256, source
+classification, and retrieval metadata. Upload persistence uses the same generated document ID in
+the database and storage key so repair and reconciliation cannot drift across identities.
+
+`DocumentProcessingRun` is append-only operational history for one parser name/version and one
+immutable source checksum. It records bounded failure taxonomy, verified content metadata, a
+deterministic versioned chunk manifest/hash, block/text counts, requester, and timing. Canonical
+DocumentBlocks remain separate scientific evidence structures; a failed run never becomes a
+successful parse and a retry creates a new run rather than rewriting history.
+
+The parser boundary validates canonical block identity/order/location, section depth, UTF-8 byte
+limits, finite coordinates, and deterministic manifest inputs before blocks are persisted. Local
+and S3-compatible storage are provider implementations behind a small protocol; storage
+reconciliation is read-only diagnostics and cannot delete objects or silently alter document
+state. Restricted document classes require screening authorization before verified content bytes
+are returned.

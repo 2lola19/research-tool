@@ -238,3 +238,16 @@ and bounded provider/model circuit opening. Existing AI unit coverage remains gr
 foundation integration test covers the Review-scoped usage endpoint and policy response. No live
 provider call or credential is used. The combined AI integration shard timed out without output
 after 300 seconds and is recorded as `ENVIRONMENT_BLOCKED`, not as a pass.
+
+## Phase 35 document processing and storage coverage
+
+Unit coverage verifies opaque-key/path traversal rejection, atomic local storage, verified
+put/get/head/list behavior, corruption detection, the vendor-neutral S3 adapter boundary,
+canonical parser limits, deterministic chunk-manifest hashes, malformed GROBID fixture handling,
+and HTTPS/private-host retrieval policy. Integration coverage verifies upload-ID/key alignment,
+restricted content authorization, verified content retrieval, parser-run history, corruption and
+repair retry transitions, reconciliation read-only behavior, and foreign-tenant non-enumeration.
+
+Migration coverage upgrades and downgrades the SQLite chain through `20260819_0035` and asserts
+the new processing-run metadata columns. No live GROBID, S3 service, malware scanner, external
+retrieval, or PostgreSQL concurrency claim is made. Those remain deployment/environment gates.

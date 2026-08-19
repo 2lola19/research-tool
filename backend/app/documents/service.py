@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import ipaddress
 import re
 from datetime import UTC, datetime
+from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 from backend.app.citations.contracts import CitationRepository
@@ -13,13 +16,22 @@ from backend.app.documents.domain import (
     CriterionDecision,
     Document,
     DocumentEvidenceLocation,
+    DocumentProcessingRun,
     DocumentRetrievalMethod,
     DocumentStatus,
     DocumentWarning,
     DocumentWarningKind,
     FullTextDecision,
     FullTextScreening,
+    ProcessingFailureClass,
     ProcessingRunStatus,
+)
+from backend.app.documents.manifests import build_chunk_manifest
+from backend.app.documents.parsers import (
+    DocumentParseError,
+    DocumentParserLimitError,
+    DocumentParserLimits,
+    validate_canonical_document,
 )
 from backend.app.identity.contracts import IdentityRepository
 from backend.app.identity.domain import ActorContext, Permission
@@ -31,7 +43,23 @@ from backend.app.provenance.domain import ProvenanceActorKind, VerificationState
 from backend.app.provenance.service import ProvenanceService
 from backend.app.reviews.contracts import ReviewRepository
 from backend.app.reviews.service import ReviewService
-from backend.app.storage.contracts import ObjectStorageProvider
+from backend.app.storage.contracts import (
+    StorageIntegrityError,
+    VerifiedObjectStorageProvider,
+)
+
+_RESTRICTED_ACCESS_CLASSIFICATIONS = {
+    "RESTRICTED",
+    "LICENSE_RESTRICTED",
+    "PAYWALLED",
+    "USER_UPLOADED",
+}
+_BLOCKED_SOURCE_HOSTS = {
+    "localhost",
+    "localhost.localdomain",
+    "metadata.google.internal",
+    "metadata.google.com",
+}
 
 
 class DocumentService:
@@ -43,7 +71,7 @@ class DocumentService:
         protocol_repository: ProtocolRepository,
         identity_repository: IdentityRepository,
         provenance_repository: ProvenanceRepository,
-        storage: ObjectStorageProvider,
+        storage: VerifiedObjectStorageProvider,
         settings: Settings,
     ) -> None:
         self._repository = repository
@@ -74,7 +102,9 @@ class DocumentService:
         )
         if article is None:
             raise ResourceNotFoundError("article was not found")
-        self._validate_upload(filename, media_type, content)
+        normalized_filename, normalized_media_type = self._validate_upload(
+            filename, media_type, content
+        )
         checksum = hashlib.sha256(content).hexdigest()
         if (
             await self._repository.get_document_for_article_checksum(
@@ -86,9 +116,16 @@ class DocumentService:
 
         document_id = uuid4()
         storage_key = f"{actor.organization_id}/{review.id}/{article.id}/{document_id.hex}.pdf"
-        await self._storage.put(storage_key, content)
+        await self._storage.put_verified(
+            storage_key,
+            content,
+            expected_sha256=checksum,
+            expected_size=len(content),
+            media_type=normalized_media_type,
+        )
         try:
             document = await self._repository.create_document(
+                id=document_id,
                 organization_id=actor.organization_id,
                 review_id=review.id,
                 article_id=article.id,
@@ -100,8 +137,8 @@ class DocumentService:
                 license=None,
                 access_classification="USER_UPLOADED",
                 storage_key=storage_key,
-                original_filename=filename,
-                media_type="application/pdf",
+                original_filename=normalized_filename,
+                media_type=normalized_media_type,
                 file_size=len(content),
                 sha256=checksum,
                 uploaded_by_user_id=actor.user_id,
@@ -138,6 +175,8 @@ class DocumentService:
             raise ConflictError("retrieval records cannot use a file-processing status")
         if status == DocumentStatus.EXTERNAL_LINK_ONLY and not source_url:
             raise ConflictError("external link records require a source URL")
+        if source_url:
+            self._validate_source_url(source_url)
         article = await self._citation_repository.get_article(
             actor.organization_id, review.id, article_id
         )
@@ -189,6 +228,11 @@ class DocumentService:
         storage_key = document.storage_key
         if document.status == DocumentStatus.PROCESSED:
             raise ConflictError("document has already been processed")
+        attempts = await self._repository.count_processing_runs(
+            actor.organization_id, document.review_id, document.id
+        )
+        if attempts >= self._settings.max_document_processing_attempts:
+            raise ConflictError("document processing retry limit has been reached")
         document = await self._repository.update_document_status(
             actor.organization_id, document.id, DocumentStatus.PROCESSING
         )
@@ -202,16 +246,42 @@ class DocumentService:
             started_at=datetime.now(UTC),
             finished_at=None,
         )
+        content: bytes | None = None
+        manifest: list[dict[str, object]] = []
+        manifest_hash = ""
+        text_byte_size = 0
         try:
-            content = await self._storage.get(storage_key)
-            canonical = parser.parse(content)
+            if document.sha256 is None or document.file_size is None:
+                raise StorageIntegrityError("document has incomplete storage metadata")
+            content = await self._storage.get_verified(
+                storage_key,
+                expected_sha256=document.sha256,
+                expected_size=document.file_size,
+                max_bytes=self._settings.max_document_file_size_bytes,
+            )
+            canonical = await asyncio.wait_for(
+                asyncio.to_thread(parser.parse, content),
+                timeout=self._settings.document_parser_timeout_seconds,
+            )
+            validate_canonical_document(canonical, self._parser_limits())
+            manifest, manifest_hash, text_byte_size = build_chunk_manifest(
+                canonical, content_sha256=document.sha256
+            )
             await self._repository.replace_document_blocks(document, canonical)
         except Exception as exc:
+            failure_class = self._processing_failure_class(exc)
             await self._repository.finish_processing_run(
                 organization_id=actor.organization_id,
                 run_id=run.id,
                 status=ProcessingRunStatus.FAILED,
-                error_message=str(exc)[:4000],
+                error_message=self._safe_processing_error(exc),
+                failure_class=failure_class.value,
+                content_sha256=document.sha256 if content is not None else None,
+                content_size=len(content) if content is not None else None,
+                chunk_manifest_hash=None,
+                chunk_manifest=None,
+                block_count=0,
+                text_byte_size=0,
                 finished_at=datetime.now(UTC),
             )
             failed = await self._repository.update_document_status(
@@ -222,15 +292,23 @@ class DocumentService:
                 document.review_id,
                 failed,
                 "processing_failed",
-                {"parser": parser.name, "error": str(exc)[:500]},
+                {"parser": parser.name, "failure_class": failure_class.value},
             )
             return failed
 
+        assert content is not None
         await self._repository.finish_processing_run(
             organization_id=actor.organization_id,
             run_id=run.id,
             status=ProcessingRunStatus.SUCCEEDED,
             error_message=None,
+            failure_class=None,
+            content_sha256=document.sha256,
+            content_size=len(content),
+            chunk_manifest_hash=manifest_hash,
+            chunk_manifest=manifest,
+            block_count=len(manifest),
+            text_byte_size=text_byte_size,
             finished_at=datetime.now(UTC),
         )
         processed = await self._repository.update_document_status(
@@ -259,6 +337,59 @@ class DocumentService:
             {"parser": parser.name, "parser_version": parser.version},
         )
         return processed
+
+    async def content(self, actor: ActorContext, document_id: UUID) -> tuple[Document, bytes]:
+        document = await self.get(actor, document_id)
+        if document.storage_key is None or document.sha256 is None or document.file_size is None:
+            raise ResourceNotFoundError("document content was not found")
+        if (
+            document.access_classification or ""
+        ).strip().upper() in _RESTRICTED_ACCESS_CLASSIFICATIONS:
+            AuthorizationService.require(actor, Permission.SCREEN_ARTICLES)
+        try:
+            content = await self._storage.get_verified(
+                document.storage_key,
+                expected_sha256=document.sha256,
+                expected_size=document.file_size,
+                max_bytes=self._settings.max_document_file_size_bytes,
+            )
+        except FileNotFoundError as exc:
+            raise ResourceNotFoundError("document content was not found") from exc
+        except StorageIntegrityError as exc:
+            raise ConflictError("document content checksum verification failed") from exc
+        return document, content
+
+    async def list_processing_runs(
+        self, actor: ActorContext, *, document_id: UUID
+    ) -> list[DocumentProcessingRun]:
+        document = await self.get(actor, document_id)
+        return await self._repository.list_processing_runs(
+            actor.organization_id, document.review_id, document.id
+        )
+
+    async def reconcile_storage(self, actor: ActorContext, *, review_id: UUID) -> dict[str, object]:
+        review = await self._review_service.get(actor, review_id)
+        AuthorizationService.require(actor, Permission.MANAGE_DOCUMENTS)
+        documents = await self._repository.list_documents_for_review(
+            actor.organization_id, review.id
+        )
+        expected_keys = {item.storage_key for item in documents if item.storage_key}
+        prefix = f"{actor.organization_id}/{review.id}"
+        actual_keys = set(await self._storage.list_keys(prefix))
+        missing = sorted(
+            str(item.id)
+            for item in documents
+            if item.storage_key and item.storage_key not in actual_keys
+        )
+        return {
+            "review_id": review.id,
+            "document_count": len(documents),
+            "expected_object_count": len(expected_keys),
+            "actual_object_count": len(actual_keys),
+            "missing_document_ids": missing,
+            "orphan_object_count": len(actual_keys - expected_keys),
+            "status": "RECONCILIATION_ONLY",
+        }
 
     async def create_evidence_location(
         self,
@@ -460,14 +591,86 @@ class DocumentService:
             reason=None,
         )
 
-    def _validate_upload(self, filename: str, media_type: str, content: bytes) -> None:
-        if not filename or len(filename) > 500 or "/" in filename or "\\" in filename:
+    def _validate_upload(self, filename: str, media_type: str, content: bytes) -> tuple[str, str]:
+        normalized_filename = filename.strip()
+        normalized_media_type = media_type.split(";", 1)[0].strip().casefold()
+        if (
+            not normalized_filename
+            or len(normalized_filename) > 500
+            or "/" in normalized_filename
+            or "\\" in normalized_filename
+        ):
             raise ConflictError("filename must be a simple PDF filename")
-        if not re.fullmatch(r"[^\x00-\x1f]+\.pdf", filename, flags=re.IGNORECASE):
+        if not re.fullmatch(r"[^\x00-\x1f]+\.pdf", normalized_filename, flags=re.IGNORECASE):
             raise ConflictError("filename must end with .pdf")
-        if media_type.casefold() != "application/pdf":
+        if normalized_media_type != "application/pdf":
             raise ConflictError("only application/pdf uploads are accepted")
         if len(content) > self._settings.max_document_file_size_bytes:
             raise ConflictError("document exceeds the configured size limit")
         if not content.startswith(b"%PDF-"):
             raise ConflictError("document does not have a valid PDF signature")
+        return normalized_filename, normalized_media_type
+
+    def _parser_limits(self) -> DocumentParserLimits:
+        return DocumentParserLimits(
+            maximum_blocks=self._settings.max_document_parser_blocks,
+            maximum_text_bytes=self._settings.max_document_parser_text_bytes,
+            maximum_block_text_bytes=self._settings.max_document_parser_block_text_bytes,
+            maximum_section_depth=self._settings.max_document_parser_section_depth,
+        )
+
+    @staticmethod
+    def _processing_failure_class(exc: Exception) -> ProcessingFailureClass:
+        if isinstance(exc, FileNotFoundError):
+            return ProcessingFailureClass.STORAGE_MISSING
+        if isinstance(exc, StorageIntegrityError):
+            return ProcessingFailureClass.STORAGE_INTEGRITY
+        if isinstance(exc, asyncio.TimeoutError):
+            return ProcessingFailureClass.PARSER_TIMEOUT
+        if isinstance(exc, DocumentParserLimitError):
+            return ProcessingFailureClass.PARSER_LIMIT
+        if isinstance(exc, DocumentParseError):
+            return ProcessingFailureClass.PARSER_INVALID
+        return ProcessingFailureClass.UNEXPECTED
+
+    @staticmethod
+    def _safe_processing_error(exc: Exception) -> str:
+        if isinstance(exc, FileNotFoundError):
+            return "document content is missing from object storage"
+        if isinstance(exc, StorageIntegrityError):
+            return "document content failed checksum or size verification"
+        if isinstance(exc, asyncio.TimeoutError):
+            return "document parser exceeded its time limit"
+        if isinstance(exc, DocumentParserLimitError):
+            return str(exc)[:4000]
+        if isinstance(exc, DocumentParseError):
+            return str(exc)[:4000]
+        return "document processing failed unexpectedly"
+
+    @staticmethod
+    def _validate_source_url(source_url: str) -> None:
+        parsed = urlparse(source_url.strip())
+        host = (parsed.hostname or "").casefold()
+        if parsed.scheme.casefold() != "https" or not host:
+            raise ConflictError("document source URLs must use HTTPS")
+        try:
+            _port = parsed.port
+        except ValueError as exc:
+            raise ConflictError("document source URL port is invalid") from exc
+        if parsed.username or parsed.password or parsed.fragment:
+            raise ConflictError("document source URLs cannot contain credentials or fragments")
+        if host in _BLOCKED_SOURCE_HOSTS or host.endswith((".local", ".internal")):
+            raise ConflictError("document source URL host is not allowed")
+        try:
+            address = ipaddress.ip_address(host)
+        except ValueError:
+            address = None
+        if address is not None and (
+            address.is_private
+            or address.is_loopback
+            or address.is_link_local
+            or address.is_multicast
+            or address.is_reserved
+            or address.is_unspecified
+        ):
+            raise ConflictError("document source URL host is not allowed")

@@ -234,3 +234,23 @@ input/output prices. Task routing is pinned and fallback is disabled. Organizati
 history enforces monthly token/cost budgets and opens a bounded provider/model circuit after
 repeated failures. Unknown usage/cost is surfaced rather than guessed; budget or circuit blocks
 fail closed. AI remains advisory and human/domain-service boundaries are unchanged.
+
+## Phase 35 document and object-storage security
+
+Document authorization is evaluated before storage-key resolution or byte access. Uploads require
+an exact PDF media type, signature, bounded size, simple filename, generated tenant/review/article
+key, and post-write SHA-256/size verification. Local writes are atomic; the S3-compatible adapter
+accepts only the vendor-neutral client protocol and validates returned keys. No storage SDK,
+credential, or arbitrary object URL is admitted into domain code.
+
+Processing reads verify the persisted checksum and size, bound parser execution and canonical
+output, classify missing/integrity/invalid/limit/timeout failures, and preserve the original
+artifact for retry or manual investigation. External document URLs are HTTPS-only and reject
+credentials, fragments, invalid ports, loopback/private/link-local/reserved hosts, and local host
+names; Phase 35 does not fetch them automatically. Restricted, paywalled, licensed, and user-
+uploaded classes require screening permission for content download.
+
+Storage reconciliation is tenant/review-scoped, returns counts and document identifiers only, and
+is read-only: it never deletes or rewrites an object. Parser manifests contain bounded hashes and
+metadata rather than unbounded source bytes. Malware scanning remains an explicit deployment
+boundary and no clean-scan claim is made by the local fixture.

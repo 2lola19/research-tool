@@ -60,6 +60,12 @@ class Settings(BaseSettings):
     object_storage_provider: Literal["local", "s3"] = "local"
     local_storage_path: Path = Path("data/objects")
     max_document_file_size_bytes: int = Field(default=25_000_000, ge=1024, le=200_000_000)
+    max_document_processing_attempts: int = Field(default=3, ge=1, le=10)
+    document_parser_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
+    max_document_parser_blocks: int = Field(default=20_000, ge=1, le=100_000)
+    max_document_parser_text_bytes: int = Field(default=20_000_000, ge=1024, le=200_000_000)
+    max_document_parser_block_text_bytes: int = Field(default=1_000_000, ge=256, le=20_000_000)
+    max_document_parser_section_depth: int = Field(default=32, ge=1, le=256)
     notification_provider: Literal["mock", "email"] = "mock"
     authentication_provider: Literal["local", "oidc"] = "local"
     local_auth_secret: SecretStr = Field(

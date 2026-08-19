@@ -32,8 +32,12 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
         }
+        processing_columns = {
+            row[1]
+            for row in connection.execute("PRAGMA table_info(document_processing_runs)").fetchall()
+        }
 
-    assert version == ("20260819_0034",)
+    assert version == ("20260819_0035",)
     assert {
         "users",
         "organizations",
@@ -192,6 +196,16 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "report_snapshots",
         "report_artifacts",
     } <= tables
+
+    assert {
+        "failure_class",
+        "content_sha256",
+        "content_size",
+        "chunk_manifest_hash",
+        "chunk_manifest",
+        "block_count",
+        "text_byte_size",
+    } <= processing_columns
 
     downgrade = subprocess.run(
         [sys.executable, "-m", "alembic", "downgrade", "base"],

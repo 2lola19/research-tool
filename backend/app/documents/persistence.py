@@ -24,7 +24,6 @@ from backend.app.core.errors import ConflictError, ResourceNotFoundError
 from backend.app.db.base import Base
 from backend.app.documents.domain import (
     CanonicalDocument,
-    CanonicalDocumentBlock,
     CriterionDecision,
     Document,
     DocumentBlock,
@@ -38,8 +37,10 @@ from backend.app.documents.domain import (
     FullTextCriterionJudgment,
     FullTextDecision,
     FullTextScreening,
+    ProcessingFailureClass,
     ProcessingRunStatus,
 )
+from backend.app.documents.parsers import materialize_blocks
 
 
 class DocumentRecord(Base):
@@ -113,6 +114,25 @@ class DocumentProcessingRunRecord(Base):
             "status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED')",
             name="ck_document_runs_status",
         ),
+        CheckConstraint(
+            "failure_class IS NULL OR failure_class IN "
+            "('STORAGE_MISSING','STORAGE_INTEGRITY','PARSER_INVALID','PARSER_LIMIT',"
+            "'PARSER_TIMEOUT','UNEXPECTED')",
+            name="ck_document_runs_failure_class",
+        ),
+        CheckConstraint(
+            "content_size IS NULL OR content_size >= 0", name="ck_document_runs_content_size"
+        ),
+        CheckConstraint("block_count >= 0", name="ck_document_runs_block_count"),
+        CheckConstraint("text_byte_size >= 0", name="ck_document_runs_text_size"),
+        CheckConstraint(
+            "content_sha256 IS NULL OR length(content_sha256) = 64",
+            name="ck_document_runs_content_hash",
+        ),
+        CheckConstraint(
+            "chunk_manifest_hash IS NULL OR length(chunk_manifest_hash) = 64",
+            name="ck_document_runs_manifest_hash",
+        ),
         ForeignKeyConstraint(
             ["document_id", "organization_id", "review_id"],
             ["documents.id", "documents.organization_id", "documents.review_id"],
@@ -135,6 +155,13 @@ class DocumentProcessingRunRecord(Base):
     parser_version: Mapped[str] = mapped_column(String(80))
     status: Mapped[str] = mapped_column(String(20))
     error_message: Mapped[str | None] = mapped_column(Text)
+    failure_class: Mapped[str | None] = mapped_column(String(30))
+    content_sha256: Mapped[str | None] = mapped_column(String(64))
+    content_size: Mapped[int | None] = mapped_column(Integer)
+    chunk_manifest_hash: Mapped[str | None] = mapped_column(String(64))
+    chunk_manifest: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON)
+    block_count: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
+    text_byte_size: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
     requested_by_user_id: Mapped[UUID] = mapped_column()
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -389,6 +416,13 @@ def _run(row: DocumentProcessingRunRecord) -> DocumentProcessingRun:
         started_at=row.started_at,
         finished_at=row.finished_at,
         created_at=row.created_at or now,
+        failure_class=(ProcessingFailureClass(row.failure_class) if row.failure_class else None),
+        content_sha256=row.content_sha256,
+        content_size=row.content_size,
+        chunk_manifest=row.chunk_manifest,
+        chunk_manifest_hash=row.chunk_manifest_hash,
+        block_count=row.block_count,
+        text_byte_size=row.text_byte_size,
     )
 
 
@@ -517,6 +551,19 @@ class SqlAlchemyDocumentRepository:
         )
         return [_document(row) for row in rows]
 
+    async def list_documents_for_review(
+        self, organization_id: UUID, review_id: UUID
+    ) -> list[Document]:
+        rows = await self._session.scalars(
+            select(DocumentRecord)
+            .where(
+                DocumentRecord.organization_id == organization_id,
+                DocumentRecord.review_id == review_id,
+            )
+            .order_by(DocumentRecord.created_at, DocumentRecord.id)
+        )
+        return [_document(row) for row in rows]
+
     async def list_blocks(
         self, organization_id: UUID, review_id: UUID, document_id: UUID
     ) -> list[DocumentBlock]:
@@ -546,6 +593,38 @@ class SqlAlchemyDocumentRepository:
             .limit(1)
         )
         return _run(row) if row is not None else None
+
+    async def count_processing_runs(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> int:
+        return int(
+            await self._session.scalar(
+                select(func.count(DocumentProcessingRunRecord.id)).where(
+                    DocumentProcessingRunRecord.organization_id == organization_id,
+                    DocumentProcessingRunRecord.review_id == review_id,
+                    DocumentProcessingRunRecord.document_id == document_id,
+                )
+            )
+            or 0
+        )
+
+    async def list_processing_runs(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> list[DocumentProcessingRun]:
+        rows = await self._session.scalars(
+            select(DocumentProcessingRunRecord)
+            .where(
+                DocumentProcessingRunRecord.organization_id == organization_id,
+                DocumentProcessingRunRecord.review_id == review_id,
+                DocumentProcessingRunRecord.document_id == document_id,
+            )
+            .order_by(
+                DocumentProcessingRunRecord.started_at,
+                DocumentProcessingRunRecord.created_at,
+                DocumentProcessingRunRecord.id,
+            )
+        )
+        return [_run(row) for row in rows]
 
     async def get_full_text_screening_for_document(
         self, organization_id: UUID, review_id: UUID, document_id: UUID
@@ -625,19 +704,7 @@ class SqlAlchemyDocumentRepository:
         ).all()
         if existing:
             raise ConflictError("document already has a canonical processing result")
-        canonical_blocks = list(canonical.blocks)
-        if canonical.title:
-            canonical_blocks.insert(
-                0,
-                CanonicalDocumentBlock(
-                    block_id="title",
-                    block_type=DocumentBlockType.TITLE,
-                    block_order=0,
-                    page_number=1,
-                    section_path=[],
-                    text=canonical.title,
-                ),
-            )
+        canonical_blocks = materialize_blocks(canonical)
         rows = [
             DocumentBlockRecord(
                 document_id=document.id,

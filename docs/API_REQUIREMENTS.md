@@ -263,3 +263,22 @@ AI runs may use OpenAI, Anthropic, or Gemini only when deployment configuration 
 the provider and supplies an environment-backed secret. Model identifiers must be allowlisted and
 the selected task/provider/model are pinned in the run. A provider, budget, circuit, timeout, or
 pricing policy failure is reported explicitly; no endpoint silently falls back to another model.
+
+## Phase 35 document processing and storage API
+
+Document upload continues to return only tenant-scoped `Document` metadata; the server generates
+the opaque object key and verifies PDF signature, media type, size, and checksum before the row is
+committed. `GET /api/v1/documents/{document_id}/content` authorizes the document first, then
+returns checksum-verified bytes; restricted classes require screening permission and missing or
+corrupt objects fail closed without exposing storage paths.
+
+`GET /api/v1/documents/{document_id}/processing-runs` returns tenant/review-scoped append-only
+parser history, including safe failure class/message, parser version, verified content metadata,
+manifest hash, bounded manifest entries, and block/text counts. `POST /api/v1/documents/{document_id}/process`
+may create a bounded retry run for a failed document; it cannot silently reprocess a successful
+document or exceed the configured attempt limit.
+
+`GET /api/v1/documents/reviews/{review_id}/storage-reconciliation` is a manager-only, read-only
+diagnostic. It returns counts, missing document IDs, orphan count, and a status marker, never raw
+storage keys, bytes, credentials, or deletion controls. External retrieval records accept only
+validated HTTPS URLs and do not trigger automatic fetching in this phase.

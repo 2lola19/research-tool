@@ -144,3 +144,12 @@ Production AI adapters reuse HTTPX and the existing Python/FastAPI/Pydantic/SQLA
 there is no OpenAI, Anthropic, or Google vendor SDK. HTTPX remains isolated behind the
 repository-owned `AIHTTPTransport` boundary. Provider keys, paid service credentials, model
 licenses, and live network access are deployment configuration rather than committed dependencies.
+
+## Phase 35 dependency impact
+
+Document processing and object-storage hardening adds no third-party runtime dependency. The local
+atomic provider, verified metadata contract, S3-compatible adapter boundary, PDF fixture parser,
+canonical validation, and deterministic manifests use the existing Python/FastAPI/Pydantic/
+SQLAlchemy stack. No S3 vendor SDK, GROBID client SDK, OCR/computer-vision package, malware scanner,
+cloud credential, or live external service was introduced. GROBID and production S3 remain explicit
+deployment choices behind the repository-owned protocols.

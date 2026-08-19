@@ -18,6 +18,7 @@ from backend.app.documents.domain import (
     CriterionDecision,
     Document,
     DocumentEvidenceLocation,
+    DocumentProcessingRun,
     DocumentRetrievalMethod,
     DocumentStatus,
     DocumentWarning,
@@ -162,6 +163,50 @@ class FullTextScreeningResponse(BaseModel):
         )
 
 
+class ProcessingRunResponse(BaseModel):
+    id: UUID
+    document_id: UUID
+    parser_name: str
+    parser_version: str
+    status: str
+    failure_class: str | None
+    error_message: str | None
+    content_sha256: str | None
+    content_size: int | None
+    chunk_manifest_hash: str | None
+    chunk_manifest: list[dict[str, object]] | None
+    block_count: int
+    text_byte_size: int
+
+    @classmethod
+    def from_domain(cls, item: DocumentProcessingRun) -> ProcessingRunResponse:
+        return cls(
+            id=item.id,
+            document_id=item.document_id,
+            parser_name=item.parser_name,
+            parser_version=item.parser_version,
+            status=item.status.value,
+            failure_class=item.failure_class.value if item.failure_class else None,
+            error_message=item.error_message,
+            content_sha256=item.content_sha256,
+            content_size=item.content_size,
+            chunk_manifest_hash=item.chunk_manifest_hash,
+            chunk_manifest=item.chunk_manifest,
+            block_count=item.block_count,
+            text_byte_size=item.text_byte_size,
+        )
+
+
+class StorageReconciliationResponse(BaseModel):
+    review_id: UUID
+    document_count: int
+    expected_object_count: int
+    actual_object_count: int
+    missing_document_ids: list[str]
+    orphan_object_count: int
+    status: str
+
+
 def _service(
     session: DbSessionDependency,
     storage: ObjectStorageDependency,
@@ -251,6 +296,23 @@ async def create_retrieval_record(
     return DocumentResponse.from_domain(document)
 
 
+@router.get(
+    "/reviews/{review_id}/storage-reconciliation",
+    response_model=StorageReconciliationResponse,
+)
+async def reconcile_document_storage(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    storage: ObjectStorageDependency,
+    settings: SettingsDependency,
+    review_id: Annotated[UUID, Path()],
+) -> StorageReconciliationResponse:
+    report = await _service(session, storage, settings).reconcile_storage(
+        actor, review_id=review_id
+    )
+    return StorageReconciliationResponse.model_validate(report)
+
+
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def get_document(
     actor: ActorContextDependency,
@@ -273,17 +335,7 @@ async def get_document_content(
     document_id: Annotated[UUID, Path()],
 ) -> Response:
     service = _service(session, storage, settings)
-    document = await service.get(actor, document_id)
-    if document.storage_key is None:
-        from backend.app.core.errors import ResourceNotFoundError
-
-        raise ResourceNotFoundError("document content was not found")
-    try:
-        content = await storage.get(document.storage_key)
-    except FileNotFoundError as exc:
-        from backend.app.core.errors import ResourceNotFoundError
-
-        raise ResourceNotFoundError("document content was not found") from exc
+    document, content = await service.content(actor, document_id)
     return Response(content=content, media_type=document.media_type or "application/pdf")
 
 
@@ -300,6 +352,20 @@ async def process_document(
     )
     await session.commit()
     return DocumentResponse.from_domain(document)
+
+
+@router.get("/{document_id}/processing-runs", response_model=list[ProcessingRunResponse])
+async def list_document_processing_runs(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    storage: ObjectStorageDependency,
+    settings: SettingsDependency,
+    document_id: Annotated[UUID, Path()],
+) -> list[ProcessingRunResponse]:
+    runs = await _service(session, storage, settings).list_processing_runs(
+        actor, document_id=document_id
+    )
+    return [ProcessingRunResponse.from_domain(item) for item in runs]
 
 
 @router.post("/{document_id}/evidence-locations", response_model=EvidenceLocationResponse)

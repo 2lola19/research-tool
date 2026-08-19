@@ -127,5 +127,20 @@ by default; live providers and arbitrary retrieval remain deferred.
   read-only diagnostics; it never replays a scientific write or resolves a human checkpoint.
 - This boundary is recorded in ADR-031. No Temporal/cloud runtime, provider credential, or new
   scientific decision authority was introduced.
+
+## 2026-08-19 — Phase 35 document and storage boundary
+
+- Original PDF bytes remain the immutable source artifact. Verified local storage and the
+  vendor-neutral S3-compatible protocol own atomic writes, opaque-key validation, and SHA-256/size
+  checks; no vendor SDK or storage credential enters domain code.
+- Document IDs and storage keys are generated together and persisted together. Parser processing
+  is bounded and append-only: missing/corrupt bytes, invalid output, limits, and timeouts create
+  classified failed runs, while repair/retry creates a new run and never rewrites history.
+- Canonical title, abstract, and body blocks are materialized deterministically before bounded
+  manifests and evidence persistence. Restricted document classes require screening permission;
+  reconciliation is read-only and cannot delete or silently repair artifacts.
+- External source URLs are HTTPS/private-host validated but not fetched in this phase. GROBID,
+  OCR, malware scanning, live S3/PostgreSQL, and production retrieval remain deployment gates.
+  ADR-034 records the decision.
   provisional phase list. The envelope remains Phases 27–38, with durable jobs and recovery split
   across Phases 31–32 and offline-safe provider/storage/parser hardening in Phases 33–35.

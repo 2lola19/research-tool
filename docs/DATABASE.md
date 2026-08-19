@@ -284,3 +284,16 @@ append-only operational history. Tenant-wide monthly usage and provider/model ci
 derived only from organization-scoped attempt predicates, so workflow state, scientific data, and
 provenance remain separate. No provider credential or raw HTTP error body is persisted. No new
 migration is required for this phase.
+
+## Phase 35 document processing and storage hardening metadata
+
+Migration `20260819_0035` extends `document_processing_runs` with bounded failure class,
+verified source SHA-256/size, deterministic chunk-manifest JSON/hash, and block/text byte counts.
+Checks constrain failure values, non-negative sizes/counts, and hash lengths; the linear SQLite
+upgrade and downgrade retain the existing tenant/review foreign-key structure. Processing runs
+remain operational history, while `documents`, `document_blocks`, evidence locations, warnings,
+and provenance retain their separate scientific and audit responsibilities.
+
+Storage keys are opaque relative paths and are not persisted as filesystem paths. No database row
+stores object-storage credentials, external retrieval secrets, raw parser output beyond the
+bounded manifest, or a claim that live S3/GROBID/PostgreSQL behavior has been validated.

@@ -254,3 +254,24 @@ This log records commands, results, and honest environment blockers for the V1 c
 - `git log --oneline -10`: PASS — `HEAD` is `ff5e1bb`, Phase 26 baseline.
 - Control plane: PASS — required files and `PHASE_REPORTS/` created.
 - Roadmap reconciliation: PASS — definitive Phase 27–38 plan recorded from repository inspection.
+
+## 2026-08-19 - Phase 35 document processing, object storage, and PDF hardening
+
+- Repository gates: PASS - `ruff check .`, `ruff format --check .` (374 files), strict
+  `mypy backend workers` (234 source files), and backend/worker compileall passed.
+- Focused Phase 35 tests: PASS - 24 tests covering local verified storage, S3 protocol adaptation,
+  unsafe-key rejection, corruption detection, parser limits, title/abstract/body materialization,
+  deterministic manifests, external URL policy, document upload/process/retrieve/retry,
+  restricted content, reconciliation, tenant boundaries, and migration behavior.
+- Migration: PASS - `tests/integration/test_migrations.py` upgraded and downgraded the SQLite chain
+  through `20260819_0035` and asserted the new processing-run metadata columns.
+- Full repository pytest: ENVIRONMENT_BLOCKED - no output after 424 seconds. Exact pytest/python
+  descendants were inspected and terminated safely; no full-suite assertion result is claimed.
+- Scientific/security/provenance review: PASS - Document, Article, Study, workflow, scientific
+  evidence, and provenance remain separate; original bytes are checksum-verified; parser output is
+  bounded; restricted access and HTTPS/private-host policy fail closed; reconciliation is read-only.
+- Secret/credential/generated-artifact/scope audit: PASS - no credentials, runtime data, caches,
+  host files, or unrelated files are intended for the Phase 35 checkpoint. Live GROBID, S3,
+  malware scanning, external retrieval, PostgreSQL, and Docker remain environment/deployment gates.
+- Local checkpoint: READY_FOR_CHECKPOINT - implementation and required reviews are complete under
+  `feat: harden document processing and object storage pipeline`; no GitHub operation is authorized.

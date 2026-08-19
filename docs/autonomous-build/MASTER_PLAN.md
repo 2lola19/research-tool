@@ -4,7 +4,8 @@ Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpoint
 `f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 checkpointed locally at
 `c59a340`; Phase 31 checkpointed locally at `65de1a9`; Phase 32 checkpointed locally at
 `b5039cd`; Phase 33 is checkpointed locally at `1687da9`; Phase 34 is checkpointed locally at
-`e70e18c`; Phase 35 is next
+`e70e18c`; Phase 35 implementation is validated and ready for local checkpoint; Phase 36 follows
+after checkpoint
 
 ## Reconciled baseline and sequencing
 
@@ -330,6 +331,15 @@ Security/provenance/tests: authorization before key resolution, checksum and mal
 SSRF-safe external retrieval, parser/task/source hashes, tenant tests, corrupted upload/reprocess
 tests, migration/docs/ADR-034. Live GROBID/S3 remains environment-blocked if unavailable.
 
+Implementation status: implementation-complete and validated for local checkpoint. Verified local
+and vendor-neutral S3-compatible storage contracts, stable document/storage identity, exact PDF
+upload validation, parser bounds/timeouts, append-only processing failures/retries, deterministic
+title/abstract/body chunk manifests, restricted-content authorization, HTTPS/private-host policy,
+read-only reconciliation, migration `20260819_0035`, ADR-034, and focused tests are complete.
+Repository gates pass; full pytest is truthfully recorded as `ENVIRONMENT_BLOCKED` after a 424-second
+no-output timeout. The validated local checkpoint is ready under the required phase-specific
+message. No live GROBID/S3/PostgreSQL/malware-scan claim or GitHub operation is authorized.
+
 ## Phase 36 — Collaboration, Assignment, Quality-Control and Operational UX Hardening
 
 Objective: make human assignment, review queues, blinded states, error queues, job status, and
@@ -423,6 +433,6 @@ cover OpenAlex, PubMed, Europe PMC, fixture acquisition, bounded HTTP safety, no
 imports, raw artifacts, and provider-attempt provenance; the full-suite no-output timeout remains
 truthfully documented. The validated Phase 33 implementation checkpoint is local commit
 `1687da9d5f4da9332786692e5085a856848b9c99`. Phase 34 implementation and focused validation are
-checkpointed locally at `e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7`. The next safe action is Phase 35
-planning for document processing, object storage, and PDF pipeline hardening. No GitHub operation is
-authorized.
+checkpointed locally at `e70e18cac1bf1c7e7e304631d07f7a3bed87d1c7`. Phase 35 implementation and
+focused validation are complete and ready for the required local checkpoint under its truthful
+phase-specific message; Phase 36 follows after that checkpoint. No GitHub operation is authorized.
