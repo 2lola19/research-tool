@@ -265,3 +265,16 @@ step-progress state and output digest without embedding scientific state in an o
 adds a bounded attempt budget and requeues it. `WorkflowRecoveryOperation` makes resume and manual
 retry idempotent. `ReconciliationReport` is read-only diagnostics over workflow/attempt invariants;
 it does not silently replay writes or resolve a human checkpoint.
+
+## Phase 34 production AI execution
+
+`AIModelVersion.configuration` retains the immutable task allowlist, routing-policy version, and
+provider endpoint profile without credentials. `AIRun.policy_snapshot` pins the selected provider,
+model identity, bounded retry/timeout/token policy, tenant budget limits, circuit thresholds, and
+unknown-cost policy. Existing `AIRunAttempt` rows remain the append-only operational usage and
+failure history from which scoped budget consumption and provider/model circuit state are derived.
+
+Provider adapters are infrastructure records behind the `AIProvider` protocol; they do not create
+Articles, Studies, evidence values, workflow decisions, or canonical scientific outputs. A
+validated proposal remains separate from human acceptance and the existing scientific domain
+service.

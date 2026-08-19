@@ -151,3 +151,21 @@ confidence, and unsupported workflow/scientific/manuscript actions. Versioned po
 context hashes, citations, AI run/proposal links, validation, query status, and append-only audit
 records preserve the read-only interaction history. The offline deterministic provider remains the
 only executable provider; the copilot is not a scientific calculation or source of truth.
+
+## Phase 34: production provider adapters and governance
+
+OpenAI Chat Completions, Anthropic Messages, and Gemini Generate Content are optional protocol
+adapters behind a repository-owned bounded HTTP transport. The deterministic mock remains the
+default, and live execution requires an explicit enable flag plus an environment-backed provider
+secret. Fixed adapter endpoints, model allowlists, structured-output capability checks, bounded
+timeouts/response bytes, safe failure classification, and no-tool requests prevent arbitrary
+network or provider behavior.
+
+Task routing deterministically pins one approved model/provider to the immutable AI run policy;
+fallback is disabled. Existing immutable model/prompt versions, input/prompt/response hashes,
+append-only attempts, validation, human decisions, and domain-service acceptance remain unchanged.
+Provider usage is normalized with unknown fields preserved as unknown. Exact decimal pricing is
+recorded only when versioned prices and usage exist. Tenant token/cost budgets and provider/model
+circuit limits are checked from scoped attempt history before a run and are retained in the run
+policy snapshot. A budget, circuit, allowlist, pricing, or provider failure is an explicit failure,
+not an autonomous model switch.

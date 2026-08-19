@@ -218,3 +218,19 @@ Raw responses are checksum-verified tenant-scoped artifacts. Normalized records 
 citation import/provenance path, while provider attempts are append-only operational history.
 Provider adapters cannot alter canonical search strategy, protocol, Article, Study, screening, or
 analysis state and live network execution is not used by tests.
+
+## Phase 34 production AI provider security
+
+OpenAI, Anthropic, and Gemini adapters use fixed HTTPS endpoints and a repository-owned transport;
+arbitrary provider URLs, redirects, tools, retrieval, filesystem, shell, browser, and database
+authority are unavailable. Responses are byte-bounded and provider failures are classified without
+including response bodies or credentials in error messages. API keys are `SecretStr` settings read
+from environment-backed configuration and are never placed in model configuration, run snapshots,
+attempt history, registry responses, logs, or provenance.
+
+Live execution requires an explicit enable flag, a selected provider, an allowlisted model
+identifier, structured-output capability, and (unless explicitly governed otherwise) versioned
+input/output prices. Task routing is pinned and fallback is disabled. Organization-scoped attempt
+history enforces monthly token/cost budgets and opens a bounded provider/model circuit after
+repeated failures. Unknown usage/cost is surfaced rather than guessed; budget or circuit blocks
+fail closed. AI remains advisory and human/domain-service boundaries are unchanged.

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -18,12 +20,28 @@ from backend.app.ai.domain import (
     AIValidationStage,
     content_hash,
     estimate_cost,
+    normalize_usage,
     render_prompt,
 )
 from backend.app.ai.execution import call_with_timeout
+from backend.app.ai.governance import (
+    AIGovernanceLimits,
+    AIUsageSnapshot,
+    governance_block_reason,
+    pricing_is_complete,
+    worst_case_cost,
+)
 from backend.app.ai.persistence import SqlAlchemyAIRepository
 from backend.app.ai.provider import AIProvider, AIProviderError, ProviderRequest
+from backend.app.ai.providers import (
+    build_provider_registry,
+    configured_model_identifier,
+    configured_model_pricing,
+    provider_capability,
+)
+from backend.app.ai.queries import usage_summary
 from backend.app.ai.tasks import SEARCH_QUERY_TASK, TASKS, prompt_definition
+from backend.app.core.config import Settings, get_settings
 from backend.app.core.errors import ConflictError, ResourceNotFoundError
 from backend.app.identity.domain import ActorContext, Permission
 from backend.app.identity.service import AuthorizationService
@@ -33,6 +51,7 @@ from backend.app.reviews.service import ReviewService
 
 VALIDATOR_VERSION = "ai-structured-validator-1"
 RETRY_POLICY_VERSION = "bounded-transient-retry-1"
+ROUTING_POLICY_VERSION = "ai-routing-1"
 MAX_OUTPUT_BYTES = 32_768
 _GOVERNED_SCREENING_TASKS = {
     AITaskType.SCREENING_SUGGESTION,
@@ -51,12 +70,16 @@ class AIExecutionService:
         repository: SqlAlchemyAIRepository,
         reviews: ReviewService,
         provenance: SqlAlchemyProvenanceRepository,
-        providers: dict[str, AIProvider],
+        providers: Mapping[str, AIProvider] | None = None,
+        settings: Settings | None = None,
     ) -> None:
         self._repository = repository
         self._reviews = reviews
         self._provenance = provenance
-        self._providers = providers
+        self._settings = settings or get_settings()
+        configured = build_provider_registry(self._settings)
+        configured.update(dict(providers or {}))
+        self._providers = configured
 
     async def ensure_defaults(
         self,
@@ -68,22 +91,40 @@ class AIExecutionService:
         if task is None:
             raise ValueError(f"AI task is not enabled: {task_type.value}")
         models = await self._repository.list_models(actor.organization_id)
-        if models:
-            model = models[-1]
-        else:
+        model = next(
+            (item for item in reversed(models) if self._model_supports_task(item, task)), None
+        )
+        if model is None:
+            provider_key = self._settings.ai_provider
+            provider = self._providers.get(provider_key)
+            capability = provider_capability(provider_key)
+            if provider is None or capability is None:
+                raise ConflictError(
+                    "the selected AI provider is not configured; live execution remains opt-in"
+                )
+            task_allowlist = [item.task_type.value for item in TASKS.values()]
+            configuration = {
+                "temperature": 0.0,
+                "seed": 23,
+                "task_allowlist": task_allowlist,
+                "routing_policy_version": ROUTING_POLICY_VERSION,
+                "endpoint_profile": capability.endpoint_profile,
+            }
             definition = {
-                "provider_key": "mock",
-                "model_identifier": "deterministic-mock-v1",
-                "display_name": "Deterministic Mock",
+                "provider_key": provider_key,
+                "model_identifier": configured_model_identifier(self._settings, provider_key),
+                "display_name": f"{provider_key} configured model",
                 "configuration_version": 1,
-                "capabilities": ["structured_generation"],
+                "capabilities": list(capability.capabilities),
                 "structured_output_supported": True,
                 "context_window": 4096,
-                "pricing": {},
-                "configuration": {"temperature": 0.0, "seed": 23},
+                "pricing": configured_model_pricing(self._settings, provider_key),
+                "configuration": configuration,
                 "active": True,
                 "deprecated": False,
             }
+            if not definition["model_identifier"]:
+                raise ConflictError("the selected AI provider has no configured model identifier")
             model = await self._repository.create_model(
                 organization_id=actor.organization_id,
                 **definition,
@@ -99,6 +140,7 @@ class AIExecutionService:
                 **definition,
                 content_hash=content_hash(definition),
             )
+        self._validate_model_for_task(model, task)
         return model, prompt
 
     async def registry(self, actor: ActorContext) -> dict[str, Any]:
@@ -115,14 +157,33 @@ class AIExecutionService:
         return {
             "providers": [
                 {
-                    "key": "mock",
-                    "capabilities": ["structured_generation"],
-                    "network_required": False,
+                    "key": key,
+                    "capabilities": list(
+                        getattr(
+                            provider_capability(key), "capabilities", ("structured_generation",)
+                        )
+                    ),
+                    "network_required": bool(
+                        getattr(provider_capability(key), "network_required", False)
+                    ),
+                    "endpoint_profile": getattr(
+                        provider_capability(key), "endpoint_profile", "custom"
+                    ),
+                    "model_allowlist_configured": bool(
+                        getattr(provider, "allowed_model_identifiers", ())
+                    ),
                 }
+                for key, provider in sorted(self._providers.items())
             ],
             "models": models,
             "prompts": prompts,
             "tasks": list(TASKS.values()),
+            "routing": {
+                "policy_version": ROUTING_POLICY_VERSION,
+                "selected_provider": self._settings.ai_provider,
+                "live_execution_enabled": self._settings.ai_live_provider_execution_enabled,
+                "fallback_allowed": False,
+            },
         }
 
     async def create_and_execute(
@@ -156,6 +217,7 @@ class AIExecutionService:
             raise ResourceNotFoundError("AI model version was not found or is not allowed")
         if prompt is None or prompt.task_type is not task_type:
             raise ResourceNotFoundError("AI prompt version was not found")
+        self._validate_model_for_task(model, task)
         self._validate_input(input_data, task)
         sanitized = self._sanitize_input(input_data, task)
         rendered, prompt_hash = render_prompt(prompt, sanitized)
@@ -168,6 +230,22 @@ class AIExecutionService:
         prior = await self._repository.find_identical_run(
             actor.organization_id, review_id, task_type.value, prompt.id, model.id, input_hash
         )
+        effective_token_ceiling = per_run_token_ceiling or self._settings.ai_per_run_token_ceiling
+        if timeout_seconds > self._settings.ai_provider_timeout_seconds:
+            raise ValueError(
+                f"timeout must be at most {self._settings.ai_provider_timeout_seconds} seconds"
+            )
+        if maximum_attempts > self._settings.ai_provider_max_attempts:
+            raise ValueError(
+                f"maximum attempts must be at most {self._settings.ai_provider_max_attempts}"
+            )
+        self._check_live_pricing(model)
+        await self._check_governance(
+            actor.organization_id,
+            model,
+            reserved_tokens=effective_token_ceiling,
+        )
+        governance_limits = self._governance_limits()
         policy = AIExecutionPolicy(
             version="ai-policy-1",
             enabled=True,
@@ -175,7 +253,17 @@ class AIExecutionService:
             allowed_model_version_ids=(model.id,),
             maximum_attempts=maximum_attempts,
             timeout_seconds=timeout_seconds,
-            per_run_token_ceiling=per_run_token_ceiling,
+            per_run_token_ceiling=effective_token_ceiling,
+            routing_policy_version=ROUTING_POLICY_VERSION,
+            monthly_token_budget=governance_limits.monthly_token_budget,
+            monthly_cost_budget=(
+                str(governance_limits.monthly_cost_budget)
+                if governance_limits.monthly_cost_budget is not None
+                else None
+            ),
+            circuit_failure_threshold=governance_limits.circuit_failure_threshold,
+            circuit_cooldown_seconds=governance_limits.circuit_cooldown_seconds,
+            require_pricing_for_live_providers=self._settings.ai_require_pricing_for_live_providers,
         )
         run = await self._repository.create_run(
             organization_id=actor.organization_id,
@@ -190,9 +278,24 @@ class AIExecutionService:
                 "version": policy.version,
                 "maximum_attempts": maximum_attempts,
                 "timeout_seconds": timeout_seconds,
-                "per_run_token_ceiling": per_run_token_ceiling,
+                "per_run_token_ceiling": effective_token_ceiling,
                 "human_review_required": task.human_review_required,
                 "allow_fallback": False,
+                "routing_policy_version": ROUTING_POLICY_VERSION,
+                "provider_key": model.provider_key,
+                "model_version_id": str(model.id),
+                "model_identifier": model.model_identifier,
+                "monthly_token_budget": governance_limits.monthly_token_budget,
+                "monthly_cost_budget": (
+                    str(governance_limits.monthly_cost_budget)
+                    if governance_limits.monthly_cost_budget is not None
+                    else None
+                ),
+                "circuit_failure_threshold": governance_limits.circuit_failure_threshold,
+                "circuit_cooldown_seconds": governance_limits.circuit_cooldown_seconds,
+                "require_pricing_for_live_providers": (
+                    self._settings.ai_require_pricing_for_live_providers
+                ),
             },
             input_snapshot=snapshot,
             input_hash=input_hash,
@@ -215,9 +318,10 @@ class AIExecutionService:
         )
         provider = self._providers.get(model.provider_key)
         if provider is None:
-            raise ValueError("configured AI provider is unavailable")
+            raise ConflictError("configured AI provider is unavailable")
         proposal: AIOutputProposal | None = None
         for attempt_number in range(1, maximum_attempts + 1):
+            attempt_usage: dict[str, int | None] = normalize_usage(None)
             try:
                 result = await call_with_timeout(
                     provider,
@@ -231,13 +335,19 @@ class AIExecutionService:
                         temperature=0.0,
                         top_p=None,
                         seed=23,
+                        max_output_tokens=effective_token_ceiling,
                     ),
                     timeout_seconds,
                 )
-                total = result.usage.get("input_tokens", 0) or 0
-                total += result.usage.get("output_tokens", 0) or 0
-                if per_run_token_ceiling is not None and total > per_run_token_ceiling:
-                    raise ValueError("provider usage exceeded the per-run token ceiling")
+                attempt_usage = normalize_usage(result.usage)
+                total = (attempt_usage.get("input_tokens") or 0) + (
+                    attempt_usage.get("output_tokens") or 0
+                )
+                if total > effective_token_ceiling:
+                    raise AIProviderError(
+                        AIProviderErrorKind.POLICY_BLOCKED,
+                        "provider usage exceeded the per-run token ceiling",
+                    )
                 response_hash = content_hash(result.output)
                 await self._repository.append_attempt(
                     organization_id=actor.organization_id,
@@ -252,8 +362,8 @@ class AIExecutionService:
                     provider_request_id=result.provider_request_id,
                     response_snapshot=result.output,
                     response_hash=response_hash,
-                    usage=result.usage,
-                    estimated_cost=estimate_cost(result.usage, model.pricing),
+                    usage=attempt_usage,
+                    estimated_cost=estimate_cost(attempt_usage, model.pricing),
                     duration_ms=result.duration_ms,
                 )
                 errors = self._validate_output(result.output, task, sanitized)
@@ -333,8 +443,8 @@ class AIExecutionService:
                     provider_request_id=None,
                     response_snapshot=None,
                     response_hash=None,
-                    usage={},
-                    estimated_cost=None,
+                    usage=attempt_usage,
+                    estimated_cost=estimate_cost(attempt_usage, model.pricing),
                     duration_ms=None,
                 )
                 transient = exc.kind in {
@@ -361,12 +471,140 @@ class AIExecutionService:
                     actor, review_id, run.id, "AI_RUN_FAILED", {"error_kind": exc.kind.value}
                 )
                 return run, None
+            except (TypeError, ValueError):
+                await self._repository.append_attempt(
+                    organization_id=actor.organization_id,
+                    review_id=review_id,
+                    ai_run_id=run.id,
+                    attempt_number=attempt_number,
+                    provider_key=model.provider_key,
+                    model_identifier=model.model_identifier,
+                    state=AIAttemptState.FAILED.value,
+                    error_kind=AIProviderErrorKind.POLICY_BLOCKED.value,
+                    error_message="AI execution policy rejected the provider result",
+                    provider_request_id=None,
+                    response_snapshot=None,
+                    response_hash=None,
+                    usage=attempt_usage,
+                    estimated_cost=estimate_cost(attempt_usage, model.pricing),
+                    duration_ms=None,
+                )
+                run = await self._repository.update_run(
+                    run.id,
+                    actor.organization_id,
+                    review_id,
+                    state=AIRunState.FAILED.value,
+                    failure_reason="AI execution policy rejected the provider result",
+                    completed_at=datetime.now(UTC),
+                )
+                await self._audit(
+                    actor,
+                    review_id,
+                    run.id,
+                    "AI_RUN_FAILED",
+                    {"error_kind": AIProviderErrorKind.POLICY_BLOCKED.value},
+                )
+                return run, None
         return run, proposal
+
+    def _model_supports_task(self, model: Any, task: AITaskDefinition) -> bool:
+        if not model.active or model.deprecated:
+            return False
+        provider = self._providers.get(model.provider_key)
+        capability = provider_capability(model.provider_key)
+        if provider is None or capability is None:
+            return False
+        if not set(task.required_capabilities).issubset(set(model.capabilities)):
+            return False
+        if not model.structured_output_supported:
+            return False
+        task_allowlist = model.configuration.get("task_allowlist", [])
+        if task_allowlist and task.task_type.value not in task_allowlist:
+            return False
+        allowed_models = getattr(provider, "allowed_model_identifiers", ())
+        return not allowed_models or model.model_identifier in allowed_models
+
+    def _validate_model_for_task(self, model: Any, task: AITaskDefinition) -> None:
+        if not self._model_supports_task(model, task):
+            raise ConflictError("AI model is not allowlisted for this task or provider")
+
+    def _check_live_pricing(self, model: Any) -> None:
+        if (
+            model.provider_key != "mock"
+            and self._settings.ai_require_pricing_for_live_providers
+            and not pricing_is_complete(model.pricing)
+        ):
+            raise ConflictError(
+                "live AI execution requires versioned input and output pricing for the selected "
+                "model"
+            )
+
+    def _governance_limits(self) -> AIGovernanceLimits:
+        monthly_cost_budget = self._settings.ai_monthly_cost_budget
+        return AIGovernanceLimits(
+            monthly_token_budget=self._settings.ai_monthly_token_budget,
+            monthly_cost_budget=(
+                Decimal(str(monthly_cost_budget)) if monthly_cost_budget is not None else None
+            ),
+            circuit_failure_threshold=self._settings.ai_circuit_failure_threshold,
+            circuit_cooldown_seconds=self._settings.ai_circuit_cooldown_seconds,
+            allow_unknown_cost=self._settings.ai_allow_unknown_cost,
+        )
+
+    async def _check_governance(
+        self,
+        organization_id: UUID,
+        model: Any,
+        *,
+        reserved_tokens: int,
+    ) -> None:
+        snapshot = AIUsageSnapshot(
+            input_tokens=0,
+            output_tokens=0,
+            known_cost=Decimal("0"),
+            unknown_cost_attempts=0,
+            consecutive_failures=0,
+            last_failure_at=None,
+        )
+        snapshot_loader = getattr(self._repository, "governance_snapshot", None)
+        if snapshot_loader is not None:
+            now = datetime.now(UTC)
+            snapshot = await snapshot_loader(
+                organization_id,
+                provider_key=model.provider_key,
+                model_identifier=model.model_identifier,
+                period_start=datetime(now.year, now.month, 1, tzinfo=UTC),
+            )
+        limits = self._governance_limits()
+        reason = governance_block_reason(
+            snapshot,
+            limits,
+            reserved_tokens=reserved_tokens,
+            reserved_cost=worst_case_cost(reserved_tokens, model.pricing),
+            now=datetime.now(UTC),
+        )
+        if reason is not None:
+            raise ConflictError(reason)
 
     async def list_runs(self, actor: ActorContext, review_id: UUID) -> list[AIRun]:
         await self._reviews.get(actor, review_id)
         runs = await self._repository.list_runs(actor.organization_id, review_id)
         return [item for item in runs if item.task_type not in _GOVERNED_SCREENING_TASKS]
+
+    async def usage(self, actor: ActorContext, review_id: UUID) -> dict[str, Any]:
+        await self._reviews.get(actor, review_id)
+        return {
+            "summary": await usage_summary(
+                self._repository.session, actor.organization_id, review_id
+            ),
+            "policy": {
+                "monthly_token_budget": self._settings.ai_monthly_token_budget,
+                "monthly_cost_budget": self._settings.ai_monthly_cost_budget,
+                "circuit_failure_threshold": self._settings.ai_circuit_failure_threshold,
+                "circuit_cooldown_seconds": self._settings.ai_circuit_cooldown_seconds,
+                "allow_unknown_cost": self._settings.ai_allow_unknown_cost,
+            },
+        }
 
     async def proposal(
         self, actor: ActorContext, review_id: UUID, proposal_id: UUID

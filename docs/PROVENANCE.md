@@ -199,3 +199,17 @@ scoped and append-only, and a partial result is represented as `PARTIAL` with th
 and imported discovery links intact. Provider retries never overwrite an earlier attempt, change
 the canonical query, merge Articles, or bypass Study, screening, human-review, or analysis
 boundaries.
+
+## Production AI provider provenance
+
+Each Phase 34 AI run retains the selected provider key, immutable model version, task/prompt
+versions, routing-policy version, bounded timeout/retry/token policy, budget/circuit policy, input
+and rendered-prompt hashes, and the normal AI provenance/audit chain. Each provider attempt retains
+the normalized usage snapshot, request identifier when supplied, response hash, exact structured
+response snapshot, duration, estimated cost when pricing and usage are both known, or an explicit
+unknown-cost state. Failure attempts retain only safe classification/message metadata.
+
+Provider credentials, authorization headers, arbitrary endpoint URLs, raw error bodies, and secret
+configuration are excluded from provenance. Usage and circuit reads repeat organization/Review
+scope; they describe operational execution and spend governance, not scientific evidence. No model
+response bypasses validation, human acceptance, or the existing canonical scientific service.

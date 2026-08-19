@@ -166,3 +166,12 @@ fixture adapters behind a bounded allowlisted HTTP transport. It preserves exact
 queries and filters, raw response artifact checksums, normalized citation-import provenance, and
 immutable provider attempt history. Live execution remains explicit opt-in and disabled by default;
 credentials, external network behavior, and production provider operations remain deployment gates.
+
+## Phase 34 complete: production AI provider integrations and governance
+
+Phase 34 adds offline-safe protocol adapters for OpenAI, Anthropic, and Gemini, a fixed bounded HTTP
+transport, explicit environment-backed live opt-in, task/model allowlists, deterministic routing
+without silent fallback, normalized usage, exact known-cost accounting, tenant token/cost budgets,
+provider/model circuit limits, and a Review-scoped usage endpoint. Paid credentials, live network
+behavior, and PostgreSQL concurrency remain deployment gates; canonical scientific acceptance is
+unchanged.

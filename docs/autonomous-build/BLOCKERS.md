@@ -133,3 +133,30 @@ without ACL or lock-file surgery.
 - PASS - local implementation commit `1687da9d5f4da9332786692e5085a856848b9c99` exists and matches
   the validated Phase 33 scope. Execution state reconciliation records the phase as `CHECKPOINTED`;
   Phase 34 is the next resume point. No GitHub operation was performed.
+
+## Phase 34 validation conditions
+
+- Repository Ruff/format, strict mypy, compile/import, existing AI unit coverage, new provider and
+  governance fixtures, AI foundation integration, API/config checks, and existing migration gates
+  pass. Phase 34 adds no migration and keeps the schema head at `20260819_0034`.
+- Scientific review: provider adapters remain advisory infrastructure; deterministic task validators,
+  human acceptance, existing scientific services, Article/Study separation, workflow state, and
+  provenance boundaries are unchanged. No autonomous scientific decision or silent fallback exists.
+- Security/provenance review: live execution is disabled by default; fixed provider endpoints,
+  environment-only `SecretStr` keys, model allowlists, bounded HTTP responses/timeouts, safe error
+  taxonomy, normalized usage, tenant budgets, circuit limits, and secret-safe registry/usage output
+  pass.
+- The combined AI integration shard emitted no output and timed out after 300 seconds; its exact
+  pytest/python descendants were inspected and safely terminated. This is
+  `ENVIRONMENT_BLOCKED_TIMEOUT_NO_OUTPUT_300_SECONDS`, not a test pass.
+- The full `pytest -q` invocation emitted no output and timed out after 394 seconds; its exact
+  pytest/python descendants were inspected and safely terminated. This is
+  `ENVIRONMENT_BLOCKED_TIMEOUT_NO_OUTPUT_394_SECONDS`, not a test pass.
+- Live credentials, paid calls, external network behavior, provider terms, Docker, PostgreSQL
+  concurrency, and production operations remain deployment/environment gates. No GitHub operation
+  is authorized.
+
+## Phase 34 implementation checkpoint readiness
+
+- Phase 34 implementation and required scientific/security/provenance reviews are complete; the
+  validated local Git checkpoint checklist is next.

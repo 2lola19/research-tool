@@ -40,6 +40,10 @@ def test_ai_proposal_requires_human_decision_and_preserves_tenant_boundaries(
     result = generated.json()
     assert result["run"]["state"] == "SUCCEEDED"
     assert result["proposal"]["state"] == "PENDING_REVIEW"
+    usage = tenant_api.client.get(f"/api/v1/ai/reviews/{review_id}/usage", headers=owner)
+    assert usage.status_code == 200, usage.text
+    assert usage.json()["summary"]["attempts"] >= 1
+    assert usage.json()["policy"]["allow_unknown_cost"] is False
     after_generation = tenant_api.client.get(
         f"/api/v1/search-strategies/reviews/{review_id}/versions", headers=owner
     ).json()

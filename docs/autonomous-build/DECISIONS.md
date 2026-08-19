@@ -81,6 +81,22 @@ by default; live providers and arbitrary retrieval remain deferred.
 - ADR-032 records the boundary. HTTPX is accepted only as an infrastructure transport dependency;
   live provider calls remain a deployment gate and are not used in tests.
 
+## 2026-08-19 - Phase 34 production AI provider boundary
+
+- OpenAI Chat Completions, Anthropic Messages, and Gemini Generate Content use repository-owned
+  provider adapters and a bounded HTTP transport. Fixed HTTPS endpoints, response limits, timeout,
+  safe status classification, and no-tool structured requests keep vendor behavior outside domain
+  logic; no provider SDK or arbitrary URL is accepted.
+- Live execution requires an explicit enable flag and environment-backed secret. Provider/model
+  allowlists and structured-generation capabilities are checked before the run; task routing pins
+  one model/provider in the immutable policy snapshot, and fallback is disabled.
+- Existing append-only AI attempts are the usage/cost and failure history. Provider usage is
+  normalized without inventing missing fields; exact decimal cost is recorded only with versioned
+  prices and known usage. Tenant token/cost budgets and bounded provider/model circuits fail closed.
+- AI output remains advisory. Existing deterministic validators, human decisions, provenance, audit,
+  workflow state, and scientific domain services remain the only canonical acceptance boundaries.
+  ADR-033 records the decision; live credentials and paid/network validation remain deferred.
+
 ## 2026-08-19 - Phase 31 durable worker boundary
 
 - Durable execution extends the existing workflow job contract with explicit payload schema/version,

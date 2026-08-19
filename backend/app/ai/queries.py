@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -60,20 +61,27 @@ async def usage_summary(
     totals = {
         "input_tokens": 0,
         "output_tokens": 0,
+        "total_tokens": 0,
         "cached_tokens": 0,
         "reasoning_tokens": 0,
     }
     attempts = 0
     unknown_cost_attempts = 0
-    known_cost = 0.0
+    known_cost = Decimal("0")
     for row in rows:
         attempts += 1
         for key in totals:
             totals[key] += int(row.usage.get(key) or 0)
         if row.estimated_cost is None:
-            unknown_cost_attempts += 1
+            if row.state == "SUCCEEDED" and (
+                row.usage.get("input_tokens") or row.usage.get("output_tokens")
+            ):
+                unknown_cost_attempts += 1
         else:
-            known_cost += float(row.estimated_cost)
+            try:
+                known_cost += Decimal(str(row.estimated_cost))
+            except Exception:
+                unknown_cost_attempts += 1
     run_count = len(
         list(
             await session.scalars(

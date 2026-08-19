@@ -37,6 +37,7 @@ Last updated: 2026-08-19
 | Governed AI Risk-of-Bias Assistance (Phase 27) | IMPLEMENTED | Instrument-version-pinned signalling-answer proposals, Study Family/document/parser/chunk provenance, deterministic evidence and declarative-rule validation, blinded/assisted reveal, human disposition through the existing RoB service, abstention/high-risk evaluation, migration, API, UI, and tenant tests. The bundled instrument remains a demonstration framework, not complete RoB 2. |
 
 | Scholarly Search Provider Integrations (Phase 33) | IMPLEMENTED | Provider-neutral OpenAlex, PubMed, Europe PMC, and deterministic fixture adapters; bounded allowlisted HTTP transport; normalized citation import; raw artifact checksums; immutable provider-attempt provenance; explicit opt-in API/configuration; deterministic unit, integration, and migration coverage. Live network execution remains an environment/deployment gate. |
+| Production AI Provider Integrations and Governance (Phase 34) | IMPLEMENTED | Fixed OpenAI/Anthropic/Gemini adapters behind a bounded transport; explicit live opt-in; deterministic task/model routing and allowlists; normalized usage, exact known-cost accounting, tenant budget/circuit checks, usage API, and deterministic no-network coverage. Live credentials/network and PostgreSQL concurrency remain deployment gates. |
 
 ## Validation evidence
 
@@ -268,3 +269,13 @@ rate-limit/retry classification, polite identification, secret-safe request fing
 normalization, raw artifact integrity, tenant-scoped citation import, and immutable provider
 attempt history are in place. Provider execution is explicit and disabled by default; live network
 credentials, PostgreSQL behavior, and external service operations remain deployment gates.
+
+## Phase 34 production AI provider integrations and governance
+
+Phase 34 adds fixed OpenAI, Anthropic, and Gemini provider adapters behind a bounded provider
+transport, explicit secret/enablement configuration, task/model allowlists, deterministic routing
+without fallback, normalized usage, exact known-cost handling, tenant token/cost budgets, and
+provider/model circuit checks derived from append-only attempt history. The deterministic mock and
+all provider tests remain offline; no credentials or paid calls are included. The full AI integration
+shard timed out without output after 300 seconds in this environment and is recorded as an
+environment limitation; focused AI unit and foundation integration tests pass.

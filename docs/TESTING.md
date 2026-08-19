@@ -227,3 +227,14 @@ SearchExecution/citation/raw-artifact/provenance services, append-only provider-
 Review/tenant authorization. Migration coverage upgrades and downgrades the linear SQLite chain
 through `20260819_0034`. Live provider credentials, network behavior, PostgreSQL concurrency, and
 external service etiquette remain deployment gates.
+
+## Phase 34 production AI provider coverage
+
+Unit coverage exercises OpenAI, Anthropic, and Gemini response envelopes with fake transports,
+provider-specific usage normalization, structured JSON rejection, status/error classification,
+response bounds, model allowlist behavior, explicit live opt-in, and secret-safe error text.
+Governance unit coverage exercises exact pricing/unknown-cost behavior, monthly token/cost budgets,
+and bounded provider/model circuit opening. Existing AI unit coverage remains green, and the AI
+foundation integration test covers the Review-scoped usage endpoint and policy response. No live
+provider call or credential is used. The combined AI integration shard timed out without output
+after 300 seconds and is recorded as `ENVIRONMENT_BLOCKED`, not as a pass.

@@ -89,6 +89,15 @@ async def list_runs(
     return [asdict(item) for item in await _service(session).list_runs(actor, review_id)]
 
 
+@router.get("/reviews/{review_id}/usage")
+async def usage_summary_route(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    review_id: Annotated[UUID, Path()],
+) -> dict[str, Any]:
+    return await _service(session).usage(actor, review_id)
+
+
 @router.get("/reviews/{review_id}/proposals/{proposal_id}")
 async def get_proposal(
     actor: ActorContextDependency,

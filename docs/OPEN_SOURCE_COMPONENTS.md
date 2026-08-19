@@ -137,3 +137,10 @@ license. OpenAlex, PubMed, Europe PMC, and fixture adapters remain repository-ow
 implementations; no provider SDK, crawler, embedding service, paid API client, or credential is
 introduced. HTTPX is isolated behind the `SearchHttpTransport` boundary and is not part of the
 canonical scientific model.
+
+## Phase 34 dependency impact
+
+Production AI adapters reuse HTTPX and the existing Python/FastAPI/Pydantic/SQLAlchemy stack;
+there is no OpenAI, Anthropic, or Google vendor SDK. HTTPX remains isolated behind the
+repository-owned `AIHTTPTransport` boundary. Provider keys, paid service credentials, model
+licenses, and live network access are deployment configuration rather than committed dependencies.

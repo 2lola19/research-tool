@@ -17,11 +17,19 @@ class ProviderRequest:
     temperature: float
     top_p: float | None
     seed: int | None
+    max_output_tokens: int | None = None
 
 
 class AIProviderError(RuntimeError):
-    def __init__(self, kind: AIProviderErrorKind, message: str) -> None:
+    def __init__(
+        self,
+        kind: AIProviderErrorKind,
+        message: str,
+        *,
+        metadata: dict[str, str | int | float | bool] | None = None,
+    ) -> None:
         self.kind = kind
+        self.metadata = dict(metadata or {})
         super().__init__(message)
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -66,6 +66,8 @@ class AIProviderErrorKind(StrEnum):
     RATE_LIMIT = "RATE_LIMIT"
     UNAVAILABLE = "UNAVAILABLE"
     PERMANENT = "PERMANENT"
+    INVALID_RESPONSE = "INVALID_RESPONSE"
+    POLICY_BLOCKED = "POLICY_BLOCKED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +82,12 @@ class AIExecutionPolicy:
     human_review_required: bool = True
     allow_fallback: bool = False
     data_classification: str = "STANDARD_RESEARCH_DATA"
+    routing_policy_version: str = "ai-routing-1"
+    monthly_token_budget: int | None = None
+    monthly_cost_budget: str | None = None
+    circuit_failure_threshold: int = 3
+    circuit_cooldown_seconds: int = 300
+    require_pricing_for_live_providers: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,6 +115,7 @@ class ModelVersion:
     deprecated: bool
     content_hash: str
     created_at: datetime
+    configuration: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,6 +195,39 @@ def content_hash(value: Any) -> str:
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
+def normalize_usage(usage: dict[str, Any] | None) -> dict[str, int | None]:
+    """Normalize provider-specific usage fields without inventing missing values."""
+
+    source = usage or {}
+
+    def integer(*keys: str) -> int | None:
+        for key in keys:
+            value = source.get(key)
+            if value is None:
+                continue
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                return None
+            return int(value)
+        return None
+
+    input_tokens = integer("input_tokens", "prompt_tokens", "inputTokenCount", "promptTokenCount")
+    output_tokens = integer(
+        "output_tokens", "completion_tokens", "outputTokenCount", "candidatesTokenCount"
+    )
+    cached_tokens = integer("cached_tokens", "cache_read_input_tokens", "cachedContentTokenCount")
+    reasoning_tokens = integer("reasoning_tokens", "reasoningTokenCount")
+    total_tokens = integer("total_tokens", "totalTokenCount")
+    if total_tokens is None and input_tokens is not None and output_tokens is not None:
+        total_tokens = input_tokens + output_tokens
+    return {
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+        "cached_tokens": cached_tokens,
+        "reasoning_tokens": reasoning_tokens,
+    }
+
+
 def estimate_cost(usage: dict[str, int | None], pricing: dict[str, Any]) -> str | None:
     input_price = pricing.get("input_cost_per_token")
     output_price = pricing.get("output_cost_per_token")
@@ -195,9 +237,14 @@ def estimate_cost(usage: dict[str, int | None], pricing: dict[str, Any]) -> str 
     output_tokens = usage.get("output_tokens")
     if input_tokens is None or output_tokens is None:
         return None
-    return str(
-        Decimal(str(input_price)) * input_tokens + Decimal(str(output_price)) * output_tokens
-    )
+    try:
+        parsed_input_price = Decimal(str(input_price))
+        parsed_output_price = Decimal(str(output_price))
+    except Exception:
+        return None
+    if parsed_input_price < 0 or parsed_output_price < 0:
+        return None
+    return str(parsed_input_price * input_tokens + parsed_output_price * output_tokens)
 
 
 def render_prompt(template: PromptTemplateVersion, variables: dict[str, Any]) -> tuple[str, str]:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -30,6 +31,7 @@ from backend.app.ai.domain import (
     ModelVersion,
     PromptTemplateVersion,
 )
+from backend.app.ai.governance import AIUsageSnapshot
 from backend.app.db.base import Base
 
 
@@ -416,6 +418,64 @@ class SqlAlchemyAIRepository:
             .limit(1)
         )
 
+    async def governance_snapshot(
+        self,
+        organization_id: UUID,
+        *,
+        provider_key: str,
+        model_identifier: str,
+        period_start: datetime,
+    ) -> AIUsageSnapshot:
+        rows = list(
+            await self.session.scalars(
+                select(AIRunAttemptRecord)
+                .where(
+                    AIRunAttemptRecord.organization_id == organization_id,
+                    AIRunAttemptRecord.created_at >= period_start,
+                )
+                .order_by(AIRunAttemptRecord.created_at.desc(), AIRunAttemptRecord.id.desc())
+            )
+        )
+        input_tokens = 0
+        output_tokens = 0
+        known_cost = Decimal("0")
+        unknown_cost_attempts = 0
+        for row in rows:
+            row_input_tokens = int(row.usage.get("input_tokens") or 0)
+            row_output_tokens = int(row.usage.get("output_tokens") or 0)
+            input_tokens += row_input_tokens
+            output_tokens += row_output_tokens
+            if row.estimated_cost is None:
+                if row.state == "SUCCEEDED" and (row_input_tokens or row_output_tokens):
+                    unknown_cost_attempts += 1
+            else:
+                try:
+                    known_cost += Decimal(str(row.estimated_cost))
+                except Exception:
+                    unknown_cost_attempts += 1
+
+        targeted = [
+            row
+            for row in rows
+            if row.provider_key == provider_key and row.model_identifier == model_identifier
+        ]
+        consecutive_failures = 0
+        last_failure_at: datetime | None = None
+        for row in targeted:
+            if row.state == "SUCCEEDED":
+                break
+            consecutive_failures += 1
+            if last_failure_at is None:
+                last_failure_at = row.created_at
+        return AIUsageSnapshot(
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            known_cost=known_cost,
+            unknown_cost_attempts=unknown_cost_attempts,
+            consecutive_failures=consecutive_failures,
+            last_failure_at=last_failure_at,
+        )
+
     async def append_attempt(self, **values: Any) -> None:
         self.session.add(AIRunAttemptRecord(**values))
         await self.session.flush()
@@ -491,6 +551,7 @@ def _model(row: AIModelVersionRecord) -> ModelVersion:
         deprecated=row.deprecated,
         content_hash=row.content_hash,
         created_at=row.created_at or datetime.now(UTC),
+        configuration=row.configuration,
     )
 
 

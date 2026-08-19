@@ -3,7 +3,8 @@
 Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpointed locally at
 `f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 checkpointed locally at
 `c59a340`; Phase 31 checkpointed locally at `65de1a9`; Phase 32 checkpointed locally at
-`b5039cd`; Phase 33 is checkpointed locally at `1687da9`; Phase 34 is next
+`b5039cd`; Phase 33 is checkpointed locally at `1687da9`; Phase 34 implementation is complete and
+validation/checkpointing is in progress
 
 ## Reconciled baseline and sequencing
 
@@ -297,6 +298,14 @@ Security/provenance/tests: secret/config audits, provider/model/prompt/task iden
 separation from scientific data, explicit fallback policy, tenant budgets and failure classification.
 ADR-033/docs. Live provider validation is deferred without credentials/authorization.
 
+Implementation status: complete. Fixed OpenAI, Anthropic, and Gemini protocol adapters, bounded
+HTTP transport, explicit live opt-in, model/task allowlists, deterministic no-fallback routing,
+normalized usage, exact known-cost handling, tenant budget/circuit checks, Review-scoped usage
+reporting, ADR-033, and deterministic no-network tests are implemented. Focused AI validation
+passes; the combined AI integration shard's no-output timeout is documented as an environment
+limitation. The validated local Phase 34 checkpoint is pending its phase-specific Git checklist.
+No live provider call or GitHub operation is authorized.
+
 ## Phase 35 — Production Document Processing/Object Storage/PDF Pipeline Hardening
 
 Objective: harden immutable document acquisition, object storage, parser runs, evidence manifests,
@@ -408,4 +417,5 @@ cover OpenAlex, PubMed, Europe PMC, fixture acquisition, bounded HTTP safety, no
 imports, raw artifacts, and provider-attempt provenance; the full-suite no-output timeout remains
 truthfully documented. The validated Phase 33 implementation checkpoint is local commit
 `1687da9d5f4da9332786692e5085a856848b9c99`. The next safe action is Phase 34 planning for
-production AI provider governance. No GitHub operation is authorized.
+production AI provider governance. Phase 34 implementation and focused validation are now complete;
+the next safe action is the validated Phase 34 local checkpoint. No GitHub operation is authorized.

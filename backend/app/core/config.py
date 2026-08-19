@@ -24,6 +24,39 @@ class Settings(BaseSettings):
     )
     database_echo: bool = False
     ai_provider: Literal["mock", "openai", "anthropic", "gemini"] = "mock"
+    ai_live_provider_execution_enabled: bool = False
+    ai_provider_user_agent: str = Field(
+        default="ResearchTool/0.1 (AI provider adapter)", min_length=1, max_length=200
+    )
+    ai_provider_timeout_seconds: int = Field(default=60, ge=1, le=300)
+    ai_provider_max_attempts: int = Field(default=5, ge=1, le=5)
+    ai_per_run_token_ceiling: int = Field(default=16_384, ge=1, le=1_000_000)
+    ai_provider_max_response_bytes: int = Field(default=2_000_000, ge=1024, le=10_000_000)
+    ai_openai_api_key: SecretStr | None = Field(default=None, repr=False)
+    ai_anthropic_api_key: SecretStr | None = Field(default=None, repr=False)
+    ai_gemini_api_key: SecretStr | None = Field(default=None, repr=False)
+    ai_openai_model_identifier: str = Field(default="gpt-4o-mini", min_length=1, max_length=160)
+    ai_anthropic_model_identifier: str = Field(
+        default="claude-3-5-haiku-latest", min_length=1, max_length=160
+    )
+    ai_gemini_model_identifier: str = Field(
+        default="gemini-2.0-flash", min_length=1, max_length=160
+    )
+    ai_openai_allowed_models: list[str] = Field(default_factory=list)
+    ai_anthropic_allowed_models: list[str] = Field(default_factory=list)
+    ai_gemini_allowed_models: list[str] = Field(default_factory=list)
+    ai_openai_input_cost_per_token: float | None = Field(default=None, ge=0)
+    ai_openai_output_cost_per_token: float | None = Field(default=None, ge=0)
+    ai_anthropic_input_cost_per_token: float | None = Field(default=None, ge=0)
+    ai_anthropic_output_cost_per_token: float | None = Field(default=None, ge=0)
+    ai_gemini_input_cost_per_token: float | None = Field(default=None, ge=0)
+    ai_gemini_output_cost_per_token: float | None = Field(default=None, ge=0)
+    ai_monthly_token_budget: int | None = Field(default=1_000_000, ge=1)
+    ai_monthly_cost_budget: float | None = Field(default=None, ge=0)
+    ai_circuit_failure_threshold: int = Field(default=3, ge=1, le=20)
+    ai_circuit_cooldown_seconds: int = Field(default=300, ge=1, le=86_400)
+    ai_allow_unknown_cost: bool = False
+    ai_require_pricing_for_live_providers: bool = True
     object_storage_provider: Literal["local", "s3"] = "local"
     local_storage_path: Path = Path("data/objects")
     max_document_file_size_bytes: int = Field(default=25_000_000, ge=1024, le=200_000_000)

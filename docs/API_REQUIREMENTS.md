@@ -250,3 +250,16 @@ destructive Article merges. Results retain provider totals, `COMPLETED` versus `
 raw response artifact identity, import linkage, provider/version provenance, and safe attempt
 history. Provider credentials, when needed, are read only from environment-backed secret
 settings and are never returned.
+
+## Phase 34 production AI provider and governance API
+
+The existing `/api/v1/ai/registry` response exposes safe provider capability, routing-policy, model,
+prompt, and task metadata without secrets. `GET /api/v1/ai/reviews/{review_id}/usage` returns the
+Review-scoped normalized attempt/run totals, known estimated cost, unknown-cost count, and the
+configured token/cost/circuit policy. The route repeats active Review authorization and never
+returns prompt secrets, provider credentials, raw error bodies, or lease capabilities.
+
+AI runs may use OpenAI, Anthropic, or Gemini only when deployment configuration explicitly enables
+the provider and supplies an environment-backed secret. Model identifiers must be allowlisted and
+the selected task/provider/model are pinned in the run. A provider, budget, circuit, timeout, or
+pricing policy failure is reported explicitly; no endpoint silently falls back to another model.

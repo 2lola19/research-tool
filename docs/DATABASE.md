@@ -273,3 +273,14 @@ intent state. Raw provider bytes remain in the existing checksum-verified object
 normalized citation records are created through the existing citation-import tables and retain
 their own provenance. The linear migration upgrades and downgrades through `0034`; live PostgreSQL
 provider/network behavior remains a production gate.
+
+## Phase 34 AI provider governance metadata
+
+Phase 34 intentionally reuses the immutable `ai_model_versions`, `ai_execution_runs`, and
+`ai_run_attempts` tables. Model configuration stores task/model allowlists and an endpoint profile;
+run `policy_snapshot` stores the selected provider/model, routing version, bounded limits, and
+budget/circuit policy; attempt `usage`, `estimated_cost`, provider/model, and failure fields remain
+append-only operational history. Tenant-wide monthly usage and provider/model circuit state are
+derived only from organization-scoped attempt predicates, so workflow state, scientific data, and
+provenance remain separate. No provider credential or raw HTTP error body is persisted. No new
+migration is required for this phase.
