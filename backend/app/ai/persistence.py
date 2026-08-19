@@ -11,6 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -64,7 +65,9 @@ class AIModelVersionRecord(Base):
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     deprecated: Mapped[bool] = mapped_column(Boolean, default=False)
     content_hash: Mapped[str] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIPromptTemplateVersionRecord(Base):
@@ -92,13 +95,16 @@ class AIPromptTemplateVersionRecord(Base):
     status: Mapped[str] = mapped_column(String(30))
     content_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIExecutionRunRecord(Base):
     __tablename__ = "ai_execution_runs"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_execution_runs_tenant"),
+        Index("ix_ai_execution_runs_review", "organization_id", "review_id", "created_at"),
         ForeignKeyConstraint(
             ["review_id", "organization_id"],
             ["reviews.id", "reviews.organization_id"],
@@ -147,7 +153,9 @@ class AIExecutionRunRecord(Base):
     identical_prior_run_id: Mapped[UUID | None] = mapped_column(nullable=True)
     failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -182,7 +190,9 @@ class AIRunAttemptRecord(Base):
     usage: Mapped[dict[str, Any]] = mapped_column(JSON)
     estimated_cost: Mapped[str | None] = mapped_column(String(80), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIValidationResultRecord(Base):
@@ -207,13 +217,20 @@ class AIValidationResultRecord(Base):
     valid: Mapped[bool] = mapped_column(Boolean)
     errors: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
     validator_version: Mapped[str] = mapped_column(String(80))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIOutputProposalRecord(Base):
     __tablename__ = "ai_output_proposals"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_output_proposal_tenant"),
+        CheckConstraint(
+            "model_reported_confidence IS NULL OR "
+            "(model_reported_confidence >= 0 AND model_reported_confidence <= 1)",
+            name="ck_ai_proposal_confidence",
+        ),
         ForeignKeyConstraint(
             ["ai_run_id", "organization_id", "review_id"],
             [
@@ -236,7 +253,9 @@ class AIOutputProposalRecord(Base):
     evidence_references: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
     model_reported_confidence: Mapped[float | None] = mapped_column(nullable=True)
     response_hash: Mapped[str] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIReviewDecisionRecord(Base):
@@ -270,7 +289,9 @@ class AIReviewDecisionRecord(Base):
     canonical_subject_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     canonical_subject_id: Mapped[UUID | None] = mapped_column(nullable=True)
     reviewer_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 def _reject_mutation(_: Mapper[Any], __: object, ___: object) -> None:

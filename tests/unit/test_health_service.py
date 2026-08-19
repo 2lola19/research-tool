@@ -20,12 +20,12 @@ async def test_database_health_can_require_current_migration() -> None:
     try:
         async with database_engine.begin() as connection:
             await connection.execute(text("CREATE TABLE alembic_version (version_num TEXT)"))
-            await connection.execute(text("INSERT INTO alembic_version VALUES ('20260819_0035')"))
+            await connection.execute(text("INSERT INTO alembic_version VALUES ('20260819_0036')"))
 
         assert await HealthService(
             database_engine,
             require_migrations=True,
-            expected_revision="20260819_0035",
+            expected_revision="20260819_0036",
         ).database_is_ready()
         assert not await HealthService(
             database_engine,

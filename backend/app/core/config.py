@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     )
     database_echo: bool = False
     database_require_migrations: bool = False
-    database_expected_revision: str = Field(default="20260819_0035", min_length=13, max_length=13)
+    database_expected_revision: str = Field(default="20260819_0036", min_length=13, max_length=13)
     ai_provider: Literal["mock", "openai", "anthropic", "gemini"] = "mock"
     ai_live_provider_execution_enabled: bool = False
     ai_provider_user_agent: str = Field(

@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -73,6 +74,12 @@ class AICopilotQueryRecord(Base):
     __tablename__ = "ai_copilot_queries"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_copilot_query_tenant"),
+        Index(
+            "ix_ai_copilot_queries_review_created",
+            "organization_id",
+            "review_id",
+            "created_at",
+        ),
         ForeignKeyConstraint(
             ["review_id", "organization_id"],
             ["reviews.id", "reviews.organization_id"],
@@ -111,6 +118,10 @@ class AICopilotQueryRecord(Base):
         ),
         CheckConstraint("length(context_hash) = 64", name="ck_ai_copilot_context_hash"),
         CheckConstraint("length(query_text) BETWEEN 1 AND 4000", name="ck_ai_copilot_query_text"),
+        CheckConstraint(
+            "task_key IN ('PROJECT_STATUS','WORKFLOW_BLOCKERS','PROVENANCE_NAVIGATION')",
+            name="ck_ai_copilot_task_key",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)

@@ -18,7 +18,7 @@ class HealthService:
         database_engine: AsyncEngine,
         *,
         require_migrations: bool = False,
-        expected_revision: str = "20260819_0035",
+        expected_revision: str = "20260819_0036",
     ) -> None:
         self._database_engine = database_engine
         self._require_migrations = require_migrations

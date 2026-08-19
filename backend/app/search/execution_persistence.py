@@ -10,6 +10,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -91,6 +92,13 @@ class IdentificationSourceRecord(Base):
 class SearchExecutionRecord(Base):
     __tablename__ = "search_executions"
     __table_args__ = (
+        Index(
+            "ix_search_executions_review_date",
+            "organization_id",
+            "review_id",
+            "executed_at",
+            "id",
+        ),
         UniqueConstraint(
             "id", "organization_id", "review_id", name="uq_search_executions_id_tenant"
         ),
@@ -230,6 +238,12 @@ class SearchExecutionEventRecord(Base):
 class SearchExecutionCitationLinkRecord(Base):
     __tablename__ = "search_execution_citation_links"
     __table_args__ = (
+        Index(
+            "ix_search_execution_links_citation",
+            "organization_id",
+            "review_id",
+            "citation_source_record_id",
+        ),
         UniqueConstraint(
             "search_execution_id",
             "citation_source_record_id",

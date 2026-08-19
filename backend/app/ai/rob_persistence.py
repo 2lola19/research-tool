@@ -10,6 +10,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -70,6 +71,13 @@ class AIRobProposalLinkRecord(Base):
     __table_args__ = (
         UniqueConstraint("proposal_id", name="uq_ai_rob_proposal"),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_rob_link_tenant"),
+        Index(
+            "ix_ai_rob_assessment",
+            "organization_id",
+            "review_id",
+            "assessment_id",
+            "created_at",
+        ),
         CheckConstraint("assistance_mode IN ('BLINDED_AI','ASSISTED')", name="ck_ai_rob_link_mode"),
         CheckConstraint("length(instrument_content_hash) = 64", name="ck_ai_rob_instrument_hash"),
         CheckConstraint("length(chunk_manifest_hash) = 64", name="ck_ai_rob_chunk_hash"),
@@ -155,7 +163,7 @@ class AIRobSourceRecord(Base):
                 "ai_rob_proposal_links.review_id",
             ],
             name="fk_ai_rob_source_link",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
             ["article_id", "organization_id", "review_id"],
@@ -209,6 +217,7 @@ class AIRobEvidenceRecord(Base):
         UniqueConstraint(
             "proposal_link_id", "question_key", "ordinal", name="uq_ai_rob_evidence_ordinal"
         ),
+        Index("ix_ai_rob_evidence_question", "proposal_link_id", "question_key"),
         ForeignKeyConstraint(
             ["proposal_link_id", "organization_id", "review_id"],
             [
@@ -217,7 +226,7 @@ class AIRobEvidenceRecord(Base):
                 "ai_rob_proposal_links.review_id",
             ],
             name="fk_ai_rob_evidence_link",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
             ["document_id", "organization_id", "review_id"],
@@ -420,7 +429,7 @@ class AIRobEvaluationCaseRecord(Base):
                 "ai_rob_evaluation_datasets.review_id",
             ],
             name="fk_ai_rob_case_dataset",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
             ["study_id", "organization_id", "review_id"],
@@ -494,7 +503,7 @@ class AIRobEvaluationCaseResultRecord(Base):
                 "ai_rob_evaluation_results.review_id",
             ],
             name="fk_ai_rob_case_result_result",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
             ["case_id", "organization_id", "review_id"],

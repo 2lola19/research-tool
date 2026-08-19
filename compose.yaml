@@ -31,7 +31,7 @@ services:
       APP_RATE_LIMIT_ENABLED: "true"
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-review}:${POSTGRES_PASSWORD:-review}@db:5432/${POSTGRES_DB:-review_platform}
       DATABASE_REQUIRE_MIGRATIONS: "true"
-      DATABASE_EXPECTED_REVISION: "20260819_0035"
+      DATABASE_EXPECTED_REVISION: "20260819_0036"
       AI_PROVIDER: mock
       OBJECT_STORAGE_PROVIDER: local
       LOCAL_STORAGE_PATH: /app/data/objects
@@ -82,6 +82,17 @@ services:
     security_opt:
       - no-new-privileges:true
     stop_grace_period: 30s
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from pathlib import Path; raise SystemExit(0 if 'workers.review_worker' in Path('/proc/1/cmdline').read_bytes().decode(errors='ignore') else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     restart: unless-stopped
 
   frontend:
@@ -98,7 +109,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 12

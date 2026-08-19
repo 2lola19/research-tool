@@ -16,40 +16,89 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-def upgrade() -> None:
-    with op.batch_alter_table("workflow_jobs", recreate="always") as batch_op:
-        batch_op.add_column(sa.Column("retry_policy", sa.JSON(), nullable=True))
-        batch_op.add_column(
-            sa.Column("timeout_seconds", sa.Integer(), server_default="300", nullable=False)
-        )
-        batch_op.add_column(sa.Column("next_retry_at", sa.DateTime(timezone=True), nullable=True))
-        batch_op.add_column(sa.Column("failure_class", sa.String(length=20), nullable=True))
-        batch_op.add_column(
-            sa.Column("dead_lettered_at", sa.DateTime(timezone=True), nullable=True)
-        )
-        batch_op.add_column(
-            sa.Column("recovery_count", sa.Integer(), server_default="0", nullable=False)
-        )
-        batch_op.add_column(sa.Column("step_key", sa.String(length=120), nullable=True))
-        batch_op.add_column(sa.Column("step_order", sa.Integer(), nullable=True))
-        batch_op.add_column(sa.Column("definition_hash", sa.String(length=64), nullable=True))
-        batch_op.drop_constraint("ck_workflow_jobs_state", type_="check")
-        batch_op.create_check_constraint(
-            "ck_workflow_jobs_state",
-            "state IN ('NOT_STARTED', 'QUEUED', 'RUNNING', 'AWAITING_HUMAN', "
-            "'COMPLETED', 'FAILED', 'DEAD_LETTERED', 'PAUSED', 'CANCELLED')",
-        )
-        batch_op.create_check_constraint(
-            "ck_workflow_jobs_timeout_seconds",
-            "timeout_seconds >= 5 AND timeout_seconds <= 86400",
-        )
-        batch_op.create_check_constraint(
-            "ck_workflow_jobs_recovery_count",
-            "recovery_count >= 0",
-        )
+def _is_postgresql() -> bool:
+    return op.get_bind().dialect.name == "postgresql"
 
-    with op.batch_alter_table("workflow_job_attempts", recreate="always") as batch_op:
-        batch_op.add_column(sa.Column("deadline_at", sa.DateTime(timezone=True), nullable=True))
+
+def _workflow_job_columns() -> tuple[sa.Column[object], ...]:
+    return (
+        sa.Column("retry_policy", sa.JSON(), nullable=True),
+        sa.Column("timeout_seconds", sa.Integer(), server_default="300", nullable=False),
+        sa.Column("next_retry_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("failure_class", sa.String(length=20), nullable=True),
+        sa.Column("dead_lettered_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("recovery_count", sa.Integer(), server_default="0", nullable=False),
+        sa.Column("step_key", sa.String(length=120), nullable=True),
+        sa.Column("step_order", sa.Integer(), nullable=True),
+        sa.Column("definition_hash", sa.String(length=64), nullable=True),
+    )
+
+
+def _create_workflow_job_checks() -> None:
+    op.create_check_constraint(
+        "ck_workflow_jobs_state",
+        "workflow_jobs",
+        "state IN ('NOT_STARTED', 'QUEUED', 'RUNNING', 'AWAITING_HUMAN', "
+        "'COMPLETED', 'FAILED', 'DEAD_LETTERED', 'PAUSED', 'CANCELLED')",
+    )
+    op.create_check_constraint(
+        "ck_workflow_jobs_timeout_seconds",
+        "workflow_jobs",
+        "timeout_seconds >= 5 AND timeout_seconds <= 86400",
+    )
+    op.create_check_constraint(
+        "ck_workflow_jobs_recovery_count",
+        "workflow_jobs",
+        "recovery_count >= 0",
+    )
+
+
+def _drop_workflow_job_checks() -> None:
+    op.drop_constraint("ck_workflow_jobs_recovery_count", "workflow_jobs", type_="check")
+    op.drop_constraint("ck_workflow_jobs_timeout_seconds", "workflow_jobs", type_="check")
+    op.drop_constraint("ck_workflow_jobs_state", "workflow_jobs", type_="check")
+
+
+def _create_original_workflow_job_state_check() -> None:
+    op.create_check_constraint(
+        "ck_workflow_jobs_state",
+        "workflow_jobs",
+        "state IN ('NOT_STARTED', 'QUEUED', 'RUNNING', 'AWAITING_HUMAN', "
+        "'COMPLETED', 'FAILED', 'PAUSED', 'CANCELLED')",
+    )
+
+
+def upgrade() -> None:
+    if _is_postgresql():
+        for column in _workflow_job_columns():
+            op.add_column("workflow_jobs", column)
+        op.drop_constraint("ck_workflow_jobs_state", "workflow_jobs", type_="check")
+        _create_workflow_job_checks()
+        op.add_column(
+            "workflow_job_attempts",
+            sa.Column("deadline_at", sa.DateTime(timezone=True), nullable=True),
+        )
+    else:
+        with op.batch_alter_table("workflow_jobs", recreate="always") as batch_op:
+            for column in _workflow_job_columns():
+                batch_op.add_column(column)
+            batch_op.drop_constraint("ck_workflow_jobs_state", type_="check")
+            batch_op.create_check_constraint(
+                "ck_workflow_jobs_state",
+                "state IN ('NOT_STARTED', 'QUEUED', 'RUNNING', 'AWAITING_HUMAN', "
+                "'COMPLETED', 'FAILED', 'DEAD_LETTERED', 'PAUSED', 'CANCELLED')",
+            )
+            batch_op.create_check_constraint(
+                "ck_workflow_jobs_timeout_seconds",
+                "timeout_seconds >= 5 AND timeout_seconds <= 86400",
+            )
+            batch_op.create_check_constraint(
+                "ck_workflow_jobs_recovery_count",
+                "recovery_count >= 0",
+            )
+
+        with op.batch_alter_table("workflow_job_attempts", recreate="always") as batch_op:
+            batch_op.add_column(sa.Column("deadline_at", sa.DateTime(timezone=True), nullable=True))
 
     op.create_index(
         "ix_workflow_jobs_retry_schedule",
@@ -173,24 +222,44 @@ def downgrade() -> None:
     op.drop_table("workflow_step_checkpoints")
     op.drop_index("ix_workflow_jobs_retry_schedule", table_name="workflow_jobs")
 
-    with op.batch_alter_table("workflow_job_attempts", recreate="always") as batch_op:
-        batch_op.drop_column("deadline_at")
+    if _is_postgresql():
+        op.drop_column("workflow_job_attempts", "deadline_at")
+        _drop_workflow_job_checks()
+        _create_original_workflow_job_state_check()
+        for column in (
+            "definition_hash",
+            "step_order",
+            "step_key",
+            "recovery_count",
+            "dead_lettered_at",
+            "failure_class",
+            "next_retry_at",
+            "timeout_seconds",
+            "retry_policy",
+        ):
+            op.drop_column("workflow_jobs", column)
+    else:
+        with op.batch_alter_table("workflow_job_attempts", recreate="always") as batch_op:
+            batch_op.drop_column("deadline_at")
 
-    with op.batch_alter_table("workflow_jobs", recreate="always") as batch_op:
-        batch_op.drop_constraint("ck_workflow_jobs_recovery_count", type_="check")
-        batch_op.drop_constraint("ck_workflow_jobs_timeout_seconds", type_="check")
-        batch_op.drop_constraint("ck_workflow_jobs_state", type_="check")
-        batch_op.create_check_constraint(
-            "ck_workflow_jobs_state",
-            "state IN ('NOT_STARTED', 'QUEUED', 'RUNNING', 'AWAITING_HUMAN', "
-            "'COMPLETED', 'FAILED', 'PAUSED', 'CANCELLED')",
-        )
-        batch_op.drop_column("definition_hash")
-        batch_op.drop_column("step_order")
-        batch_op.drop_column("step_key")
-        batch_op.drop_column("recovery_count")
-        batch_op.drop_column("dead_lettered_at")
-        batch_op.drop_column("failure_class")
-        batch_op.drop_column("next_retry_at")
-        batch_op.drop_column("timeout_seconds")
-        batch_op.drop_column("retry_policy")
+        with op.batch_alter_table("workflow_jobs", recreate="always") as batch_op:
+            batch_op.drop_constraint("ck_workflow_jobs_recovery_count", type_="check")
+            batch_op.drop_constraint("ck_workflow_jobs_timeout_seconds", type_="check")
+            batch_op.drop_constraint("ck_workflow_jobs_state", type_="check")
+            batch_op.create_check_constraint(
+                "ck_workflow_jobs_state",
+                "state IN ('NOT_STARTED', 'QUEUED', 'RUNNING', 'AWAITING_HUMAN', "
+                "'COMPLETED', 'FAILED', 'PAUSED', 'CANCELLED')",
+            )
+            for column in (
+                "definition_hash",
+                "step_order",
+                "step_key",
+                "recovery_count",
+                "dead_lettered_at",
+                "failure_class",
+                "next_retry_at",
+                "timeout_seconds",
+                "retry_policy",
+            ):
+                batch_op.drop_column(column)

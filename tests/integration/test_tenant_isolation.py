@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -8,7 +10,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import event, select
+from sqlalchemy import event, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -240,39 +242,53 @@ async def _seed(session_factory: async_sessionmaker[AsyncSession]) -> TenantIds:
 @pytest.fixture
 def tenant_api(tmp_path: Path) -> TenantApi:
     _ = database_models
-    database_path = tmp_path / "tenant.db"
-    engine = create_async_engine(
-        f"sqlite+aiosqlite:///{database_path.as_posix()}",
-        poolclass=NullPool,
-    )
+    postgresql_url = os.environ.get("POSTGRES_TEST_DATABASE_URL")
+    database_url = postgresql_url or f"sqlite+aiosqlite:///{(tmp_path / 'tenant.db').as_posix()}"
+    previous_event_loop_policy = asyncio.get_event_loop_policy()
+    if postgresql_url and sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    engine = create_async_engine(database_url, poolclass=NullPool)
 
-    @event.listens_for(engine.sync_engine, "connect")
-    def enable_foreign_keys(dbapi_connection: object, _: object) -> None:
-        dbapi_connection.execute("PRAGMA foreign_keys=ON")  # type: ignore[attr-defined]
+    if postgresql_url is None:
+
+        @event.listens_for(engine.sync_engine, "connect")
+        def enable_foreign_keys(dbapi_connection: object, _: object) -> None:
+            dbapi_connection.execute("PRAGMA foreign_keys=ON")  # type: ignore[attr-defined]
 
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
     async def prepare() -> TenantIds:
-        async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all)
+        if postgresql_url is None:
+            async with engine.begin() as connection:
+                await connection.run_sync(Base.metadata.create_all)
+        else:
+            table_names = ", ".join(f'"{name}"' for name in Base.metadata.tables)
+            async with engine.begin() as connection:
+                await connection.execute(
+                    text(f"TRUNCATE TABLE {table_names} RESTART IDENTITY CASCADE")
+                )
         return await _seed(session_factory)
 
-    ids = asyncio.run(prepare())
-    settings = Settings(
-        app_env="test",
-        database_url=f"sqlite+aiosqlite:///{database_path.as_posix()}",
-        local_auth_secret="test-local-authentication-secret",
-    )
-    app = create_app(settings)
+    try:
+        ids = asyncio.run(prepare())
+        settings = Settings(
+            app_env="test",
+            database_url=database_url,
+            local_auth_secret="test-local-authentication-secret",
+        )
+        app = create_app(settings)
 
-    async def override_session() -> object:
-        async with session_factory() as session:
-            yield session
+        async def override_session() -> object:
+            async with session_factory() as session:
+                yield session
 
-    app.dependency_overrides[get_db_session] = override_session
-    with TestClient(app, raise_server_exceptions=False) as client:
-        yield TenantApi(client=client, settings=settings, ids=ids)
-    asyncio.run(engine.dispose())
+        app.dependency_overrides[get_db_session] = override_session
+        with TestClient(app, raise_server_exceptions=False) as client:
+            yield TenantApi(client=client, settings=settings, ids=ids)
+    finally:
+        asyncio.run(engine.dispose())
+        if postgresql_url and sys.platform == "win32":
+            asyncio.set_event_loop_policy(previous_event_loop_policy)
 
 
 def test_local_login_and_authenticated_actor_context(tenant_api: TenantApi) -> None:

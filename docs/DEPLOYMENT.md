@@ -7,7 +7,10 @@ production credentials, or claim that a live deployment is ready without environ
 ## Topology
 
 The supported topology is a one-shot Alembic migration, PostgreSQL, FastAPI, a Python worker, and
-the standalone Next.js server. TLS must terminate at an approved reverse proxy or load balancer.
+the standalone Next.js server. The worker has a process-level container healthcheck and the
+frontend probes its IPv4 loopback explicitly; its
+database-backed `workflow_workers` heartbeat remains the operational worker-health signal. TLS must
+terminate at an approved reverse proxy or load balancer.
 The proxy must forward only the headers it owns; the application must not trust arbitrary
 `X-Forwarded-*` values from public clients. The database and object-storage volumes are private,
 and only the frontend/API entry points are exposed at the edge.
@@ -23,7 +26,7 @@ At minimum, a production configuration must provide:
 - `APP_ENV=production`, `AUTHENTICATION_PROVIDER=oidc`, and a reviewed production identity
   provider adapter. The local HMAC token provider is rejected outside development/test.
 - A PostgreSQL `DATABASE_URL`, `DATABASE_REQUIRE_MIGRATIONS=true`, and
-  `DATABASE_EXPECTED_REVISION=20260819_0035` (or the deployed migration head).
+  `DATABASE_EXPECTED_REVISION=20260819_0036` (or the deployed migration head).
 - Explicit HTTPS `APP_CORS_ORIGINS` without `*`, local hosts, or credentials in URLs.
 - `APP_SECURITY_HEADERS_ENABLED=true`, `APP_METRICS_ENABLED` only on an internal scrape path,
   and an edge/shared-store rate limit in addition to the process-local authentication limiter.
@@ -47,8 +50,13 @@ docker compose build
 
 With an approved disposable PostgreSQL instance, run the migration container, verify
 `GET /health/live`, verify `GET /health/ready` returns database and migration readiness, and run
-the PostgreSQL-specific integration/concurrency suite. Local SQLite migration tests are useful
-chain/integrity checks but do not replace PostgreSQL evidence.
+the PostgreSQL-specific integration/concurrency suite. The optional
+`POSTGRES_TEST_DATABASE_URL` test hook in `tests/integration/test_postgresql_migrations.py` must
+point only to an explicitly disposable target. Local SQLite migration tests are useful
+chain/integrity checks but do not replace PostgreSQL evidence. `alembic check` must also be run
+against the target; metadata drift is a deployment defect, not a reason to ignore migration state.
+Migration `20260819_0036` adds the workflow payload-version and retry-bound checks required by the
+ORM mapping.
 
 Before publishing an image, run the organization-approved dependency and image scanners (for
 example `pip-audit`, `npm audit --omit=dev`, and a container scanner) and record tool versions,

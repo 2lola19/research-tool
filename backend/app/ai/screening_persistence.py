@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -73,7 +74,9 @@ class AIScreeningPolicyVersionRecord(Base):
     mode: Mapped[str] = mapped_column(String(20))
     maximum_batch_size: Mapped[int] = mapped_column(Integer)
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIScreeningProposalLinkRecord(Base):
@@ -82,6 +85,20 @@ class AIScreeningProposalLinkRecord(Base):
         UniqueConstraint("proposal_id", name="uq_ai_screening_proposal_link"),
         UniqueConstraint(
             "id", "organization_id", "review_id", name="uq_ai_screening_proposal_link_tenant"
+        ),
+        Index(
+            "ix_ai_screening_proposal_links_article",
+            "organization_id",
+            "review_id",
+            "article_id",
+            "created_at",
+        ),
+        Index(
+            "ix_ai_screening_proposal_links_assignment",
+            "organization_id",
+            "review_id",
+            "assignment_id",
+            "created_at",
         ),
         CheckConstraint("length(protocol_content_hash) = 64", name="ck_ai_screening_protocol_hash"),
         CheckConstraint(
@@ -157,7 +174,9 @@ class AIScreeningProposalLinkRecord(Base):
     citation_content_hash: Mapped[str] = mapped_column(String(64))
     task_definition_version: Mapped[int] = mapped_column(Integer)
     assistance_mode: Mapped[str] = mapped_column(String(20))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIScreeningAccessRecord(Base):
@@ -217,7 +236,7 @@ class AIScreeningAccessRecord(Base):
     access_type: Mapped[str] = mapped_column(String(30))
     screening_decision_id: Mapped[UUID | None] = mapped_column(nullable=True)
     accessed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True), server_default=func.now(), nullable=True
     )
 
 
@@ -260,7 +279,9 @@ class AIScreeningDecisionLinkRecord(Base):
     human_reviewer_user_id: Mapped[UUID] = mapped_column()
     interaction: Mapped[str] = mapped_column(String(20))
     disagreement: Mapped[str] = mapped_column(String(50))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class ScreeningEvaluationDatasetRecord(Base):
@@ -315,7 +336,9 @@ class ScreeningEvaluationDatasetRecord(Base):
     reference_standard: Mapped[str] = mapped_column(String(50))
     content_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class ScreeningEvaluationCaseRecord(Base):
@@ -354,7 +377,9 @@ class ScreeningEvaluationCaseRecord(Base):
     reference_decision: Mapped[str] = mapped_column(String(20))
     reference_source_type: Mapped[str] = mapped_column(String(50))
     reference_source_id: Mapped[UUID | None] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class ScreeningEvaluationResultRecord(Base):
@@ -424,7 +449,9 @@ class ScreeningEvaluationResultRecord(Base):
     high_risk_disagreements: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
     content_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class ScreeningEvaluationCaseResultRecord(Base):
@@ -492,6 +519,11 @@ class ScreeningEvaluationCaseResultRecord(Base):
 class AIScreeningErrorClassificationRecord(Base):
     __tablename__ = "ai_screening_error_classifications"
     __table_args__ = (
+        CheckConstraint(
+            "category IN ('DUPLICATE_ARTICLE','MISSING_INFORMATION','CRITERION_AMBIGUITY',"
+            "'LANGUAGE_OR_PUBLICATION_TYPE','HALLUCINATED_CRITERION','OTHER')",
+            name="ck_ai_screening_error_category",
+        ),
         ForeignKeyConstraint(
             ["case_result_id", "organization_id", "review_id"],
             [
@@ -516,7 +548,9 @@ class AIScreeningErrorClassificationRecord(Base):
     category: Mapped[str] = mapped_column(String(60))
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     classified_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 def _reject_mutation(_: Mapper[Any], __: object, ___: object) -> None:

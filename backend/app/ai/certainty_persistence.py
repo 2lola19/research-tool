@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -62,6 +63,13 @@ class AICertaintyProposalLinkRecord(Base):
     __table_args__ = (
         UniqueConstraint("proposal_id", name="uq_ai_certainty_proposal"),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_certainty_link_tenant"),
+        Index(
+            "ix_ai_certainty_assessment",
+            "organization_id",
+            "review_id",
+            "assessment_id",
+            "created_at",
+        ),
         ForeignKeyConstraint(
             ["proposal_id", "organization_id", "review_id"],
             [
@@ -245,6 +253,11 @@ class AICertaintyEvaluationDatasetRecord(Base):
         UniqueConstraint(
             "id", "organization_id", "review_id", name="uq_ai_certainty_dataset_tenant"
         ),
+        CheckConstraint(
+            "reference_standard IN ('HUMAN_RATIONALE','CURATED_GOLD','FINAL_CANONICAL')",
+            name="ck_ai_certainty_reference_standard",
+        ),
+        CheckConstraint("length(content_hash) = 64", name="ck_ai_certainty_dataset_hash"),
         ForeignKeyConstraint(
             ["review_id", "organization_id"],
             ["reviews.id", "reviews.organization_id"],

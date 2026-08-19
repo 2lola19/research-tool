@@ -150,6 +150,11 @@ from backend.app.provenance.persistence import (
     PromptVersionRecord,
     ScientificProvenanceRecord,
 )
+from backend.app.reporting.persistence import (
+    ReportArtifactRecord,
+    ReportSnapshotRecord,
+    ReportSpecificationRecord,
+)
 from backend.app.reviews.persistence import ReviewMembershipRecord, ReviewRecord
 from backend.app.risk_of_bias.persistence import (
     RiskOfBiasAdjudicationRecord,
@@ -306,6 +311,9 @@ __all__ = [
     "PromptVersionRecord",
     "ProtocolDecisionRecord",
     "ProtocolVersionRecord",
+    "ReportArtifactRecord",
+    "ReportSnapshotRecord",
+    "ReportSpecificationRecord",
     "ReviewMembershipRecord",
     "ReviewRecord",
     "RiskOfBiasAdjudicationRecord",

@@ -328,3 +328,25 @@ configuration/artifact audits pass. Full pytest, broad tenant execution, live Po
 build/health, Python/image scanners, OIDC, external storage/malware scanning, shared rate limiting,
 and backup/restore remain explicit controlled-deployment evidence gates; no production readiness is
 inferred from their absence.
+
+## Deployment-readiness correction (2026-08-19)
+
+The first disposable PostgreSQL migration attempt found genuine portability defects in
+`20260819_0033` and `20260819_0035`: Alembic's unconditional batch rewrites attempted to drop
+tenant-scoped unique constraints still referenced by foreign keys. Both migrations now use direct
+PostgreSQL column/check-constraint operations and retain SQLite batch paths. This is a deployment
+correctness fix, not a new V1 feature or development phase; it remains pending focused SQLite and
+live disposable-PostgreSQL validation in the deployment-readiness control plane. Deployment
+validation also corrected the Compose worker healthcheck so a non-HTTP worker is not reported
+unhealthy by inheriting the API health probe; its persisted heartbeat remains the operational signal.
+The frontend image health probe also uses explicit IPv4 loopback to avoid a false unhealthy state
+when image-local `localhost` resolves to IPv6.
+
+The live `alembic check` also identified that reporting persistence mappings were not imported into
+Alembic's target metadata. The deployment correction imports the three reporting records so schema
+drift is visible to the readiness check; remaining check output must be re-evaluated against the
+corrected metadata before this gate is classified.
+
+The deployment correction also adds migration `20260819_0036`, which enforces the workflow
+payload-version and retry-bound checks already required by the ORM mapping. This is a deployment
+correctness correction, not a new V1 feature or development phase.

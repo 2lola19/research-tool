@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
+    CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
     Integer,
@@ -63,6 +64,11 @@ class ExtractionSchemaVersionRecord(Base):
             "id", "organization_id", "review_id", name="uq_extraction_schema_versions_id_tenant"
         ),
         UniqueConstraint("schema_id", "version", name="uq_extraction_schema_versions_number"),
+        CheckConstraint("version > 0", name="ck_extraction_schema_versions_positive"),
+        CheckConstraint(
+            "length(content_hash) = 64",
+            name="ck_extraction_schema_versions_hash_length",
+        ),
         ForeignKeyConstraint(
             ["schema_id", "organization_id", "review_id"],
             [

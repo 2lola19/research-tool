@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -97,6 +98,7 @@ class WorkflowJobRecord(Base):
             name="uq_workflow_jobs_run_idempotency",
         ),
         UniqueConstraint("id", "organization_id", name="uq_workflow_jobs_id_org"),
+        Index("ix_workflow_jobs_retry_schedule", "organization_id", "state", "next_retry_at"),
         UniqueConstraint(
             "id",
             "organization_id",

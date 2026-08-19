@@ -6,8 +6,10 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
+    CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -31,6 +33,7 @@ class AIOutcomePolicyRecord(Base):
             "organization_id", "review_id", "version", name="uq_ai_outcome_policy_version"
         ),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_outcome_policy_tenant"),
+        CheckConstraint("maximum_batch_size BETWEEN 1 AND 100", name="ck_ai_outcome_batch_size"),
         ForeignKeyConstraint(
             ["review_id", "organization_id"],
             ["reviews.id", "reviews.organization_id"],
@@ -58,6 +61,20 @@ class AIOutcomeProposalLinkRecord(Base):
     __table_args__ = (
         UniqueConstraint("proposal_id", name="uq_ai_outcome_proposal"),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_outcome_link_tenant"),
+        Index(
+            "ix_ai_outcome_extraction",
+            "organization_id",
+            "review_id",
+            "extraction_value_id",
+            "created_at",
+        ),
+        CheckConstraint("length(outcome_version_hash) = 64", name="ck_ai_outcome_version_hash"),
+        CheckConstraint(
+            "length(extraction_snapshot_hash) = 64", name="ck_ai_outcome_extraction_hash"
+        ),
+        CheckConstraint("length(chunk_manifest_hash) = 64", name="ck_ai_outcome_chunk_hash"),
+        CheckConstraint("length(selected_text_hash) = 64", name="ck_ai_outcome_text_hash"),
+        CheckConstraint("task_definition_version > 0", name="ck_ai_outcome_task_version"),
         ForeignKeyConstraint(
             ["proposal_id", "organization_id", "review_id"],
             [
@@ -132,6 +149,10 @@ class AIOutcomeAccessRecord(Base):
         UniqueConstraint(
             "proposal_id", "reviewer_user_id", "access_type", name="uq_ai_outcome_access"
         ),
+        CheckConstraint(
+            "access_type IN ('ASSISTED_VIEW','HUMAN_REVIEW')",
+            name="ck_ai_outcome_access_type",
+        ),
         ForeignKeyConstraint(
             ["proposal_id", "organization_id", "review_id"],
             [
@@ -180,6 +201,10 @@ class AIOutcomeReviewRecord(Base):
             name="fk_ai_outcome_human_review_reviewer",
             ondelete="RESTRICT",
         ),
+        CheckConstraint(
+            "action IN ('ACCEPTED','EDITED','REJECTED','UNRESOLVED')",
+            name="ck_ai_outcome_review_action",
+        ),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     organization_id: Mapped[UUID] = mapped_column()
@@ -206,6 +231,11 @@ class AIOutcomeEvaluationDatasetRecord(Base):
             name="uq_ai_outcome_dataset_version",
         ),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_outcome_dataset_tenant"),
+        CheckConstraint(
+            "reference_standard IN ('HUMAN_HARMONIZED','CURATED_GOLD','FINAL_CANONICAL')",
+            name="ck_ai_outcome_reference_standard",
+        ),
+        CheckConstraint("length(content_hash) = 64", name="ck_ai_outcome_dataset_hash"),
         ForeignKeyConstraint(
             ["review_id", "organization_id"],
             ["reviews.id", "reviews.organization_id"],

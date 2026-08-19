@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     LargeBinary,
     String,
@@ -36,6 +37,7 @@ from backend.app.reporting.domain import (
 class ReportSpecificationRecord(Base):
     __tablename__ = "report_specifications"
     __table_args__ = (
+        Index("ix_report_specifications_review", "organization_id", "review_id", "report_type"),
         UniqueConstraint(
             "id", "organization_id", "review_id", name="uq_report_specifications_id_tenant"
         ),
@@ -68,12 +70,15 @@ class ReportSpecificationRecord(Base):
     definition: Mapped[dict[str, Any]] = mapped_column(JSON)
     content_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class ReportSnapshotRecord(Base):
     __tablename__ = "report_snapshots"
     __table_args__ = (
+        Index("ix_report_snapshots_review", "organization_id", "review_id", "created_at"),
         UniqueConstraint(
             "id", "organization_id", "review_id", name="uq_report_snapshots_id_tenant"
         ),
@@ -114,7 +119,9 @@ class ReportSnapshotRecord(Base):
     scientific_content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     renderer_version: Mapped[str] = mapped_column(String(120))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     failure_reason: Mapped[str | None] = mapped_column(String(2000), nullable=True)
 
@@ -122,6 +129,7 @@ class ReportSnapshotRecord(Base):
 class ReportArtifactRecord(Base):
     __tablename__ = "report_artifacts"
     __table_args__ = (
+        Index("ix_report_artifacts_snapshot", "organization_id", "review_id", "report_snapshot_id"),
         UniqueConstraint(
             "id", "organization_id", "review_id", name="uq_report_artifacts_id_tenant"
         ),
@@ -151,7 +159,9 @@ class ReportArtifactRecord(Base):
     byte_size: Mapped[int] = mapped_column(Integer)
     manifest: Mapped[dict[str, Any]] = mapped_column(JSON)
     content: Mapped[bytes] = mapped_column(LargeBinary)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 def _immutable(_: Mapper[Any], __: object, ___: object) -> None:

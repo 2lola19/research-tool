@@ -300,9 +300,27 @@ bounded manifest, or a claim that live S3/GROBID/PostgreSQL behavior has been va
 
 ## Phase 37 operational database readiness
 
-Phase 37 adds no migration. The expected deployment head remains `20260819_0035`; when
+Phase 37 added no migration at its V1 checkpoint. The deployment-readiness correction now advances
+the expected deployment head to `20260819_0036`; when
 `DATABASE_REQUIRE_MIGRATIONS=true`, `/health/ready` requires both a successful `SELECT 1` and an
 exact `alembic_version` match. SQLite upgrade/downgrade tests validate the linear chain, but
 PostgreSQL constraint, lock, concurrency, backup, and restore evidence remains a deployment gate.
 Operational backups must preserve the database and object-storage checksum boundary; restoration
 must be verified before traffic resumes and must not rewrite append-only audit/provenance history.
+
+## PostgreSQL deployment migration correction
+
+Deployment validation found that migrations `20260819_0033` and `20260819_0035` used unconditional
+PostgreSQL batch table rewrites. Their tenant-scoped foreign keys depend on existing unique
+constraint/indexes, so PostgreSQL correctly rejected the attempted constraint drops. Both migrations
+now use direct PostgreSQL column/check-constraint operations, preserving dependent unique boundaries,
+while retaining batch-alter paths for SQLite compatibility. The corrections are migration-only and
+do not change workflow, document, scientific, or provenance ownership. They require a fresh
+disposable PostgreSQL upgrade and the existing SQLite upgrade/downgrade chain before checkpointing.
+Alembic's target metadata must import every mapped table, including the reporting snapshot/artifact
+records, so `alembic check` can detect real drift rather than silently omitting a domain.
+
+Migration `20260819_0036` adds the workflow-job `payload_version > 0` and bounded `max_attempts`
+checks that were present in the ORM mapping but absent from the live migration chain. It is a
+deployment correctness correction, not a new workflow feature; the PostgreSQL target must apply
+it successfully before readiness is claimed.

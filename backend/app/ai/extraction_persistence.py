@@ -11,6 +11,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -73,6 +74,13 @@ class AIExtractionProposalLinkRecord(Base):
     __table_args__ = (
         UniqueConstraint("proposal_id", name="uq_ai_extraction_proposal"),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_extraction_link_tenant"),
+        Index(
+            "ix_ai_extraction_assignment",
+            "organization_id",
+            "review_id",
+            "assignment_id",
+            "created_at",
+        ),
         CheckConstraint(
             "assistance_mode IN ('BLINDED_AI','ASSISTED')", name="ck_ai_extraction_link_mode"
         ),
@@ -221,6 +229,7 @@ class AIExtractionEvidenceRecord(Base):
         UniqueConstraint(
             "proposal_link_id", "field_key", "ordinal", name="uq_ai_extraction_evidence_ordinal"
         ),
+        Index("ix_ai_extraction_evidence_field", "proposal_link_id", "field_key"),
         ForeignKeyConstraint(
             ["proposal_link_id", "organization_id", "review_id"],
             [

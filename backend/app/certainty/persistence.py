@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -63,6 +64,7 @@ class CertaintyFrameworkRecord(Base):
     __table_args__ = (
         UniqueConstraint("organization_id", "review_id", "key", name="uq_cert_framework_key"),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_cert_framework_tenant"),
+        Index("ix_certainty_frameworks_review", "organization_id", "review_id"),
         _review_fk("fk_cert_framework_review"),
         _actor_fk("created_by_user_id", "fk_cert_framework_actor"),
     )
@@ -140,6 +142,12 @@ class CertaintyAssessmentRecord(Base):
     __tablename__ = "certainty_assessments"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", "review_id", name="uq_cert_assessment_tenant"),
+        Index(
+            "ix_certainty_assessments_review",
+            "organization_id",
+            "review_id",
+            "outcome_version_id",
+        ),
         UniqueConstraint(
             "review_id",
             "outcome_version_id",
@@ -325,6 +333,7 @@ class CertaintyComparisonRecord(Base):
     __table_args__ = (
         UniqueConstraint("assessment_a_id", "assessment_b_id", name="uq_cert_comparison_pair"),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_cert_comparison_tenant"),
+        Index("ix_certainty_comparisons_review", "organization_id", "review_id"),
         _review_fk("fk_cert_comparison_review"),
         ForeignKeyConstraint(
             ["outcome_version_id", "organization_id", "review_id"],
@@ -417,6 +426,7 @@ class SummaryOfFindingsSnapshotRecord(Base):
     __tablename__ = "summary_of_findings_snapshots"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", "review_id", name="uq_sof_snapshot_tenant"),
+        Index("ix_summary_of_findings_snapshots_review", "organization_id", "review_id"),
         ForeignKeyConstraint(
             ["assessment_id", "organization_id", "review_id"],
             [

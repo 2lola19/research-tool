@@ -37,7 +37,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             for row in connection.execute("PRAGMA table_info(document_processing_runs)").fetchall()
         }
 
-    assert version == ("20260819_0035",)
+    assert version == ("20260819_0036",)
     assert {
         "users",
         "organizations",

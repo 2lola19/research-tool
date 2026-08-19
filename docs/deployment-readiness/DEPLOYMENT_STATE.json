@@ -1,0 +1,99 @@
+{
+  "program": "Research Tool Controlled Deployment Readiness",
+  "baseline_commit": "a4156e32c969efcbf4363f02413b58dabf6d4dd1",
+  "status": "IN_PROGRESS",
+  "current_stage": "GO_NO_GO",
+  "last_completed_stage": "FINAL_REGRESSION",
+  "checkpoint_status": "READY_FOR_CHECKPOINT",
+  "last_local_commit": null,
+  "expected_phase_commit_message": "fix: harden controlled deployment readiness",
+  "commit_pending": true,
+  "environment_gates": {
+    "baseline_reconciliation": "PASS",
+    "environment_inventory": "PASS",
+    "container_validation": "PASS_WITH_FIXES",
+    "postgresql_validation": "PASS",
+    "postgresql_concurrency": "PASS",
+    "backup_restore": "PASS_DISPOSABLE",
+    "object_storage": "PASS_LOCAL_ADAPTER_EXTERNAL_S3_GATE",
+    "malware_scanning": "EXTERNAL_DEPLOYMENT_GATE",
+    "parser_grobid": "ENVIRONMENT_BLOCKED_GROBID",
+    "oidc_identity": "EXTERNAL_CREDENTIAL_REQUIRED",
+    "secret_management": "PASS_NO_VALUES_EXTERNAL_PRODUCTION_BOUNDARY",
+    "tls_reverse_proxy": "EXTERNAL_DEPLOYMENT_GATE",
+    "rate_limiting": "PASS_PROCESS_LOCAL_EXTERNAL_SHARED_GATE",
+    "observability": "PASS",
+    "worker_recovery": "PASS_LEASE_RECOVERY_WITH_RESTART",
+    "workflow_resume": "PASS",
+    "tenant_isolation_postgresql": "PASS",
+    "scientific_integrity": "PASS_WITH_INHERITED_AND_FOCUSED_PG_EVIDENCE",
+    "rollback": "PASS_APPLICATION_RESTART_ONLY",
+    "frontend": "PASS",
+    "dependency_scanning": "PASS_NPM_EXTERNAL_PYTHON_IMAGE_SCANNERS",
+    "regression": "PASS_FOCUSED_ENVIRONMENT_BLOCKED_BROAD_INTEGRATION"
+  },
+  "validation_status": {
+    "overall": "READY_FOR_CHECKPOINT",
+    "scientific_review": "COMPLETE",
+    "security_review": "COMPLETE_WITH_EXTERNAL_GATES",
+    "provenance_review": "COMPLETE",
+    "tenant_review": "COMPLETE"
+  },
+  "blockers": [
+    "DR-002: OIDC adapter and authorized real identity configuration are not present; EXTERNAL_CREDENTIAL_REQUIRED.",
+    "DR-003: No disposable S3-compatible service or production object-store configuration is available; EXTERNAL_DEPLOYMENT_GATE.",
+    "DR-004: No malware scanner or adapter is available; EXTERNAL_DEPLOYMENT_GATE.",
+    "DR-005: No bounded live GROBID service is available; ENVIRONMENT_BLOCKED_GROBID.",
+    "DR-006: Rate limiting is process-local; an approved shared or edge limiter is required for multi-replica exposure.",
+    "DR-007: No disposable TLS/reverse-proxy topology is available; EXTERNAL_DEPLOYMENT_GATE.",
+    "DR-008: Production secret-manager/provider configuration is not present; EXTERNAL_CREDENTIAL_REQUIRED.",
+    "DR-009: pip-audit and Trivy are unavailable on this host; approved Python/image scans remain an external gate.",
+    "DR-010: Full integration regression timed out twice without a result; focused shards pass and the broad run is ENVIRONMENT_BLOCKED."
+  ],
+  "known_external_gates": [
+    {
+      "gate": "OIDC/identity",
+      "classification": "EXTERNAL_CREDENTIAL_REQUIRED",
+      "action": "Provide an authorized issuer, audience, JWKS/key rotation, tenant membership, role mapping, and revocation test configuration."
+    },
+    {
+      "gate": "S3-compatible object storage",
+      "classification": "EXTERNAL_DEPLOYMENT_GATE",
+      "action": "Provide an explicitly disposable or approved staging bucket and run the upload/checksum/reconciliation suite without exposing credentials."
+    },
+    {
+      "gate": "Malware scanning",
+      "classification": "EXTERNAL_DEPLOYMENT_GATE",
+      "action": "Provide an approved scanner integration and exercise clean, failure, unavailable, and safe test-signature paths."
+    },
+    {
+      "gate": "GROBID",
+      "classification": "ENVIRONMENT_BLOCKED_GROBID",
+      "action": "Run the bounded representative-PDF parser rehearsal when an approved GROBID service is available."
+    },
+    {
+      "gate": "TLS/proxy/shared rate limiting",
+      "classification": "EXTERNAL_DEPLOYMENT_GATE",
+      "action": "Supply the approved edge topology, forwarded-header policy, secure-cookie/CORS values, and shared limiter behavior."
+    },
+    {
+      "gate": "Python/image vulnerability scanners",
+      "classification": "ENVIRONMENT_BLOCKED",
+      "action": "Run organization-approved pip-audit and container scans and disposition every high/critical finding."
+    }
+  ],
+  "last_completed_action": "Completed bounded deployment validation: live PostgreSQL migrations/head/metadata, concurrency, tenant isolation, backup/restore with scientific provenance, worker lease recovery, focused scientific/security tests, final frontend artifacts, image build, health checks, and strict quality gates. No release-blocking defect remains; external gates are recorded.",
+  "next_action": "Perform the strict local checkpoint procedure, record the resulting SHA, verify the worktree, then stop at the durable READY_WITH_EXTERNAL_GATES decision without pushing or starting another development phase.",
+  "files_in_progress": [
+    "docs/deployment-readiness/DEPLOYMENT_PLAN.md",
+    "docs/deployment-readiness/DEPLOYMENT_STATE.json",
+    "docs/deployment-readiness/ENVIRONMENT_INVENTORY.md",
+    "docs/deployment-readiness/VALIDATION_LOG.md",
+    "docs/deployment-readiness/BLOCKERS.md",
+    "docs/deployment-readiness/SECURITY_REVIEW.md",
+    "docs/deployment-readiness/OPERATIONS_REHEARSAL.md",
+    "docs/deployment-readiness/DEPLOYMENT_REPORT.md",
+    "docs/deployment-readiness/RECOVERY.md"
+  ],
+  "updated_at": "2026-08-19T23:29:26+01:00"
+}

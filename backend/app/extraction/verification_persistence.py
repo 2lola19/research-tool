@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
+    CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
     String,
@@ -34,6 +35,10 @@ class ExtractionVerificationRecord(Base):
         ),
         UniqueConstraint(
             "run_a_id", "run_b_id", "field_key", name="uq_extraction_verifications_pair_field"
+        ),
+        CheckConstraint(
+            "status IN ('MATCHED','NEEDS_ADJUDICATION','ADJUDICATED')",
+            name="ck_extraction_verifications_status",
         ),
         ForeignKeyConstraint(
             ["study_id", "organization_id", "review_id"],
@@ -82,6 +87,7 @@ class ExtractionConflictRecord(Base):
         UniqueConstraint(
             "id", "organization_id", "review_id", name="uq_extraction_conflicts_id_tenant"
         ),
+        CheckConstraint("status IN ('OPEN','RESOLVED')", name="ck_extraction_conflicts_status"),
         ForeignKeyConstraint(
             ["study_id", "organization_id", "review_id"],
             ["studies.id", "studies.organization_id", "studies.review_id"],

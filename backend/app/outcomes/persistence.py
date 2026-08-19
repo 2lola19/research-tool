@@ -11,6 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     Numeric,
     String,
@@ -85,7 +86,9 @@ class OutcomeDefinitionRecord(Base):
     review_id: Mapped[UUID] = mapped_column()
     key: Mapped[str] = mapped_column(String(120))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class OutcomeDefinitionVersionRecord(Base):
@@ -126,7 +129,9 @@ class OutcomeDefinitionVersionRecord(Base):
     content_hash: Mapped[str] = mapped_column(String(64))
     protocol_version_id: Mapped[UUID | None] = mapped_column()
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class TimepointWindowRecord(Base):
@@ -159,7 +164,9 @@ class TimepointWindowRecord(Base):
     maximum_days: Mapped[Decimal | None] = mapped_column(Numeric(30, 12))
     rule_version: Mapped[str] = mapped_column(String(100))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class UnitDefinitionRecord(Base):
@@ -187,7 +194,9 @@ class UnitDefinitionRecord(Base):
     precision: Mapped[int] = mapped_column(Integer)
     rule_version: Mapped[str] = mapped_column(String(100))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class MeasurementScaleRecord(Base):
@@ -216,12 +225,22 @@ class MeasurementScaleRecord(Base):
     maximum: Mapped[Decimal | None] = mapped_column(Numeric(30, 12))
     directionality: Mapped[str] = mapped_column(String(30))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class OutcomeMappingRecord(Base):
     __tablename__ = "outcome_mappings"
     __table_args__ = (
+        Index(
+            "ix_outcome_mappings_review_study",
+            "organization_id",
+            "review_id",
+            "study_id",
+            "outcome_version_id",
+            "id",
+        ),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_outcome_mapping_tenant"),
         UniqueConstraint("supersedes_mapping_id", name="uq_outcome_mapping_single_successor"),
         ForeignKeyConstraint(
@@ -346,12 +365,23 @@ class OutcomeMappingRecord(Base):
     extraction_verified: Mapped[bool] = mapped_column(Boolean)
     supersedes_mapping_id: Mapped[UUID | None] = mapped_column()
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class EffectEstimateRecord(Base):
     __tablename__ = "effect_estimates"
     __table_args__ = (
+        Index(
+            "ix_effect_estimates_review_outcome",
+            "organization_id",
+            "review_id",
+            "outcome_version_id",
+            "study_id",
+            "effect_measure",
+            "id",
+        ),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_effect_estimate_tenant"),
         ForeignKeyConstraint(
             ["study_id", "organization_id", "review_id"],
@@ -455,7 +485,9 @@ class EffectEstimateRecord(Base):
     calculation_version: Mapped[str | None] = mapped_column(String(100))
     zero_event_pattern: Mapped[str] = mapped_column(String(30))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class EffectEstimateSourceRecord(Base):
@@ -531,7 +563,9 @@ class SynthesisCandidateSetRecord(Base):
     population_label: Mapped[str | None] = mapped_column(String(300))
     estimate_ids: Mapped[list[str]] = mapped_column(JSON)
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class SynthesisCandidateEstimateRecord(Base):
@@ -596,7 +630,9 @@ class AnalysisReadinessSnapshotRecord(Base):
     status: Mapped[str] = mapped_column(String(30))
     blockers: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
     evaluated_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 def _reject_mutation(_: Mapper[Any], __: object, ___: object) -> None:

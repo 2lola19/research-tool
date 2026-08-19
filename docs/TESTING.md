@@ -248,7 +248,7 @@ and HTTPS/private-host retrieval policy. Integration coverage verifies upload-ID
 restricted content authorization, verified content retrieval, parser-run history, corruption and
 repair retry transitions, reconciliation read-only behavior, and foreign-tenant non-enumeration.
 
-Migration coverage upgrades and downgrades the SQLite chain through `20260819_0035` and asserts
+Migration coverage upgrades and downgrades the SQLite chain through `20260819_0036` and asserts
 the new processing-run metadata columns. No live GROBID, S3 service, malware scanner, external
 retrieval, or PostgreSQL concurrency claim is made. Those remain deployment/environment gates.
 
@@ -270,8 +270,30 @@ environment limitation rather than a test pass.
 Unit/API coverage verifies production configuration rejection for local auth/SQLite/debug or
 insecure CORS, migration-head readiness, correlation-ID and traceparent bounds, redacted metrics,
 security headers, authentication `429` behavior, and worker disposal/poll shutdown. Existing
-Alembic coverage upgrades the full linear SQLite chain through `20260819_0035` and downgrades to
+Alembic coverage upgrades the full linear SQLite chain through `20260819_0036` and downgrades to
 base. `docker compose config`, PostgreSQL migration/constraint/concurrency checks, image and
 dependency scanners, TLS/proxy behavior, OIDC, external object storage/malware scanning, and
 backup/restore remain environment/deployment gates and must be recorded as blocked rather than
 claimed as passes when unavailable.
+
+## Deployment-readiness PostgreSQL migration correction
+
+The first disposable PostgreSQL upgrade exposed real portability defects in migrations
+`20260819_0033` and `20260819_0035`: unconditional batch rewrites attempted to drop unique
+constraints still referenced by tenant-scoped foreign keys. Both migrations now take direct
+PostgreSQL paths for column/check-constraint changes and retain SQLite batch paths. The focused
+SQLite migration upgrade/downgrade test remains required; an optional
+`POSTGRES_TEST_DATABASE_URL` integration test runs the complete Alembic upgrade against an explicitly
+disposable PostgreSQL target. A live disposable upgrade is required evidence for this deployment
+program and is not replaced by the SQLite result.
+
+The PostgreSQL deployment check also requires Alembic's target metadata to import the reporting
+records; metadata omissions are treated as migration drift. Migration `20260819_0036` is covered
+by the same full-chain upgrade/downgrade test.
+
+Deployment container validation also verifies that the worker does not inherit the API HTTP
+healthcheck: Compose uses a process-level worker check, while the persisted worker heartbeat remains
+the database-backed operational signal.
+
+The frontend container healthcheck uses explicit IPv4 loopback so a healthy server is not falsely
+reported unavailable by image-local `localhost` resolution.

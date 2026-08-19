@@ -85,7 +85,9 @@ class AnalysisSpecificationRecord(Base):
     review_id: Mapped[UUID] = mapped_column()
     key: Mapped[str] = mapped_column(String(120))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AnalysisSpecificationVersionRecord(Base):
@@ -153,7 +155,9 @@ class AnalysisSpecificationVersionRecord(Base):
     model: Mapped[str] = mapped_column(String(30))
     heterogeneity_estimator: Mapped[str] = mapped_column(String(40))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AnalysisSetRecord(Base):
@@ -193,7 +197,9 @@ class AnalysisSetRecord(Base):
     excluded_estimates: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
     input_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AnalysisSetEstimateRecord(Base):
@@ -284,7 +290,9 @@ class MetaAnalysisRunRecord(Base):
     created_by_user_id: Mapped[UUID] = mapped_column()
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class MetaAnalysisStudyWeightRecord(Base):
@@ -408,7 +416,9 @@ class AnalysisArtifactRecord(Base):
     sha256: Mapped[str] = mapped_column(String(64))
     byte_size: Mapped[int] = mapped_column(Integer)
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 def _reject_mutation(_: Mapper[Any], __: object, ___: object) -> None:

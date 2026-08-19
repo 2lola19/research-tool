@@ -24,6 +24,9 @@ must add an edge or shared-store limit before exposing authentication publicly.
 The worker polls through the provider-neutral workflow runner, handles SIGINT/SIGTERM where the
 runtime supports signal handlers, and disposes its database engine in `finally`. A shutdown stops
 new polling; an in-flight claim remains governed by its lease and the explicit recovery command.
+Compose also checks that the worker process is alive; operational health still requires a current
+`workflow_workers` heartbeat in PostgreSQL rather than treating a live process as proof of a healthy
+database connection.
 Use `python -m workers.review_worker --recover-expired` only as an authorized, bounded operational
 action. Inspect attempts, events, checkpoints, retry class, and provenance before requeueing.
 

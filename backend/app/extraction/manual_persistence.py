@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
+    CheckConstraint,
     Date,
     DateTime,
     ForeignKeyConstraint,
@@ -35,6 +36,11 @@ class ExtractionRunRecord(Base):
     __tablename__ = "extraction_runs"
     __table_args__ = (
         UniqueConstraint("id", "organization_id", "review_id", name="uq_extraction_runs_id_tenant"),
+        CheckConstraint(
+            "status IN ('NOT_STARTED','IN_PROGRESS','COMPLETED','NEEDS_REVIEW',"
+            "'VERIFIED','CONFLICT')",
+            name="ck_extraction_runs_status",
+        ),
         ForeignKeyConstraint(
             ["review_id", "organization_id"],
             ["reviews.id", "reviews.organization_id"],
@@ -83,6 +89,11 @@ class ExtractionValueRecord(Base):
             "id", "organization_id", "review_id", name="uq_extraction_values_id_tenant"
         ),
         UniqueConstraint("run_id", "field_key", name="uq_extraction_values_run_field"),
+        CheckConstraint(
+            "missingness IN ('VALUE_REPORTED','NOT_REPORTED','UNCLEAR',"
+            "'NOT_APPLICABLE','NEEDS_REVIEW')",
+            name="ck_extraction_values_missingness",
+        ),
         ForeignKeyConstraint(
             ["run_id", "organization_id", "review_id"],
             ["extraction_runs.id", "extraction_runs.organization_id", "extraction_runs.review_id"],

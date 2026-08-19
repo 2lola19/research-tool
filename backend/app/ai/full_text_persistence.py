@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -40,6 +41,20 @@ class AIFullTextProposalLinkRecord(Base):
     __table_args__ = (
         UniqueConstraint("proposal_id", name="uq_ai_full_text_proposal"),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_ai_full_text_link_tenant"),
+        Index(
+            "ix_ai_full_text_assignment",
+            "organization_id",
+            "review_id",
+            "assignment_id",
+            "created_at",
+        ),
+        Index(
+            "ix_ai_full_text_document",
+            "organization_id",
+            "review_id",
+            "document_version_id",
+            "created_at",
+        ),
         CheckConstraint(
             "assistance_mode IN ('BLINDED_AI','ASSISTED')", name="ck_ai_full_text_mode"
         ),
@@ -158,7 +173,9 @@ class AIFullTextProposalLinkRecord(Base):
     selection_method: Mapped[str] = mapped_column(String(80))
     task_definition_version: Mapped[int] = mapped_column(Integer)
     assistance_mode: Mapped[str] = mapped_column(String(20))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class AIFullTextAccessRecord(Base):
@@ -218,7 +235,7 @@ class AIFullTextAccessRecord(Base):
     access_type: Mapped[str] = mapped_column(String(30))
     screening_decision_id: Mapped[UUID | None] = mapped_column(nullable=True)
     accessed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True), server_default=func.now(), nullable=True
     )
 
 
@@ -262,7 +279,9 @@ class AIFullTextDecisionLinkRecord(Base):
     interaction: Mapped[str] = mapped_column(String(20))
     disagreement: Mapped[str] = mapped_column(String(50))
     exclusion_criterion_from_ai: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class FullTextEvaluationDatasetRecord(Base):
@@ -318,7 +337,9 @@ class FullTextEvaluationDatasetRecord(Base):
     reference_standard: Mapped[str] = mapped_column(String(50))
     content_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class FullTextEvaluationCaseRecord(Base):
@@ -344,7 +365,7 @@ class FullTextEvaluationCaseRecord(Base):
                 "ai_full_text_evaluation_datasets.review_id",
             ],
             name="fk_ai_full_text_case_dataset",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
             ["article_id", "organization_id", "review_id"],
@@ -450,7 +471,9 @@ class FullTextEvaluationResultRecord(Base):
     metrics: Mapped[dict[str, Any]] = mapped_column(JSON)
     content_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class FullTextEvaluationCaseResultRecord(Base):
@@ -468,7 +491,7 @@ class FullTextEvaluationCaseResultRecord(Base):
                 "ai_full_text_evaluation_results.review_id",
             ],
             name="fk_ai_full_text_case_result_result",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
             ["case_id", "organization_id", "review_id"],
@@ -536,7 +559,9 @@ class FullTextErrorClassificationRecord(Base):
     category: Mapped[str] = mapped_column(String(80))
     notes: Mapped[str | None] = mapped_column(Text)
     classified_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 _IMMUTABLE = (

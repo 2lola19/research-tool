@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -63,7 +64,9 @@ class RiskOfBiasInstrumentRecord(Base):
     name: Mapped[str] = mapped_column(String(300))
     description: Mapped[str | None] = mapped_column(Text)
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class RiskOfBiasInstrumentVersionRecord(Base):
@@ -94,7 +97,9 @@ class RiskOfBiasInstrumentVersionRecord(Base):
     definition: Mapped[dict[str, Any]] = mapped_column(JSON)
     content_hash: Mapped[str] = mapped_column(String(64))
     created_by_user_id: Mapped[UUID] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class RiskOfBiasInstrumentDecisionRecord(Base):
@@ -126,12 +131,22 @@ class RiskOfBiasInstrumentDecisionRecord(Base):
     decision: Mapped[str] = mapped_column(String(20))
     decided_by_user_id: Mapped[UUID] = mapped_column()
     reason: Mapped[str | None] = mapped_column(Text)
-    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    decided_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
 
 
 class RiskOfBiasAssessmentRecord(Base):
     __tablename__ = "rob_assessments"
     __table_args__ = (
+        Index(
+            "ix_rob_assessments_review_study",
+            "organization_id",
+            "review_id",
+            "study_id",
+            "status",
+            "id",
+        ),
         UniqueConstraint("id", "organization_id", "review_id", name="uq_rob_assessment_id_tenant"),
         UniqueConstraint(
             "study_id",
@@ -198,7 +213,9 @@ class RiskOfBiasAssessmentRecord(Base):
     overall_rationale: Mapped[str | None] = mapped_column(Text)
     overall_override_reason: Mapped[str | None] = mapped_column(Text)
     overall_evidence_location_id: Mapped[UUID | None] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=True
+    )
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
@@ -232,7 +249,7 @@ class RiskOfBiasAnswerRecord(Base):
     rationale: Mapped[str | None] = mapped_column(Text)
     evidence_location_id: Mapped[UUID | None] = mapped_column()
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=True
     )
 
 
@@ -268,7 +285,7 @@ class RiskOfBiasDomainJudgmentRecord(Base):
     override_reason: Mapped[str | None] = mapped_column(Text)
     evidence_location_id: Mapped[UUID | None] = mapped_column()
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=True
     )
 
 
@@ -325,7 +342,7 @@ class RiskOfBiasComparisonRecord(Base):
     differences: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
     compared_by_user_id: Mapped[UUID] = mapped_column()
     compared_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True), server_default=func.now(), nullable=True
     )
 
 
@@ -365,7 +382,7 @@ class RiskOfBiasAdjudicationRecord(Base):
     evidence_location_id: Mapped[UUID | None] = mapped_column()
     adjudicated_by_user_id: Mapped[UUID] = mapped_column()
     adjudicated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True), server_default=func.now(), nullable=True
     )
 
 

@@ -7,6 +7,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
@@ -38,6 +39,12 @@ class WorkflowStepCheckpointRecord(Base):
             "workflow_run_id",
             "step_key",
             name="uq_workflow_step_checkpoint_run_step",
+        ),
+        Index(
+            "ix_workflow_step_checkpoints_review",
+            "organization_id",
+            "review_id",
+            "state",
         ),
         ForeignKeyConstraint(
             ["workflow_run_id", "organization_id", "review_id"],
@@ -77,6 +84,12 @@ class WorkflowRecoveryOperationRecord(Base):
             "operation",
             "idempotency_key",
             name="uq_workflow_recovery_operation_idempotency",
+        ),
+        Index(
+            "ix_workflow_recovery_operations_review",
+            "organization_id",
+            "review_id",
+            "operation",
         ),
         CheckConstraint(
             "operation IN ('RESUME', 'MANUAL_RETRY')",
