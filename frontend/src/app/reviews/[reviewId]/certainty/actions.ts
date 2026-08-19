@@ -169,3 +169,61 @@ export async function createSummaryOfFindings(reviewId: string, assessmentId: st
   );
   await finish(reviewId, response, "summary_of_findings_snapshot_created");
 }
+
+export async function createAICertaintyPolicy(reviewId: string, formData: FormData) {
+  const response = await request("POST", "/api/v1/ai/certainty/reviews/" + reviewId + "/policies", {
+    maximum_batch_size: Number(value(formData, "maximum_batch_size") || "20"),
+  });
+  await finish(reviewId, response, "ai_certainty_policy_saved");
+}
+
+export async function requestAICertaintySuggestions(
+  reviewId: string,
+  assessmentId: string,
+  formData: FormData,
+) {
+  const documentIds = list(formData, "document_ids");
+  const response = await request("POST", "/api/v1/ai/certainty/reviews/" + reviewId + "/proposals", {
+    items: [
+      {
+        assessment_id: assessmentId,
+        documents: documentIds.map((documentId) => ({
+          document_id: documentId,
+          document_role: "PRIMARY_FULL_TEXT",
+        })),
+      },
+    ],
+  });
+  await finish(reviewId, response, "ai_certainty_suggestions_created");
+}
+
+export async function reviewAICertaintyProposal(
+  reviewId: string,
+  proposalId: string,
+  formData: FormData,
+) {
+  const rawPayload = value(formData, "human_payload");
+  let humanPayload: Record<string, unknown> | null = null;
+  if (rawPayload) {
+    try {
+      const parsed: unknown = JSON.parse(rawPayload);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        redirect("/reviews/" + reviewId + "/certainty?error=invalid_human_payload");
+      }
+      humanPayload = parsed as Record<string, unknown>;
+    } catch {
+      redirect("/reviews/" + reviewId + "/certainty?error=invalid_human_payload");
+    }
+  }
+  const response = await request(
+    "POST",
+    "/api/v1/ai/certainty/reviews/" + reviewId + "/proposals/" + proposalId + "/review",
+    {
+      action: value(formData, "action"),
+      canonical_action: optional(formData, "canonical_action"),
+      human_payload: humanPayload,
+      reason: optional(formData, "reason"),
+    },
+  );
+  await finish(reviewId, response, "ai_certainty_proposal_reviewed");
+}

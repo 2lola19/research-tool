@@ -118,3 +118,21 @@ candidate of the matching canonical kind. Both call the existing `OutcomeService
 records receive human provenance. Evaluation datasets and descriptive agreement/grounding,
 abstention, unsupported-conversion, high-risk, and calibration-status metrics remain separate from
 canonical outcomes. No automatic acceptance or official statistical harmonization is claimed.
+
+## Phase 29: governed AI certainty-of-evidence assistance
+
+`CERTAINTY_SUGGESTION` is an advisory task over the existing `CertaintyService` and immutable
+certainty framework versions. Deterministic preparation pins the assessor-owned in-progress
+assessment, outcome/framework versions, evidence profile, included Studies, explicitly selected
+processed Documents, parser/block snapshots, bounded chunks, and input hashes. The provider has no
+retrieval or tool authority.
+
+The output may contain only an evidence summary, exact grounded evidence, framework-permitted
+domain suggestions, confidence, or abstention. Validation rejects identity changes, invented
+domains/choices/magnitudes, fabricated or mismatched quotes, stale source references, final or
+candidate certainty, threshold, upgrade/downgrade, publication-bias, and statistical decisions.
+Human `ACCEPTED`/`EDITED` dispositions are append-only and invoke `CertaintyService.save_domain`
+with an explicit human payload; AI never saves final certainty, calculates a candidate, submits an
+assessment, adjudicates, or creates a Summary-of-Findings decision. Evaluation datasets and
+descriptive grounding/agreement, abstention, unsupported-adjustment, high-risk, and calibration
+metrics remain outside canonical certainty data.

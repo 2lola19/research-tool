@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from backend.app.api.routes.ai import router as ai_router
+from backend.app.api.routes.ai_certainty import router as ai_certainty_router
 from backend.app.api.routes.ai_extraction import router as ai_extraction_router
 from backend.app.api.routes.ai_full_text_screening import router as ai_full_text_screening_router
 from backend.app.api.routes.ai_inspection import router as ai_inspection_router
@@ -57,6 +58,7 @@ def build_api_router(api_prefix: str) -> APIRouter:
     router.include_router(ai_extraction_router, prefix=api_prefix)
     router.include_router(ai_risk_of_bias_router, prefix=api_prefix)
     router.include_router(ai_outcomes_router, prefix=api_prefix)
+    router.include_router(ai_certainty_router, prefix=api_prefix)
     router.include_router(ai_screening_router, prefix=api_prefix)
     router.include_router(analysis_router, prefix=api_prefix)
     router.include_router(certainty_router, prefix=api_prefix)

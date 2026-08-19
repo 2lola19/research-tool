@@ -1,6 +1,8 @@
 # Research Tool V1 Completion — Master Plan
 
-Status: definitive plan; Phase 27 checkpointed at 995c5af; Phase 28 local checkpoint pending
+Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpointed locally at
+`f475619`; Phase 29 implementation and required validation are complete and ready for local
+checkpointing; Phase 30 is next
 
 ## Reconciled baseline and sequencing
 
@@ -38,6 +40,46 @@ The provisional 27–38 envelope is retained, with the following repository-spec
   Docker/WSL troubleshooting, or production mutation is part of autonomous implementation.
 - Each phase requires focused tests, scientific/security/tenant/provenance review, documentation,
   a phase report, and a truthful local Git checkpoint when writable.
+
+## Local Git checkpoint autonomy
+
+The autonomous build runs with full local filesystem access. After a phase is
+implementation-complete and its required validation, scientific, security, tenant, and provenance
+reviews are complete, Codex may create a local Git checkpoint. GitHub remains out of scope: no
+push, force-push, release publication, repository-setting change, remote change, branch/tag
+deletion, history rewrite, or operation on another repository is authorized.
+
+Permitted local operations include `git status`, `git diff`, `git diff --check`, `git add` for
+intended phase files, staged-diff inspection, local `git commit`, and read-only `git log`/`git show`
+inspection required to verify the checkpoint. Before every commit, Codex must confirm phase
+completion and required reviews, record every required gate as `PASS` or truthfully as
+`ENVIRONMENT_BLOCKED`, run `git status`, inspect the unstaged diff, run `git diff --check`, audit
+for secrets and credentials, exclude unrelated files/temp directories/caches/generated runtime
+artifacts/host files, stage only intended phase files, inspect staged stat and content, run
+`git diff --cached --check`, commit with one truthful phase-specific message, verify the commit
+and resulting worktree, and record the SHA in `EXECUTION_STATE.json` and the phase report before
+continuing automatically.
+
+Codex must never use `git reset --hard`, `git clean`, broad `git restore`, ACL or `.git`
+permission changes, `git init`, repository recreation, global Git configuration changes, or
+history-rewriting operations. A per-command safe-directory option may be used when Git reports
+ownership ambiguity; it must not be persisted globally.
+
+The current full-access environment means ordinary local commits are expected. A historical
+`.git/index.lock` sandbox failure is not a stop condition: attempt the normal validated checkpoint
+once. If Git mutation actually fails, diagnose non-destructively, check whether another Git process
+is active, do not delete a lock blindly or perform ACL surgery, preserve all work, set
+`commit_pending: true` and `checkpoint_status: CHECKPOINT_PENDING`, record `LOCAL_COMMIT_PENDING`,
+and stop only at that durable checkpoint for the minimum manual intervention.
+
+## Cost-aware model policy
+
+Use the currently selected model for normal implementation. Do not stop merely because another
+model may be stronger, and do not switch models autonomously. Escalate only when a genuinely
+unresolved scientific, security, migration, or architectural issue cannot be resolved
+confidently. If escalation is required, preserve all work, update `EXECUTION_STATE.json`, set
+`status: MODEL_ESCALATION_RECOMMENDED`, explain the exact unresolved issue, and stop at a durable
+checkpoint.
 
 ## Shared phase definition of done
 
@@ -327,10 +369,18 @@ architecture, domain/security/AI/testing documents, current state, relevant ADRs
 inspect partial files and resume from the first incomplete durable step. `VALIDATION_LOG.md`,
 `DECISIONS.md`, `BLOCKERS.md`, and `PHASE_REPORTS/phase-XX.md` are the human-auditable trail.
 
+`checkpoint_status` describes the current phase and is one of `NOT_READY`, `READY_FOR_CHECKPOINT`,
+`CHECKPOINT_PENDING`, or `CHECKPOINTED`. Completed phase SHAs are retained in
+`phase_checkpoints`; state and Git `HEAD` must be reconciled before resuming. If a state file claims
+completion but its recorded local commit is absent, the phase is `CHECKPOINT_PENDING`, not silently
+skipped.
+
 ## Current execution status
 
-Phase 27 is locally checkpointed at `995c5af`. Phase 28 implementation is complete pending its
-final documentation/checkpoint review. The Phase 28 canonical boundary is the existing
-`OutcomeService`; AI only proposes grounded mapping or reported-effect candidates and requires an
-explicit human payload for any canonical write. After the Phase 28 checkpoint, the next safe action
-is Phase 29 planning over the existing certainty/GRADE service.
+Phase 27 is locally checkpointed at `995c5af78996410ef9a04ddbe93b00ed3c52f79e`, and Phase 28 is
+locally checkpointed at `f47561973e697ac30a87c41a865d146b18e11246`. Phase 29 is implementation-
+complete and has passed its focused backend/frontend/migration gates, with the full pytest timeout
+truthfully recorded as an environment limitation. Its canonical boundary is the existing
+`CertaintyService`; AI only proposes grounded evidence and framework-permitted domain suggestions
+and requires an explicit human payload for canonical writes. The next safe action is the validated
+local Phase 29 checkpoint, followed automatically by Phase 30 planning.

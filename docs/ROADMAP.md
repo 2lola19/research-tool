@@ -117,3 +117,19 @@ immutable OutcomeDefinitionVersions. It may suggest an evidence-grounded mapping
 effect candidate, but cannot convert values, calculate effects, impute components, pool studies, or
 change analysis readiness. Human dispositions call the existing canonical outcome service with an
 explicit payload. Evaluation remains descriptive and separate from canonical outcome data.
+
+## Phase 29 complete: governed certainty-of-evidence/GRADE assistance
+
+The certainty assistant is an advisory projection over assessor-owned in-progress assessments,
+immutable framework versions, included Studies, and explicitly selected processed evidence. It
+provides only grounded summaries, permitted domain suggestions, or abstention. Human dispositions
+call the existing certainty service; no AI final certainty, threshold, publication-bias inference,
+upgrade/downgrade, calculation, adjudication, or submission is supported. Evaluation is descriptive
+and separate from canonical certainty data. This is a structured foundation, not a claim of full
+official GRADE support.
+
+## Recommended Phase 30
+
+Build the read-only evidence-aware Review copilot/project intelligence surface described in the
+master plan. Preserve allowlisted context, explicit citations, stale-context labels, tenant scope,
+and no canonical writes or scientific calculation.

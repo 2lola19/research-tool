@@ -40,6 +40,7 @@ _GOVERNED_SCREENING_TASKS = {
     AITaskType.EXTRACTION_SUGGESTION,
     AITaskType.ROB_SUGGESTION,
     AITaskType.OUTCOME_MAPPING_SUGGESTION,
+    AITaskType.CERTAINTY_SUGGESTION,
 }
 
 
@@ -106,6 +107,7 @@ class AIExecutionService:
         await self.ensure_defaults(actor, AITaskType.EXTRACTION_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.ROB_SUGGESTION)
         await self.ensure_defaults(actor, AITaskType.OUTCOME_MAPPING_SUGGESTION)
+        await self.ensure_defaults(actor, AITaskType.CERTAINTY_SUGGESTION)
         models = await self._repository.list_models(actor.organization_id)
         prompts = await self._repository.list_prompts(actor.organization_id)
         return {
@@ -444,8 +446,13 @@ class AIExecutionService:
                 "outcome_definition",
                 "extraction_value",
                 "allowed_mappings",
+                "framework_definition",
+                "assessment_snapshot",
+                "evidence_profile",
             }:
                 valid = isinstance(current, dict) and bool(current)
+            elif key in {"included_studies"}:
+                valid = isinstance(current, list) and bool(current)
             else:
                 valid = isinstance(current, str) and bool(current.strip())
             if not valid:
@@ -506,6 +513,19 @@ class AIExecutionService:
                 raise ValueError("outcome assistance requires 1 through 80 selected chunks")
             if not isinstance(documents, list) or not documents or len(documents) > 8:
                 raise ValueError("outcome assistance requires 1 through 8 source documents")
+        if task.task_type is AITaskType.CERTAINTY_SUGGESTION:
+            domains = value.get("framework_definition", {}).get("domains", [])
+            chunks = value.get("chunks")
+            documents = value.get("source_documents")
+            studies = value.get("included_studies")
+            if not isinstance(domains, list) or not domains or len(domains) > 50:
+                raise ValueError("certainty assistance requires 1 through 50 framework domains")
+            if not isinstance(studies, list) or not studies or len(studies) > 500:
+                raise ValueError("certainty assistance requires 1 through 500 included Studies")
+            if not isinstance(chunks, list) or not chunks or len(chunks) > 80:
+                raise ValueError("certainty assistance requires 1 through 80 selected chunks")
+            if not isinstance(documents, list) or not documents or len(documents) > 8:
+                raise ValueError("certainty assistance requires 1 through 8 source documents")
 
     @staticmethod
     def _sanitize_input(
@@ -558,6 +578,20 @@ class AIExecutionService:
                 "outcome_definition": value["outcome_definition"],
                 "extraction_value": value["extraction_value"],
                 "allowed_mappings": value["allowed_mappings"],
+                "source_documents": value["source_documents"],
+                "chunks": value["chunks"],
+                "input_preparation": value["input_preparation"],
+            }
+        if task.task_type is AITaskType.CERTAINTY_SUGGESTION:
+            return {
+                "review_id": str(value["review_id"]),
+                "assessment_id": str(value["assessment_id"]),
+                "outcome_version_id": str(value["outcome_version_id"]),
+                "framework_version_id": str(value["framework_version_id"]),
+                "framework_definition": value["framework_definition"],
+                "assessment_snapshot": value["assessment_snapshot"],
+                "evidence_profile": value["evidence_profile"],
+                "included_studies": value["included_studies"],
                 "source_documents": value["source_documents"],
                 "chunks": value["chunks"],
                 "input_preparation": value["input_preparation"],
@@ -650,6 +684,11 @@ class AIExecutionService:
             from backend.app.ai.outcome_domain import validate_outcome_output
 
             errors.extend(validate_outcome_output(value, input_data or {}))
+            return errors
+        if task.task_type is AITaskType.CERTAINTY_SUGGESTION:
+            from backend.app.ai.certainty_domain import validate_certainty_output
+
+            errors.extend(validate_certainty_output(value, input_data or {}))
             return errors
         if "evidence_references" in value and not isinstance(value["evidence_references"], list):
             errors.append(

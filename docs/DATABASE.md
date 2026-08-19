@@ -202,3 +202,17 @@ uniqueness constraints cover policy bounds, hashes, task versions, reference sta
 actions, and access types. ORM guards reject updates/deletes across the AI outcome history. The
 migration is linear after `20260818_0028` and was manually upgraded through `0029` and downgraded
 to the base SQLite schema. PostgreSQL-specific validation remains a later production gate.
+
+## Phase 29 AI certainty metadata
+
+Migration `20260819_0030` adds append-only `ai_certainty_policy_versions`, proposal links, access
+events, human reviews, evaluation datasets/results, and error classifications. Proposal links
+repeat Organization/Review scope across the AI run/proposal, assessor-owned certainty assessment,
+immutable outcome/framework versions, evidence-profile and assessment hashes, and source/parser/
+chunk manifests.
+
+Composite foreign keys and scoped queries prevent cross-tenant/review composition. Constraints
+cover policy bounds, task/hash versions, access types, and human review actions; ORM guards reject
+updates/deletes across certainty assistance history. Canonical certainty tables remain unchanged:
+accepted or edited proposals call the existing service, while evaluation records are not scientific
+inputs. The migration is linear after `20260818_0029`; SQLite upgrade/downgrade coverage passes.

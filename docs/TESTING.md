@@ -165,3 +165,15 @@ Targeted Ruff, format, strict mypy, frontend lint, and TypeScript pass. The Wind
 cleanup remains environment-blocked for the dedicated integration shard; broad frontend lint also
 timed out without output while the changed frontend files pass direct ESLint. Vitest/build and live
 PostgreSQL/provider execution remain production-phase gates.
+
+## Phase 29 certainty assistance validation
+
+Focused unit coverage verifies framework identity, allowed domain direction/judgment/magnitude,
+exact chunk/page/section/source-block/quote grounding, abstention, forbidden final/threshold
+fields, descriptive metrics, and deterministic mock fixtures. Integration coverage verifies
+Review-scoped proposal reads, viewer authorization, policy/readiness boundaries, and foreign-ID
+non-enumeration. Migration coverage upgrades and downgrades the seven certainty-assistance tables.
+
+Backend Ruff, format, strict mypy, import, focused unit/integration, and migration checks pass.
+Frontend ESLint, TypeScript, Vitest, and production build pass for the certainty workspace. Live
+PostgreSQL, Docker, parser, external storage, and paid/live provider execution remain deferred.

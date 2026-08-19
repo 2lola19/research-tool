@@ -35,6 +35,21 @@ relevant phase report or ADR.
   human disposition. It does not present AI output as canonical or let the browser calculate
   scientific values.
 
+## 2026-08-19 - Phase 29 certainty boundary
+
+- Certainty assistance is an advisory projection over the existing immutable framework and
+  `CertaintyService`; it does not create a second certainty engine or claim complete official GRADE
+  support.
+- Deterministic preparation pins the assessor-owned in-progress assessment, evidence profile,
+  included Studies, explicit processed Documents, parser/chunk inputs, and hashes. The provider may
+  summarize evidence or suggest only exact framework-permitted domain choices with evidence.
+- AI cannot produce final/candidate certainty, thresholds, publication-bias inference,
+  upgrades/downgrades, statistical calculations, adjudication, or submission. Human `ACCEPTED` and
+  `EDITED` dispositions require an explicit domain payload and call `CertaintyService.save_domain`.
+- Evaluation stores descriptive grounding/agreement, abstention, unsupported-adjustment, and
+  high-risk metrics outside canonical certainty state. The workspace exposes pinned proposals and
+  requires a human disposition; no browser-side scientific calculation was added.
+
 ## 2026-08-18 — baseline and control plane
 
 - Observed the expected clean Phase 26 baseline at `ff5e1bb`; no newer valid work needed

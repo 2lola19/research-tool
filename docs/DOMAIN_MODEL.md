@@ -214,3 +214,17 @@ explicit human payload can call `OutcomeService.create_mapping` or
 analysis readiness. Evaluation datasets/results and error classifications are independent
 quality records. Outcome and extraction versions remain immutable, and Study and Article remain
 distinct entities.
+
+## Governed AI certainty-of-evidence assistance
+
+`AICertaintyProposalLink` is an immutable advisory bridge between an AI proposal and an assessor-
+owned in-progress `CertaintyAssessment`. It pins the immutable OutcomeDefinitionVersion and
+CertaintyFrameworkVersion, evidence profile, included Studies, Article/Document/parser/block
+sources, selected/omitted chunks, validation results, and staleness hashes. It is not a certainty
+assessment, domain judgment, final certainty, or Summary-of-Findings row.
+
+`AICertaintyReviewRecord` stores the human disposition and optional canonical subject link. Only an
+explicit human domain payload can invoke `CertaintyService.save_domain`; AI cannot choose the final
+certainty, calculate thresholds, infer publication bias, adjudicate, or submit an assessment.
+Evaluation datasets/results and error classifications are separate quality records. Certainty
+framework versions and canonical assessments remain immutable and tenant/review scoped.

@@ -62,9 +62,44 @@ This log records commands, results, and honest environment blockers for the V1 c
 - Full strict mypy: PASS - `mypy backend workers` reported no issues in 209 source files.
 - Final diff/secret review: PASS - `git diff --check` and the repository secret-pattern audit
   found no issues. Pre-existing inaccessible runtime/temp artifacts were not included.
-- Local checkpoint: ENVIRONMENT_BLOCKED - the single staging attempt failed because Git could not
-  create `.git/index.lock` (`Permission denied`). Per policy, no retry or permission workaround was
-  attempted; Phase 28 is `LOCAL_COMMIT_PENDING` with exact manual commands in `BLOCKERS.md`.
+- Local checkpoint at the time: ENVIRONMENT_BLOCKED - the first staging attempt failed because Git
+  could not create `.git/index.lock` (`Permission denied`) in the restricted sandbox. This remains
+  historical and is not a code or scientific finding.
+
+## 2026-08-19 - Phase 28 checkpoint reconciliation and control-plane policy
+
+- Git reconciliation: PASS - `HEAD` is `f47561973e697ac30a87c41a865d146b18e11246`, the expected
+  Phase 28 commit, with parent `995c5af78996410ef9a04ddbe93b00ed3c52f79e` and a clean worktree.
+- Checkpoint verification: PASS - commit message, intended Phase 28 scope, commit diff, and
+  `git diff --check` were verified. No GitHub operation was performed.
+- Control-plane update: PASS - local checkpoint autonomy, safe lock-failure handling, recovery
+  reconciliation, checkpoint states, and cost-aware model policy were recorded.
+
+## 2026-08-19 - Phase 29 governed AI certainty-of-evidence/GRADE assistance
+
+- Targeted unit tests: PASS - `tests/unit/test_ai_certainty_assistance.py` passed 5 tests with
+  `pytest --no-cov`.
+- Targeted integration tests: PASS - `tests/integration/test_ai_certainty.py` passed 3 tests,
+  including generic-route closure, viewer authorization, foreign-review non-enumeration, and the
+  policy-before-generation boundary.
+- Targeted and repository Ruff: PASS - `ruff check .`.
+- Formatting: PASS - `ruff format --check .` reported 332 files already formatted.
+- Strict typing: PASS - `mypy backend workers` reported no issues in 213 source files.
+- Python compilation/import: PASS - compileall and backend model/task imports passed.
+- Migration chain: PASS - `tests/integration/test_migrations.py` upgraded and downgraded the SQLite
+  chain through `20260819_0030`.
+- Frontend gates: PASS - `npm run lint`, `npm run typecheck`, `npm test` (9 tests), and
+  `npm run build` passed.
+- Full backend suite: ENVIRONMENT_BLOCKED - `pytest -q` produced no output for 304 seconds; exact
+  pytest processes left by the Windows wrapper were verified and terminated. No assertion result
+  was claimed.
+- Secret/credential audit: PASS - no credential patterns were found in intended Phase 29 files;
+  runtime/temp/cache directories were not staged.
+- Scientific/security/provenance review: PASS - certainty writes remain in `CertaintyService`,
+  AI cannot produce final certainty or statistical decisions, proposals are stale/tenant scoped,
+  and all accepted/edited writes require explicit human payloads and provenance.
+- Local checkpoint: READY_FOR_CHECKPOINT - full-access local Git checkpoint procedure is pending
+  after final scope and staged-diff inspection. No GitHub operation is authorized.
 
 ## 2026-08-18 — baseline
 

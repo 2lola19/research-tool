@@ -142,3 +142,19 @@ Study, extraction, OutcomeDefinitionVersion, allowed references, source mappings
 immutability. Invalid or stale proposals cannot be accepted; edited dispositions must include a
 human canonical payload. AI cannot calculate, convert, infer missing components, pool, or alter
 analysis readiness.
+
+## Phase 29 AI certainty security
+
+Certainty assistance requires active organization membership, Review access, the assessor-owned
+in-progress assessment, an immutable framework version, included Study identities, and explicit
+processed source Documents whose Articles belong to those Studies. Every policy, readiness,
+proposal, review, evaluation, and error query is tenant/Review scoped; composite foreign keys and
+path-scoped identifiers fail closed across tenants, Reviews, assessments, frameworks, Documents,
+Articles, and evaluation records.
+
+The generic AI routes reject the certainty task. Source text is untrusted, bounded, secret-screened,
+and passed to a no-tools provider adapter. Deterministic validation rejects fabricated or mismatched
+evidence, unsupported domains/magnitudes, stale inputs, candidate/final certainty, thresholds,
+publication-bias inference, and statistical calculations. Only an explicit human disposition can
+call the canonical certainty service; stale or invalid proposals cannot be accepted, and AI cannot
+write final certainty, submit, compare, adjudicate, or create Summary-of-Findings state.

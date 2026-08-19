@@ -70,6 +70,11 @@ class DeterministicMockAIProvider:
                 dict[str, Any],
                 DeterministicMockAIProvider.outcome_fixture("ABSTAIN", request.structured_input),
             )
+        if request.task_type == "CERTAINTY_SUGGESTION":
+            return cast(
+                dict[str, Any],
+                DeterministicMockAIProvider.certainty_fixture("ABSTAIN", request.structured_input),
+            )
         if request.task_type == "FULL_TEXT_SCREENING_SUGGESTION":
             return {
                 "suggestion": "MAYBE",
@@ -527,3 +532,90 @@ class DeterministicMockAIProvider:
                 },
             }
         raise ValueError(f"unknown outcome mock fixture: {scenario}")
+
+    @staticmethod
+    def certainty_fixture(
+        scenario: str, structured_input: dict[str, Any]
+    ) -> dict[str, Any] | str | AIProviderErrorKind:
+        """Named deterministic fixtures for governed certainty drafting assistance."""
+        scenario = scenario.upper()
+        errors = {
+            "TIMEOUT": AIProviderErrorKind.TIMEOUT,
+            "RATE_LIMIT": AIProviderErrorKind.RATE_LIMIT,
+            "TRANSIENT_FAILURE": AIProviderErrorKind.UNAVAILABLE,
+            "PERMANENT_FAILURE": AIProviderErrorKind.PERMANENT,
+        }
+        if scenario in errors:
+            return errors[scenario]
+        if scenario == "MALFORMED_JSON":
+            return "not-a-structured-object"
+        base: dict[str, Any] = {
+            "assessment_id": str(structured_input.get("assessment_id", "")),
+            "outcome_version_id": str(structured_input.get("outcome_version_id", "")),
+            "framework_version_id": str(structured_input.get("framework_version_id", "")),
+            "evidence_summary": None,
+            "evidence_summary_evidence": [],
+            "domain_suggestions": [],
+            "model_reported_confidence": 0.5,
+            "abstention": "HUMAN_CERTAINTY_JUDGMENT_REQUIRED",
+        }
+        if scenario in {"ABSTAIN", "SUCCESS_ABSTAIN"}:
+            return base
+        framework = structured_input.get("framework_definition", {})
+        domains = framework.get("domains", []) if isinstance(framework, dict) else []
+        chunks = structured_input.get("chunks", [])
+        first = chunks[0] if chunks else {}
+        evidence = {
+            "document_id": str(first.get("document_id", "")),
+            "document_version_id": str(first.get("document_version_id", "")),
+            "chunk_id": str(first.get("chunk_id", "")),
+            "source_block_id": str(first.get("source_block_id", "")),
+            "page": first.get("page"),
+            "section": first.get("section"),
+            "quote": str(first.get("text", ""))[:80],
+        }
+        first_domain = domains[0] if domains else {}
+        choices = first_domain.get("choices", []) if isinstance(first_domain, dict) else []
+        choice = choices[0] if choices else {"value": "NO_DOWNGRADE", "magnitude": 0}
+        suggestion = {
+            "domain_key": first_domain.get("key", ""),
+            "direction": first_domain.get("direction", "DOWNGRADE"),
+            "judgment": choice.get("value"),
+            "magnitude": choice.get("magnitude", 0),
+            "rationale": "The supplied evidence is presented for human certainty review.",
+            "evidence": [evidence],
+            "confidence": 0.5,
+        }
+        if scenario == "SUCCESS_SUGGESTION":
+            return {
+                **base,
+                "evidence_summary": "The supplied evidence requires explicit human appraisal.",
+                "evidence_summary_evidence": [evidence],
+                "domain_suggestions": [suggestion],
+                "abstention": None,
+            }
+        if scenario == "UNSUPPORTED_DIRECTION":
+            return {
+                **base,
+                "domain_suggestions": [{**suggestion, "direction": "UPGRADE"}],
+                "abstention": None,
+            }
+        if scenario == "WRONG_MAGNITUDE":
+            return {
+                **base,
+                "domain_suggestions": [{**suggestion, "magnitude": 2}],
+                "abstention": None,
+            }
+        if scenario == "FORBIDDEN_FINAL":
+            return {**base, "final_certainty": "HIGH"}
+        if scenario == "FABRICATED_EVIDENCE":
+            return {
+                **base,
+                "domain_suggestions": [
+                    {**suggestion, "evidence": [{**evidence, "quote": "fabricated"}]}
+                ],
+                "abstention": None,
+            }
+        if scenario == "OVERSIZED_OUTPUT":
+            return {**base, "evidence_summary": "x" * 40_000}
+        raise ValueError(f"unknown certainty mock fixture: {scenario}")

@@ -102,3 +102,8 @@ Phase 28 adds no third-party runtime dependency. Outcome assistance uses the exi
 Python/FastAPI/Pydantic/SQLAlchemy AI substrate, deterministic source/chunk validation, canonical
 outcome rules, and offline mock fixtures. No conversion library, statistical engine, embedding or
 retrieval service, paid model SDK, or production provider credentials were introduced.
+
+Phase 29 adds no third-party runtime dependency. Certainty assistance uses the existing
+Python/FastAPI/Pydantic/SQLAlchemy substrate, immutable certainty rules, deterministic evidence
+validation, and offline mock fixtures. No complete published GRADE instrument, statistical engine,
+retrieval/embedding service, paid AI SDK, external provider, or credential was introduced.

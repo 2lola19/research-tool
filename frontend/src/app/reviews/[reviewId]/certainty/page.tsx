@@ -7,13 +7,17 @@ import {
   getCertaintyWorkspace,
   getOutcomeWorkspace,
 } from "@/lib/api";
+import { getAICertaintyProposals } from "@/lib/ai-certainty-api";
 
 import {
   adjudicateComparison,
   compareAssessments,
   createAssessment,
+  createAICertaintyPolicy,
   createSummaryOfFindings,
   installFoundation,
+  requestAICertaintySuggestions,
+  reviewAICertaintyProposal,
   saveDomain,
   saveFinal,
   submitAssessment,
@@ -34,10 +38,11 @@ export default async function CertaintyPage({ params, searchParams }: Props) {
   const organizationId = cookieStore.get("review_organization_id")?.value;
   if (!accessToken || !organizationId) redirect("/login");
 
-  const [certainty, outcomes, analysis] = await Promise.all([
+  const [certainty, outcomes, analysis, aiCertainty] = await Promise.all([
     getCertaintyWorkspace(accessToken, organizationId, reviewId),
     getOutcomeWorkspace(accessToken, organizationId, reviewId),
     getAnalysisWorkspace(accessToken, organizationId, reviewId),
+    getAICertaintyProposals(accessToken, organizationId, reviewId),
   ]);
   if (
     certainty.status === "unauthorized" ||
@@ -336,6 +341,201 @@ export default async function CertaintyPage({ params, searchParams }: Props) {
                 );
               })}
             </div>
+          </section>
+
+          <section className="border-t border-[var(--line)] py-9">
+            <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--brand)]">
+                  Governed assistance
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold">Certainty drafting assistant</h2>
+                <p className="mt-2 text-sm text-[var(--muted)]">
+                  The assistant summarizes selected parsed evidence and proposes only framework-
+                  permitted domain judgments. It cannot calculate, choose, or save final certainty.
+                  A human must inspect the pinned evidence and submit any canonical payload.
+                </p>
+                <form
+                  action={createAICertaintyPolicy.bind(null, reviewId)}
+                  className="mt-5 space-y-3 rounded-xl bg-[#edf4f0] p-4"
+                >
+                  <label className="block text-xs font-semibold">
+                    Maximum proposal batch size
+                    <input
+                      className={field}
+                      defaultValue="20"
+                      min="1"
+                      max="100"
+                      name="maximum_batch_size"
+                      type="number"
+                    />
+                  </label>
+                  <button className={button} type="submit">
+                    Save governed policy
+                  </button>
+                </form>
+              </div>
+              <div className="space-y-4">
+                {certainty.assessments
+                  .filter((assessment) => assessment.status === "IN_PROGRESS")
+                  .map((assessment) => (
+                    <form
+                      action={requestAICertaintySuggestions.bind(null, reviewId, assessment.id)}
+                      className="rounded-xl border border-[var(--line)] bg-white p-5"
+                      key={assessment.id}
+                    >
+                      <h3 className="font-semibold">Prepare evidence-grounded suggestions</h3>
+                      <p className="mt-1 break-all font-mono text-xs text-[var(--muted)]">
+                        Assessment {assessment.id}
+                      </p>
+                      <label className="mt-4 block text-xs font-semibold">
+                        Processed source Document UUIDs
+                        <textarea
+                          className={field}
+                          name="document_ids"
+                          placeholder="Document UUIDs separated by commas"
+                          required
+                        />
+                      </label>
+                      <button className={button + " mt-4"} type="submit">
+                        Generate bounded suggestions
+                      </button>
+                    </form>
+                  ))}
+                {certainty.assessments.every((assessment) => assessment.status !== "IN_PROGRESS") ? (
+                  <p className="rounded-xl border border-[var(--line)] p-5 text-sm text-[var(--muted)]">
+                    New assistance is available only while an assessment is in progress.
+                  </p>
+                ) : null}
+                {aiCertainty.status === "unauthorized" ? (
+                  <p className="text-sm text-[var(--muted)]">
+                    Certainty assistance is restricted to authorized review roles.
+                  </p>
+                ) : null}
+                {aiCertainty.status === "unavailable" ? (
+                  <p className="text-sm text-amber-800">
+                    Certainty assistance is temporarily unavailable; canonical records are unaffected.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            {aiCertainty.status === "ready" && aiCertainty.proposals.length > 0 ? (
+              <div className="mt-8 space-y-5">
+                <h3 className="text-xl font-semibold">Proposals awaiting human disposition</h3>
+                {aiCertainty.proposals.map((proposal) => {
+                  const value = proposal.structured_value;
+                  return (
+                    <article
+                      className="rounded-2xl border border-[var(--line)] bg-white p-5"
+                      key={proposal.proposal_id ?? `${proposal.assessment_id}-${proposal.ai_run_id}`}
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <h4 className="font-semibold">
+                            {value?.abstention ? "Assistant abstained" : "Domain suggestions"}
+                          </h4>
+                          <p className="mt-1 break-all font-mono text-xs text-[var(--muted)]">
+                            Assessment {proposal.assessment_id} · {proposal.status}
+                          </p>
+                        </div>
+                        <span
+                          className={
+                            "rounded-full px-3 py-1 text-xs font-semibold " +
+                            (proposal.stale
+                              ? "bg-amber-100 text-amber-900"
+                              : proposal.validation_results?.aggregate_valid
+                                ? "bg-[#edf4f0] text-emerald-900"
+                                : "bg-amber-100 text-amber-900")
+                          }
+                        >
+                          {proposal.stale
+                            ? "STALE"
+                            : proposal.validation_results?.aggregate_valid
+                              ? "VALIDATED"
+                              : "REVIEW REQUIRED"}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm text-[var(--muted)]">
+                        {value?.abstention_reason ?? value?.evidence_summary ?? proposal.failure_reason ?? "No summary returned."}
+                      </p>
+                      {value?.domain_suggestions?.length ? (
+                        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                          {value.domain_suggestions.map((suggestion) => (
+                            <div className="rounded-xl bg-[#f7f8f6] p-4" key={suggestion.domain_key}>
+                              <p className="font-semibold">{suggestion.domain_key}</p>
+                              <p className="mt-1 text-sm">
+                                {suggestion.judgment} · magnitude {suggestion.magnitude}
+                              </p>
+                              <p className="mt-1 text-xs text-[var(--muted)]">{suggestion.rationale}</p>
+                              <p className="mt-2 text-xs text-[var(--muted)]">
+                                {suggestion.evidence.length} pinned evidence item(s)
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                      <details className="mt-4 rounded-xl bg-[#f7f8f6] p-3">
+                        <summary className="cursor-pointer text-xs font-semibold">
+                          Inspect pinned proposal and validation
+                        </summary>
+                        <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words text-[11px]">
+                          {JSON.stringify(
+                            {
+                              structured_value: value,
+                              validation_results: proposal.validation_results,
+                              stale_reasons: proposal.stale_reasons,
+                              source_manifest: proposal.source_manifest,
+                              selected_chunk_ids: proposal.selected_chunk_ids,
+                            },
+                            null,
+                            2,
+                          )}
+                        </pre>
+                      </details>
+                      {proposal.proposal_id ? (
+                        <form
+                          action={reviewAICertaintyProposal.bind(null, reviewId, proposal.proposal_id)}
+                          className="mt-5 grid gap-3 border-t border-[var(--line)] pt-4 lg:grid-cols-4"
+                        >
+                          <label className="text-xs font-semibold">
+                            Human disposition
+                            <select className={field} name="action">
+                              <option>REJECTED</option>
+                              <option>UNRESOLVED</option>
+                              <option>EDITED</option>
+                              <option>ACCEPTED</option>
+                            </select>
+                          </label>
+                          <label className="text-xs font-semibold">
+                            Canonical action
+                            <select className={field} name="canonical_action">
+                              <option value="">No canonical write</option>
+                              <option>SAVE_DOMAIN_JUDGMENTS</option>
+                            </select>
+                          </label>
+                          <label className="text-xs font-semibold lg:col-span-2">
+                            Human canonical payload (JSON)
+                            <textarea
+                              className={field + " font-mono text-[11px]"}
+                              name="human_payload"
+                              placeholder='{"domains":[{"domain_key":"IMPRECISION","judgment":"NO_CONCERN","rationale":"..."}]}'
+                            />
+                          </label>
+                          <label className="text-xs font-semibold lg:col-span-3">
+                            Reason
+                            <input className={field} name="reason" />
+                          </label>
+                          <button className={button + " self-end"} type="submit">
+                            Record disposition
+                          </button>
+                        </form>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
           </section>
 
           <section className="grid gap-6 border-t border-[var(--line)] py-9 lg:grid-cols-2">

@@ -132,3 +132,18 @@ edited canonical records are created only by the existing `OutcomeService` from 
 payload and receive human provenance with `AI_PROPOSAL` source identity. The canonical record
 retains its normal extraction/mapping/effect trace; the AI proposal, evaluation, and error records
 remain separate and are not used as analysis inputs merely because they were validated.
+
+## AI-assisted certainty-of-evidence provenance
+
+Each certainty proposal retains the assessor-owned assessment, included Study identities, outcome
+and immutable framework version/content hashes, evidence-profile and assessment snapshots,
+Article/Document/version identities, successful processing/parser and parsed-block hashes,
+selected/omitted chunk manifests, input hash, task/prompt/model versions, attempt history,
+response/validation hashes, and exact bounded evidence quotes. The proposal link is never a
+canonical certainty record.
+
+`ACCEPTED`, `EDITED`, `REJECTED`, and `UNRESOLVED` dispositions remain append-only. Accepted or
+edited domain judgments are created only by the existing `CertaintyService` from an explicit human
+payload and receive human `AI_PROPOSAL` provenance plus the normal audit event. AI abstention,
+staleness, validation errors, evaluation results, and high-risk/error classifications remain
+distinct and cannot enter scientific exports as canonical certainty state.

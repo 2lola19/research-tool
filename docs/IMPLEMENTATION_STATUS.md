@@ -204,3 +204,20 @@ schema/document/parser/task/prompt changes report staleness without rerun.
 - AI output is limited to a mapping candidate, reported effect candidate, or abstention. Deterministic validation rejects identity changes, fabricated evidence, unsupported conversions/calculations, incompatible measures, unsafe numbers, and incomplete effect metadata. Humans remain authoritative and explicit edited/accepted payloads call the canonical outcome service.
 - Added append-only proposal links, policy/review/access/evaluation/error records, tenant-scoped routes, generic-route closure, migration `20260818_0029`, deterministic mock fixtures, focused tests, and a governed panel in the existing outcomes workspace.
 - Focused unit tests, targeted Ruff/format/mypy, compile/import checks, manual SQLite upgrade/downgrade, targeted frontend ESLint, and TypeScript pass. The dedicated integration shard is environment-blocked by Windows pytest temp-root teardown; broad frontend lint timed out without output. No paid provider or live production infrastructure was used.
+
+## Phase 29 certainty-of-evidence/GRADE assistance
+
+- Implemented the governed `CERTAINTY_SUGGESTION` task over the existing immutable certainty
+  framework and `CertaintyService`. Deterministic readiness pins the assessor-owned in-progress
+  assessment, evidence profile, included Studies, explicit processed Documents, parser/block
+  snapshots, bounded chunks, and hashes.
+- AI output is limited to grounded evidence summaries, framework-permitted domain suggestions, or
+  abstention. Deterministic validation rejects unsupported domains/magnitudes, fabricated or stale
+  evidence, final/candidate certainty, threshold, publication-bias, upgrade/downgrade, and
+  calculation output. Human `ACCEPTED`/`EDITED` payloads alone call the canonical certainty service.
+- Added append-only policy/proposal/access/review/evaluation/error records, migration
+  `20260819_0030`, tenant-scoped routes, deterministic fixtures, focused tests, and a governed
+  certainty workspace panel. No official complete GRADE implementation is claimed.
+- Focused backend unit/integration/migration tests, Ruff, format, strict mypy, frontend ESLint,
+  TypeScript, Vitest, and production build pass. Live PostgreSQL, Docker, external parser/storage,
+  and paid/live provider checks remain deferred as documented environment gates.

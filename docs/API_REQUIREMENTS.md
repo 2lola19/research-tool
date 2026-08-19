@@ -173,3 +173,20 @@ service invokes `OutcomeService`, which performs the final compatibility, eviden
 immutability checks. The API never performs unit conversion, effect calculation, imputation,
 pooling, or analysis-state mutation. Direct proposal/evaluation/error identifiers are scoped by
 the path Review and active organization membership.
+
+## Phase 29 AI certainty-of-evidence API
+
+The `/api/v1/ai/certainty/reviews/{review_id}` routes provide versioned policy creation, readiness
+checks, bounded proposal generation, proposal reads, human dispositions, evaluation dataset/result
+management, and append-only error classification. A request names an assessor-owned in-progress
+certainty assessment and one through eight explicit processed Documents; the service verifies the
+assessment's included Study identities and the Article-to-Study relationship before invoking the
+AI task.
+
+The generic AI routes reject `CERTAINTY_SUGGESTION`. Responses retain assessment/outcome/framework
+identity, source and selected-chunk manifests, validation errors, staleness, and AI run/task/model/
+prompt provenance. The task may draft evidence and framework-permitted domain suggestions only.
+`ACCEPTED` and `EDITED` require an explicit human payload and `SAVE_DOMAIN_JUDGMENTS`; the route
+invokes `CertaintyService`, which rechecks framework choices, evidence, tenant scope, and
+immutability. No AI route writes candidate/final certainty, thresholds, publication-bias
+decisions, upgrades/downgrades, comparisons, adjudications, or Summary-of-Findings records.
