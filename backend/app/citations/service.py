@@ -7,6 +7,7 @@ from backend.app.citations.domain import (
     Article,
     CitationFormat,
     CitationImportBatch,
+    ParsedCitation,
     citation_content_hash,
 )
 from backend.app.citations.parsers import CitationParseError, parse_citations
@@ -56,12 +57,44 @@ class CitationImportService:
             records = parse_citations(source_format, content)
         except CitationParseError as exc:
             raise InvalidCitationImportError(str(exc)) from exc
+        return await self.import_records(
+            actor,
+            review_id=review_id,
+            source_format=source_format,
+            source_name=source_name,
+            source_content=content,
+            records=records,
+            provenance_method_name=f"{source_format.value.casefold()}-citation-parser",
+        )
+
+    async def import_records(
+        self,
+        actor: ActorContext,
+        *,
+        review_id: UUID,
+        source_format: CitationFormat,
+        source_name: str,
+        source_content: str,
+        records: list[ParsedCitation],
+        provenance_method_name: str,
+    ) -> CitationImportBatch:
+        review = await self._review_service.get(actor, review_id)
+        if not actor.has_permission(Permission.IMPORT_CITATIONS):
+            raise AuthorizationError("the current role cannot import citations")
+        if not records:
+            raise InvalidCitationImportError("citation import contained no records")
+        digest = citation_content_hash(source_content)
+        existing = await self._repository.get_batch_by_hash(
+            actor.organization_id, review.id, source_format, digest
+        )
+        if existing is not None:
+            return existing
         batch, created = await self._repository.create_import(
             organization_id=actor.organization_id,
             review_id=review.id,
             source_format=source_format,
             source_name=source_name.strip(),
-            source_content=content,
+            source_content=source_content,
             content_hash=digest,
             records=records,
             imported_by_user_id=actor.user_id,
@@ -75,7 +108,7 @@ class CitationImportService:
                 source_type="citation_source_record",
                 source_id=source.id,
                 source_locator={"batch_id": str(batch.id), "ordinal": source.ordinal},
-                method_name=f"{source_format.value.casefold()}-citation-parser",
+                method_name=provenance_method_name,
                 method_version="1",
                 actor_kind=ProvenanceActorKind.HUMAN,
                 ai_run_id=None,

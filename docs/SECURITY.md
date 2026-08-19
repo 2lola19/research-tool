@@ -201,3 +201,20 @@ run. Definition hashes prevent silent version substitution. Reconciliation is re
 timeout recovery is bounded, and no route returns lease capabilities or scientific payloads. The
 local `--recover-expired` worker command is operational only; it does not approve human checkpoints
 or invoke provider credentials.
+
+## Phase 33 scholarly provider security
+
+Provider execution is disabled by default and requires an explicit deployment setting plus the
+existing search-controller authorization. The registry permits only fixed HTTPS provider hosts;
+the transport rejects schemes, credentials, non-443 ports, private/loopback addresses, arbitrary
+hosts, and redirects. Requests use bounded timeouts, page counts, page sizes, aggregate raw bytes,
+response bytes, retry attempts, capped backoff, and rate limiting. User-agent/contact values reject
+header injection.
+
+OpenAlex, PubMed, and Europe PMC adapters receive only the exact stored query and bounded filters.
+Optional PubMed credentials are environment-backed `SecretStr` values; secret parameters are
+excluded from request fingerprints and never stored in raw artifacts, logs, or API responses.
+Raw responses are checksum-verified tenant-scoped artifacts. Normalized records enter the existing
+citation import/provenance path, while provider attempts are append-only operational history.
+Provider adapters cannot alter canonical search strategy, protocol, Article, Study, screening, or
+analysis state and live network execution is not used by tests.

@@ -183,3 +183,19 @@ If a workflow step invokes a consequential domain service, that service remains 
 atomic scientific write, source/method/actor provenance, append-only audit event, idempotency key,
 and explicit human acceptance where required. Automatic retry is never permission to repeat an
 unreviewed scientific write; handlers must be designed to detect or reject duplicate side effects.
+
+## Scholarly provider acquisition provenance
+
+Phase 33 keeps canonical search intent, SearchExecution history, raw acquisition, normalized
+CitationSourceRecords, and provider-attempt operations distinct. A provider run records the exact
+query and filters already held by SearchExecution, provider/version, bounded page and attempt
+history, safe request fingerprints, HTTP/failure classification, response sizes/hashes, and the
+checksum-verified raw response artifact. The provider execution method/version and initiating actor
+are appended to the provenance ledger; normalized citation records use the existing citation
+import provenance path and retain provider metadata in their raw source snapshot.
+
+Request fingerprints intentionally omit credential parameters. Attempt rows are tenant/Review
+scoped and append-only, and a partial result is represented as `PARTIAL` with the provider total
+and imported discovery links intact. Provider retries never overwrite an earlier attempt, change
+the canonical query, merge Articles, or bypass Study, screening, human-review, or analysis
+boundaries.

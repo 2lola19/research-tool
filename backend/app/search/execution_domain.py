@@ -7,6 +7,9 @@ from enum import StrEnum
 from typing import Protocol
 from uuid import UUID
 
+from backend.app.citations.domain import ParsedCitation
+from backend.app.search.provider_domain import ProviderAttemptSnapshot, SearchProviderCapability
+
 
 class IdentificationSourceClassification(StrEnum):
     BIBLIOGRAPHIC_DATABASE = "BIBLIOGRAPHIC_DATABASE"
@@ -157,13 +160,25 @@ class SearchProviderResult:
     provider_result_count: int
     raw_content: bytes | None = None
     raw_media_type: str | None = None
+    provider_key: str = "unknown"
+    provider_version: str = "unknown"
+    records: tuple[ParsedCitation, ...] = ()
+    attempts: tuple[ProviderAttemptSnapshot, ...] = ()
 
 
 class SearchProvider(Protocol):
     provider_key: str
     version: str
+    capability: SearchProviderCapability
 
-    async def execute_search(self, query: str, filters: dict[str, str]) -> SearchProviderResult: ...
+    async def execute_search(
+        self,
+        query: str,
+        filters: dict[str, str],
+        *,
+        max_pages: int,
+        page_size: int,
+    ) -> SearchProviderResult: ...
 
 
 @dataclass(frozen=True, slots=True)

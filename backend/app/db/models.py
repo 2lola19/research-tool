@@ -177,6 +177,7 @@ from backend.app.search.execution_persistence import (
     SearchExecutionRecord,
 )
 from backend.app.search.persistence import SearchStrategyVersionRecord, SearchTranslationRecord
+from backend.app.search.provider_persistence import SearchProviderAttemptRecord
 from backend.app.studies.persistence import StudyArticleLinkRecord, StudyRecord
 from backend.app.workflow.execution_persistence import (
     WorkflowJobAttemptRecord,
@@ -330,6 +331,7 @@ __all__ = [
     "SearchExecutionCitationLinkRecord",
     "SearchExecutionEventRecord",
     "SearchExecutionRecord",
+    "SearchProviderAttemptRecord",
     "SearchStrategyVersionRecord",
     "SearchTranslationRecord",
     "StudyArticleLinkRecord",

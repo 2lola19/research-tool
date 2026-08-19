@@ -213,3 +213,17 @@ downgrades the linear SQLite chain through `20260819_0033`.
 Required follow-on coverage includes PostgreSQL concurrent claim/recovery timing and live worker
 crash/timeout behavior when that infrastructure is available. No environment timeout is recorded as
 a test pass.
+
+## Phase 33 scholarly provider coverage
+
+Unit coverage exercises the provider-neutral OpenAlex, PubMed, Europe PMC, and fixture adapters
+with deterministic response fixtures: normalization, abstract/author/identifier mapping, bounded
+pagination, rate-limit retry/backoff, timeout/error taxonomy, raw-response limits, HTTPS host
+allowlists, redirect rejection, secret-safe fingerprints, and polite user-agent validation. No test
+calls a live scholarly API.
+
+Integration coverage verifies explicit opt-in, fixture execution through the existing
+SearchExecution/citation/raw-artifact/provenance services, append-only provider-attempt reads, and
+Review/tenant authorization. Migration coverage upgrades and downgrades the linear SQLite chain
+through `20260819_0034`. Live provider credentials, network behavior, PostgreSQL concurrency, and
+external service etiquette remain deployment gates.

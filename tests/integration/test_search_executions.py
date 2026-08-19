@@ -341,3 +341,51 @@ def test_search_execution_tenant_review_and_artifact_boundaries(
         },
     )
     assert cross_review_link.status_code == 404
+
+
+def test_provider_execution_is_explicitly_opt_in_and_persists_attempt_provenance(
+    tenant_api: TenantApi,
+) -> None:
+    source = _create_source(tenant_api, key="fixture-provider")
+    execution = _create_execution(
+        tenant_api,
+        source["id"],
+        result_count=0,
+        status="PLANNED",
+        method="API",
+        exact_query="fixture query",
+    )
+    payload = {
+        "review_id": str(tenant_api.ids.assigned_review),
+        "provider_key": "fixture",
+        "max_pages": 1,
+        "page_size": 1,
+    }
+    disabled = tenant_api.client.post(
+        f"/api/v1/search-executions/{execution['id']}/provider-runs",
+        headers=_lead_headers(tenant_api),
+        json=payload,
+    )
+    assert disabled.status_code == 409
+
+    tenant_api.settings.search_provider_execution_enabled = True
+    executed = tenant_api.client.post(
+        f"/api/v1/search-executions/{execution['id']}/provider-runs",
+        headers=_lead_headers(tenant_api),
+        json=payload,
+    )
+    assert executed.status_code == 200, executed.text
+    body = executed.json()
+    assert body["execution"]["status"] == "COMPLETED"
+    assert body["provider_key"] == "fixture"
+    assert body["normalized_record_count"] == 0
+    assert body["attempt_count"] == 1
+    assert body["artifact_id"] is not None
+
+    attempts = tenant_api.client.get(
+        f"/api/v1/search-executions/{execution['id']}/provider-attempts",
+        params={"review_id": str(tenant_api.ids.assigned_review)},
+        headers=_lead_headers(tenant_api),
+    )
+    assert attempts.status_code == 200
+    assert attempts.json()[0]["provider_key"] == "fixture"

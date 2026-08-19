@@ -37,6 +37,18 @@ class Settings(BaseSettings):
     worker_id: str = Field(default="review-worker-local", min_length=1, max_length=160)
     worker_max_concurrency: int = Field(default=1, ge=1, le=100)
     worker_lease_seconds: int = Field(default=60, ge=5, le=3600)
+    search_provider_execution_enabled: bool = False
+    search_provider_user_agent: str = Field(
+        default="ResearchTool/0.1", min_length=1, max_length=200
+    )
+    search_provider_contact_email: str | None = Field(default=None, max_length=320)
+    search_provider_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
+    search_provider_max_pages: int = Field(default=10, ge=1, le=100)
+    search_provider_page_size: int = Field(default=100, ge=1, le=1000)
+    search_provider_max_response_bytes: int = Field(default=2_000_000, ge=1024, le=10_000_000)
+    search_provider_rate_limit_seconds: float = Field(default=0.1, ge=0, le=60)
+    search_provider_max_attempts: int = Field(default=3, ge=1, le=5)
+    search_pubmed_api_key: SecretStr | None = Field(default=None, repr=False)
 
     @model_validator(mode="after")
     def validate_local_authentication_scope(self) -> "Settings":

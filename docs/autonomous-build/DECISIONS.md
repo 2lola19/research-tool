@@ -65,6 +65,22 @@ relevant phase report or ADR.
   existing canonical domain surfaces for any action. The offline deterministic provider abstains
 by default; live providers and arbitrary retrieval remain deferred.
 
+## 2026-08-19 - Phase 33 scholarly provider boundary
+
+- OpenAlex, PubMed E-utilities, Europe PMC, and the deterministic fixture implement the existing
+  provider protocol. A small allowlisted HTTP transport owns timeouts, response limits, retries,
+  rate limits, redirect rejection, and polite identification; provider SDKs and arbitrary URLs are
+  out of scope.
+- Provider execution is explicit and disabled by default. Normalizers create `ParsedCitation`
+  records only through the existing citation/provenance service; raw response bytes remain a
+  checksum-verified SearchExecution artifact, and provider attempts remain append-only operational
+  history.
+- Provider/version/query/filter/attempt metadata is retained without credential parameters.
+  Partial bounded pagination is represented honestly as `PARTIAL`; no adapter changes canonical
+  search intent, Articles, Studies, screening, analysis, or human checkpoints.
+- ADR-032 records the boundary. HTTPX is accepted only as an infrastructure transport dependency;
+  live provider calls remain a deployment gate and are not used in tests.
+
 ## 2026-08-19 - Phase 31 durable worker boundary
 
 - Durable execution extends the existing workflow job contract with explicit payload schema/version,

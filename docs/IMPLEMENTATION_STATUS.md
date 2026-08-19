@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: 2026-08-17
+Last updated: 2026-08-19
 
 ## Status by milestone
 
@@ -35,6 +35,8 @@ Last updated: 2026-08-17
 | Governed AI Full-Text Screening (Phase 25) | IMPLEMENTED | Document/version/parser-pinned bounded suggestions, exact evidence/criterion validation, structured uncertainty, direct-ID blinding, human-only canonical acceptance, staleness, batch isolation, full-text evaluation, migration, API, UI, and tenant tests. |
 | Governed AI Structured Extraction (Phase 26) | IMPLEMENTED | ExtractionSchemaVersion-pinned typed field proposals, exact report/document/chunk evidence, source/normalized value separation, explicit missingness/conflicts/limitations, direct-ID blinding, human-only manual-service acceptance/editing, staleness, batch isolation, field-level safety evaluation, migration, API, UI, and tenant tests. |
 | Governed AI Risk-of-Bias Assistance (Phase 27) | IMPLEMENTED | Instrument-version-pinned signalling-answer proposals, Study Family/document/parser/chunk provenance, deterministic evidence and declarative-rule validation, blinded/assisted reveal, human disposition through the existing RoB service, abstention/high-risk evaluation, migration, API, UI, and tenant tests. The bundled instrument remains a demonstration framework, not complete RoB 2. |
+
+| Scholarly Search Provider Integrations (Phase 33) | IMPLEMENTED | Provider-neutral OpenAlex, PubMed, Europe PMC, and deterministic fixture adapters; bounded allowlisted HTTP transport; normalized citation import; raw artifact checksums; immutable provider-attempt provenance; explicit opt-in API/configuration; deterministic unit, integration, and migration coverage. Live network execution remains an environment/deployment gate. |
 
 ## Validation evidence
 
@@ -257,3 +259,12 @@ lease/timeout reconciliation diagnostics, migration `20260819_0033`, recovery ro
 `--recover-expired` worker command. Scientific writes remain behind existing domain/provenance and
 human-acceptance boundaries; live PostgreSQL concurrency and production orchestration remain
 environment gates.
+
+## Phase 33 scholarly provider integrations
+
+Implemented provider-neutral OpenAlex, PubMed E-utilities, Europe PMC, and deterministic fixture
+adapters behind an allowlisted HTTP transport. Bounded timeouts, pagination, response sizes,
+rate-limit/retry classification, polite identification, secret-safe request fingerprints, response
+normalization, raw artifact integrity, tenant-scoped citation import, and immutable provider
+attempt history are in place. Provider execution is explicit and disabled by default; live network
+credentials, PostgreSQL behavior, and external service operations remain deployment gates.

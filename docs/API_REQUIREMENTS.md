@@ -37,7 +37,7 @@ input/result hashes. The download proxy keeps bearer credentials server-side.
 | Service | Purpose | Required stage | Providers | Credentials | Free/open alternative | Current mock | Status |
 |---|---|---|---|---|---|---|---|
 | AI inference | Screening, extraction, adjudication assistance | Screening onward | OpenAI, Anthropic, Gemini | Provider API key | Local models where validated | `MockAIProvider` | Mock interface only; real providers deferred |
-| Scholarly metadata | Discovery and enrichment | Search/import | OpenAlex, PubMed, Europe PMC, Crossref | Usually none; polite email/key may apply | Deterministic fixture translator/provider | Offline translator implemented | Live execution deferred; no credentials required yet |
+| Scholarly metadata | Discovery and enrichment | Search/import | OpenAlex, PubMed, Europe PMC, Crossref | Usually none; polite email/key may apply | Deterministic fixture translator/provider | Provider adapters and fixture implemented | Live execution explicit opt-in/deployment gate |
 | Document parsing | Scholarly PDF to structured TEI | Document management | GROBID | None for self-hosted | Fixture parser + TEI adapter | `DocumentParser` + `GrobidTeiParser` | Adapter foundation implemented; live service deferred |
 | Object storage | Durable document storage | Document management | S3-compatible providers | Access key/secret/role | Local filesystem | `LocalFileStorageProvider` | Local-first foundation implemented; S3 adapter deferred |
 | Notifications | Human checkpoints and job failures | Workflow | Email providers | Provider credentials | Console/mock notifications | Mock planned | Deferred to Phase 4 |
@@ -232,3 +232,21 @@ read-only reconciliation diagnostics. Recovery requests carry an idempotency key
 exhausted jobs require an explicit additional attempt budget. Foreign organization/Review/job
 identifiers fail closed. No recovery route accepts or writes scientific data, evidence, Article,
 Study, analysis, or human checkpoint decisions.
+
+## Phase 33 scholarly provider execution API
+
+Authenticated search-controller routes expose configured provider capability metadata at
+`/api/v1/search-executions/providers`, append-only request history at
+`/api/v1/search-executions/{execution_id}/provider-attempts`, and an explicit execution command at
+`/api/v1/search-executions/{execution_id}/provider-runs`. A provider run requires the Review,
+provider key, exact query already retained by the planned `SearchExecution`, and bounded optional
+page/page-size values. Live provider execution is disabled unless the deployment explicitly
+enables it.
+
+OpenAlex, PubMed E-utilities, Europe PMC, and the deterministic fixture implement the same
+provider protocol. Responses normalize into `ParsedCitation` records through the existing
+citation-import service; the route never accepts provider-specific canonical search semantics or
+destructive Article merges. Results retain provider totals, `COMPLETED` versus `PARTIAL` status,
+raw response artifact identity, import linkage, provider/version provenance, and safe attempt
+history. Provider credentials, when needed, are read only from environment-backed secret
+settings and are never returned.

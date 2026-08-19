@@ -151,6 +151,30 @@ This log records commands, results, and honest environment blockers for the V1 c
   diff, diff-check, secret, artifact, and intended-scope audits. The worktree is clean and no
   GitHub operation is authorized.
 
+## 2026-08-19 - Phase 33 scholarly provider integrations
+
+- Repository gates: PASS - `ruff check .`, `ruff format --check .` (362 files), strict
+  `mypy backend workers` (230 source files), and compileall passed.
+- Provider unit fixtures: PASS - 7 tests covering OpenAlex, PubMed, Europe PMC, fixture
+  normalization, bounded pagination, rate-limit retry/backoff, HTTPS/SSRF boundaries, response
+  size limits, and polite user-agent validation. No live API was called.
+- Search regression: PASS - `tests/integration/test_search_executions.py` passed 4 tests, including
+  explicit fixture opt-in, raw artifact persistence, append-only provider-attempt reads, and
+  tenant-scoped authorization. Existing search/citation/config/routing regression passed 17 tests.
+- Migration: PASS - `tests/integration/test_migrations.py` upgraded and downgraded through
+  `20260819_0034`.
+- Full backend suite: ENVIRONMENT_BLOCKED - `pytest -q` emitted no output and timed out after 384
+  seconds. Exact pytest descendants were inspected and terminated safely; no assertion result is
+  claimed.
+- Scientific/security/provenance review: PASS - provider acquisition remains separate from search
+  intent and canonical scientific records; bounds, tenant scope, raw checksums, safe fingerprints,
+  append-only attempts, and existing citation/provenance linkage are enforced.
+- Secret/credential and generated-artifact audit: PASS - no credentials, caches, runtime files,
+  generated data, or host files are in the intended Phase 33 scope. No GitHub operation is
+  authorized.
+- Local checkpoint: READY_FOR_CHECKPOINT - implementation and required reviews are complete; the
+  validated local Git checklist is next.
+
 ## 2026-08-19 - Phase 32 workflow recovery and resumability
 
 - Repository gates: PASS - `ruff check .`, `ruff format --check .` (353 files), strict

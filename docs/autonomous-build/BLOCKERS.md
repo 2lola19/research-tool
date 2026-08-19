@@ -109,3 +109,21 @@ without ACL or lock-file surgery.
 - Phase 32 local checkpoint: PASS - commit
   `b5039cd456caf2f36e10716c29aaccde4e3fa175` exists locally after the required validation and scope
   checks; the worktree is clean and GitHub remains out of scope.
+
+## Phase 33 validation conditions
+
+- Repository Ruff/format, strict mypy, compile/import, provider fixtures, search regression, tenant
+  opt-in, and SQLite migration gates pass through `20260819_0034`.
+- Scientific review: provider adapters preserve canonical SearchExecution/query semantics and
+  normalize only through the existing citation-import boundary; no Article merge, Study mutation,
+  screening decision, analysis calculation, or human checkpoint bypass is introduced.
+- Security/provenance review: live execution is disabled by default; fixed HTTPS host allowlists,
+  SSRF/redirect/response/page/retry bounds, secret-safe fingerprints, tenant artifacts, append-only
+  provider attempts, and citation/raw/provenance linkage pass.
+- The full `pytest -q` invocation emitted no output and timed out after 384 seconds; exact pytest
+  descendants were inspected and terminated safely. This is `ENVIRONMENT_BLOCKED`, not a test pass.
+- Live provider credentials, external network behavior, PostgreSQL concurrency, Docker, and paid
+  service validation remain deployment/environment gates and are not active blockers for the
+  offline-safe implementation.
+- Phase 33 implementation and required reviews are complete; the validated local Git checkpoint
+  checklist is next. No GitHub operation is authorized.

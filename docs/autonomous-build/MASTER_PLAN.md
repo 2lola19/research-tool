@@ -3,7 +3,7 @@
 Status: definitive plan; Phase 27 checkpointed at `995c5af`; Phase 28 checkpointed locally at
 `f475619`; Phase 29 checkpointed locally at `df0a74f`; Phase 30 checkpointed locally at
 `c59a340`; Phase 31 checkpointed locally at `65de1a9`; Phase 32 checkpointed locally at
-`b5039cd`; Phase 33 is next
+`b5039cd`; Phase 33 implementation is complete and validation/checkpointing is in progress
 
 ## Reconciled baseline and sequencing
 
@@ -270,6 +270,14 @@ Security/provenance/tests: SSRF/URL allowlists, response-size limits, secrets vi
 provider/model/version/query/attempt history, tenant-scoped artifacts, deterministic fixtures and
 reconciliation tests. ADR-032/docs/open-source evaluation. Live execution may remain deferred.
 
+Implementation status: complete. The provider-neutral OpenAlex, PubMed E-utilities, Europe PMC,
+and deterministic fixture adapters, bounded allowlisted HTTP transport, normalized citation-import
+path, raw artifact integrity, immutable provider-attempt history, migration `20260819_0034`, and
+explicit opt-in API/configuration are implemented. Focused backend, search, migration, scientific,
+security, provenance, tenant, secret, and artifact gates pass; the full-suite no-output timeout is
+recorded as an environment limitation. The validated local checkpoint is pending the required
+phase-specific Git checklist. No live provider call or GitHub operation is authorized.
+
 ## Phase 34 — Production AI Provider Integrations, Routing, Usage and Cost Governance
 
 Objective: add safe provider adapters and explicit routing/budget policy while preserving the current
@@ -394,5 +402,8 @@ bounded retry/backoff/timeout, dead-letter/manual recovery, idempotent resume, d
 checkpoints, and read-only reconciliation. Focused repository, migration, worker, tenant,
 scientific, security, and provenance gates pass; the full-suite no-output timeout remains
 truthfully documented. The validated Phase 32 implementation checkpoint is local commit
-`b5039cd456caf2f36e10716c29aaccde4e3fa175`. The next safe action is Phase 33 planning for
-provider-neutral scholarly search integrations. No GitHub operation is authorized.
+`b5039cd456caf2f36e10716c29aaccde4e3fa175`. Phase 33 implementation and focused validation now
+cover OpenAlex, PubMed, Europe PMC, fixture acquisition, bounded HTTP safety, normalized citation
+imports, raw artifacts, and provider-attempt provenance; the full-suite no-output timeout remains
+truthfully documented. The next safe action is the validated Phase 33 local checkpoint, followed by
+Phase 34 planning for production AI provider governance. No GitHub operation is authorized.

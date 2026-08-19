@@ -11,6 +11,7 @@ from backend.app.api.dependencies import (
     ActorContextDependency,
     DbSessionDependency,
     ObjectStorageDependency,
+    SettingsDependency,
 )
 from backend.app.citations.persistence import SqlAlchemyCitationRepository
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
@@ -27,6 +28,16 @@ from backend.app.search.execution_domain import (
 from backend.app.search.execution_persistence import SqlAlchemySearchExecutionRepository
 from backend.app.search.execution_service import MAX_RAW_ARTIFACT_BYTES, SearchExecutionService
 from backend.app.search.persistence import SqlAlchemySearchRepository
+from backend.app.search.provider_domain import (
+    ProviderFailureClass,
+    SearchProviderAttempt,
+    SearchProviderCapability,
+)
+from backend.app.search.provider_persistence import SqlAlchemySearchProviderAttemptRepository
+from backend.app.search.provider_service import (
+    ProviderExecutionOutcome,
+    SearchProviderExecutionService,
+)
 
 router = APIRouter(prefix="/search-executions", tags=["search executions"])
 
@@ -90,6 +101,13 @@ class SearchExecutionEventRequest(BaseModel):
 class LinkImportRequest(BaseModel):
     review_id: UUID
     import_batch_id: UUID
+
+
+class ProviderExecutionRequest(BaseModel):
+    review_id: UUID
+    provider_key: str = Field(min_length=1, max_length=80)
+    max_pages: int | None = Field(default=None, ge=1, le=100)
+    page_size: int | None = Field(default=None, ge=1, le=1000)
 
 
 class SearchExecutionEventResponse(BaseModel):
@@ -175,6 +193,86 @@ class SearchExecutionArtifactResponse(BaseModel):
         )
 
 
+class SearchProviderCapabilityResponse(BaseModel):
+    key: str
+    display_name: str
+    version: str
+    supports_pagination: bool
+    max_page_size: int
+    requires_api_key: bool
+
+    @classmethod
+    def from_domain(cls, item: SearchProviderCapability) -> SearchProviderCapabilityResponse:
+        return cls(
+            key=item.key,
+            display_name=item.display_name,
+            version=item.version,
+            supports_pagination=item.supports_pagination,
+            max_page_size=item.max_page_size,
+            requires_api_key=item.requires_api_key,
+        )
+
+
+class SearchProviderAttemptResponse(BaseModel):
+    id: UUID
+    search_execution_id: UUID
+    provider_key: str
+    provider_version: str
+    page_number: int
+    attempt_number: int
+    request_fingerprint: str
+    started_at: datetime
+    completed_at: datetime
+    http_status: int | None
+    failure_class: ProviderFailureClass | None
+    response_byte_size: int
+    response_sha256: str | None
+    note: str | None
+
+    @classmethod
+    def from_domain(cls, item: SearchProviderAttempt) -> SearchProviderAttemptResponse:
+        return cls(
+            id=item.id,
+            search_execution_id=item.search_execution_id,
+            provider_key=item.provider_key,
+            provider_version=item.provider_version,
+            page_number=item.page_number,
+            attempt_number=item.attempt_number,
+            request_fingerprint=item.request_fingerprint,
+            started_at=item.started_at,
+            completed_at=item.completed_at,
+            http_status=item.http_status,
+            failure_class=item.failure_class,
+            response_byte_size=item.response_byte_size,
+            response_sha256=item.response_sha256,
+            note=item.note,
+        )
+
+
+class ProviderExecutionResponse(BaseModel):
+    execution: SearchExecutionResponse
+    provider_key: str
+    provider_version: str
+    artifact_id: UUID | None
+    import_batch_id: UUID | None
+    normalized_record_count: int
+    attempt_count: int
+    failure_class: ProviderFailureClass | None
+
+    @classmethod
+    def from_domain(cls, outcome: ProviderExecutionOutcome) -> ProviderExecutionResponse:
+        return cls(
+            execution=SearchExecutionResponse.from_domain(outcome.execution),
+            provider_key=outcome.provider_key,
+            provider_version=outcome.provider_version,
+            artifact_id=outcome.artifact.id if outcome.artifact else None,
+            import_batch_id=outcome.import_batch.id if outcome.import_batch else None,
+            normalized_record_count=outcome.execution.imported_record_count,
+            attempt_count=len(outcome.attempts),
+            failure_class=outcome.failure_class,
+        )
+
+
 def _service(
     session: DbSessionDependency, storage: ObjectStorageDependency
 ) -> SearchExecutionService:
@@ -189,6 +287,25 @@ def _service(
     )
 
 
+def _provider_service(
+    session: DbSessionDependency,
+    storage: ObjectStorageDependency,
+    settings: SettingsDependency,
+) -> SearchProviderExecutionService:
+    execution_repository = SqlAlchemySearchExecutionRepository(session)
+    return SearchProviderExecutionService(
+        _service(session, storage),
+        execution_repository,
+        SqlAlchemySearchProviderAttemptRepository(session),
+        SqlAlchemyCitationRepository(session),
+        SqlAlchemyReviewRepository(session),
+        SqlAlchemyIdentityRepository(session),
+        SqlAlchemyProvenanceRepository(session),
+        storage,
+        settings,
+    )
+
+
 @router.post("/sources", response_model=IdentificationSourceResponse, status_code=201)
 async def create_identification_source(
     payload: IdentificationSourceRequest,
@@ -199,6 +316,20 @@ async def create_identification_source(
     source = await _service(session, storage).create_source(actor, **payload.model_dump())
     await session.commit()
     return IdentificationSourceResponse.from_domain(source)
+
+
+@router.get("/providers", response_model=list[SearchProviderCapabilityResponse])
+async def list_search_provider_capabilities(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    storage: ObjectStorageDependency,
+    settings: SettingsDependency,
+) -> list[SearchProviderCapabilityResponse]:
+    del actor
+    return [
+        SearchProviderCapabilityResponse.from_domain(item)
+        for item in _provider_service(session, storage, settings).capabilities()
+    ]
 
 
 @router.get("/reviews/{review_id}/sources", response_model=list[IdentificationSourceResponse])
@@ -292,6 +423,45 @@ async def link_search_import(
     )
     await session.commit()
     return ImportLinkResponse(linked_record_count=len(links))
+
+
+@router.post("/{execution_id}/provider-runs", response_model=ProviderExecutionResponse)
+async def execute_search_provider(
+    payload: ProviderExecutionRequest,
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    storage: ObjectStorageDependency,
+    settings: SettingsDependency,
+    execution_id: Annotated[UUID, Path()],
+) -> ProviderExecutionResponse:
+    outcome = await _provider_service(session, storage, settings).execute(
+        actor,
+        review_id=payload.review_id,
+        execution_id=execution_id,
+        provider_key=payload.provider_key,
+        max_pages=payload.max_pages,
+        page_size=payload.page_size,
+    )
+    await session.commit()
+    return ProviderExecutionResponse.from_domain(outcome)
+
+
+@router.get(
+    "/{execution_id}/provider-attempts",
+    response_model=list[SearchProviderAttemptResponse],
+)
+async def list_search_provider_attempts(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    storage: ObjectStorageDependency,
+    settings: SettingsDependency,
+    execution_id: Annotated[UUID, Path()],
+    review_id: UUID,
+) -> list[SearchProviderAttemptResponse]:
+    attempts = await _provider_service(session, storage, settings).list_attempts(
+        actor, review_id=review_id, execution_id=execution_id
+    )
+    return [SearchProviderAttemptResponse.from_domain(item) for item in attempts]
 
 
 async def _read_artifact(request: Request) -> bytes:

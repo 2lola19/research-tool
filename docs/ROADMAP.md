@@ -32,8 +32,8 @@
 24. **Governed AI screening assistance (implemented):** versioned policy, assignment-scoped title/abstract
     suggestions, server-enforced blinded/assisted reveal, provenance/audit links, deterministic evaluation,
     calibration, threshold simulation, and human error taxonomy.
-25. **Remaining V1 completion envelope (in progress):** durable jobs/recovery, production scholarly and
-    AI provider adapters, document/object-storage hardening, collaboration/QC UX, production readiness,
+25. **Remaining V1 completion envelope (in progress):** durable jobs/recovery, document/object-storage
+    hardening, collaboration/QC UX, production readiness,
     and end-to-end release validation. Advanced estimators, dependency policies, subgroups,
     meta-regression, publication-bias inference, network meta-analysis, and mature reports remain
     deferred beyond V1.
@@ -158,3 +158,11 @@ timeouts, dead-letter/manual recovery, normalized step checkpoints, durable idem
 recovery operations, lease/timeout reconciliation diagnostics, tenant-scoped recovery APIs, and a
 local expired-attempt recovery command. It does not silently replay consequential writes, override
 human checkpoints, or require Temporal/cloud infrastructure.
+
+## Phase 33 complete: scholarly provider integrations
+
+Phase 33 implements provider-neutral OpenAlex, PubMed E-utilities, Europe PMC, and deterministic
+fixture adapters behind a bounded allowlisted HTTP transport. It preserves exact SearchExecution
+queries and filters, raw response artifact checksums, normalized citation-import provenance, and
+immutable provider attempt history. Live execution remains explicit opt-in and disabled by default;
+credentials, external network behavior, and production provider operations remain deployment gates.

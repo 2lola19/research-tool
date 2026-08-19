@@ -33,7 +33,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             ).fetchall()
         }
 
-    assert version == ("20260819_0033",)
+    assert version == ("20260819_0034",)
     assert {
         "users",
         "organizations",
@@ -91,6 +91,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "search_execution_events",
         "search_execution_citation_links",
         "search_execution_artifacts",
+        "search_provider_attempts",
         "rob_instruments",
         "rob_instrument_versions",
         "rob_instrument_decisions",
@@ -214,6 +215,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
     assert "prisma_snapshots" not in remaining_tables
     assert "export_artifacts" not in remaining_tables
     assert "search_executions" not in remaining_tables
+    assert "search_provider_attempts" not in remaining_tables
     assert "rob_assessments" not in remaining_tables
     assert "outcome_definitions" not in remaining_tables
     assert "effect_estimates" not in remaining_tables

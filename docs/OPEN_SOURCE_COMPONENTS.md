@@ -9,7 +9,8 @@ Evaluation snapshot: 2026-08-11. Versions are pinned only when integration begin
 | dedupe | https://github.com/dedupeio/dedupe | MIT | Fuzzy entity resolution | Preliminary | Candidate | Layer after deterministic DOI/PMID/title rules; never destructively merge source records | TBD |
 | Temporal | https://github.com/temporalio/temporal | MIT (server); SDK licenses vary | Durable orchestration | Preliminary | Deferred behind port | Strong fit, but extra service complexity is premature before workflow semantics are implemented | TBD |
 | Temporal Python SDK | https://github.com/temporalio/sdk-python | MIT | Worker/client integration | Preliminary | Deferred behind port | Typed durable workflows; evaluate replay/versioning operational cost in Phase 4 | TBD |
-| OpenAlex / PyAlex | https://github.com/pyalex-tooling/pyalex | MIT | Scholarly metadata | Pending | Candidate | Implement behind `SearchProvider`; respect API etiquette and preserve raw source provenance | TBD |
+| OpenAlex / PyAlex | https://github.com/pyalex-tooling/pyalex | MIT | Scholarly metadata | Evaluated | Direct HTTP adapter accepted; PyAlex deferred | OpenAlex, PubMed, and Europe PMC use the provider protocol and allowlisted HTTP transport; no vendor SDK is required | 2026-08-19 |
+| HTTPX | https://github.com/encode/httpx | BSD-3-Clause | Bounded async HTTP transport | Evaluated | Accepted as infrastructure | Provider adapters use a small repository-owned transport boundary with HTTPS allowlists, no redirects, timeouts, response limits, and no provider-specific SDK | >=0.28,<1 |
 | metafor | https://github.com/wviechtb/metafor | GPL-2.0 | Validated meta-analysis | Architecture evaluated; legal/operational review pending | Isolate | Future separately deployed provider accepting canonical payloads and returning structured results; no raw R objects or duplicated domain state | TBD |
 
 No candidate code is copied into this repository. Direct integration requires a maintenance, license, security, and fit review at the relevant phase.
@@ -128,3 +129,11 @@ Workflow resumability and recovery add no third-party runtime dependency. Retry 
 hashing, checkpoint persistence, reconciliation, and idempotency use the existing
 Python/FastAPI/Pydantic/SQLAlchemy stack. No Temporal SDK, queue broker, provider SDK, credential,
 scientific calculation library, or cloud orchestration runtime was introduced.
+
+## Phase 33 dependency impact
+
+Scholarly provider execution adds HTTPX as a runtime transport dependency under its BSD-3-Clause
+license. OpenAlex, PubMed, Europe PMC, and fixture adapters remain repository-owned protocol
+implementations; no provider SDK, crawler, embedding service, paid API client, or credential is
+introduced. HTTPX is isolated behind the `SearchHttpTransport` boundary and is not part of the
+canonical scientific model.

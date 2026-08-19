@@ -259,3 +259,17 @@ bounded, validated operational structure, not a hidden workflow state blob. Chec
 rows are operational records; they do not replace the provenance ledger or scientific tables. The
 linear migration upgrades/downgrades through `0033`; live PostgreSQL lock/retry behavior remains an
 environment gate.
+
+## Phase 33 scholarly provider metadata
+
+Migration `20260819_0034` adds append-only `search_provider_attempts`. Each row is scoped by
+Organization, Review, and SearchExecution and records the provider/version, bounded page and
+attempt number, a request fingerprint that excludes secret parameters, timestamps, HTTP status,
+failure class, response size/hash, and a safe note. Composite foreign keys and the execution index
+prevent cross-tenant/review composition and support deterministic attempt-history reads.
+
+Provider attempts are operational acquisition provenance, not canonical Article, Study, or search
+intent state. Raw provider bytes remain in the existing checksum-verified object artifact table;
+normalized citation records are created through the existing citation-import tables and retain
+their own provenance. The linear migration upgrades and downgrades through `0034`; live PostgreSQL
+provider/network behavior remains a production gate.
