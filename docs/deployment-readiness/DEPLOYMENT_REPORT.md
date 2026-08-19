@@ -1,6 +1,6 @@
 # Controlled Deployment Readiness Report
 
-Status: COMPLETE_PENDING_LOCAL_CHECKPOINT
+Status: COMPLETE
 
 Final classification: `READY_WITH_EXTERNAL_GATES`
 
@@ -130,8 +130,9 @@ treated as passes.
 27. **Fixes made.** Direct PostgreSQL migration paths, metadata/index/check/FK alignment, reporting
     imports, migration 0036 invariants, explicit frontend IPv4 probe, process-level worker probe,
     expected-head updates, and opt-in PostgreSQL tenant-test plumbing were implemented and tested.
-28. **Local commits.** No GitHub operation occurred. The validated local checkpoint is pending the
-    strict commit procedure; its SHA will be recorded in this report and state before completion.
+28. **Local commits.** No GitHub operation occurred. The validated local checkpoint is
+    `208de49f8b16e6ef3b90104157876fd01b472831` (`fix: harden controlled deployment readiness`).
+    A small documentation-only state-finalization commit follows; neither commit is pushed.
 29. **Remaining risks.** External identity/storage/scanner/parser/proxy/shared-limit evidence,
     approved Python/image scans, and the broad integration timeout remain. These prevent a claim of
     full production readiness and require target-environment acceptance evidence.
@@ -155,6 +156,6 @@ treated as passes.
 
 `READY_WITH_EXTERNAL_GATES` is the final classification. It permits only the controlled, non-sensitive
 staging boundary described above. It does not authorize production traffic, clinical use, public
-marketing, autonomous scientific publication, paid provider activation, or GitHub push. After the
-local checkpoint SHA is recorded and the worktree is verified, stop; do not start another development
-phase.
+marketing, autonomous scientific publication, paid provider activation, or GitHub push. The validated
+checkpoint SHA is recorded in state; after the state-finalization commit and worktree verification,
+stop and do not start another development phase.

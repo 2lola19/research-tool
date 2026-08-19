@@ -167,3 +167,18 @@ Subsequent entries must remain chronological and distinguish `PASS` from `ENVIRO
 - The next action is the strict local Git checkpoint procedure. Until its SHA is recorded, the
   control-plane status is `COMPLETE_PENDING_LOCAL_CHECKPOINT` and the checkpoint state is
   `READY_FOR_CHECKPOINT`, not silently `CHECKPOINTED`.
+
+### 2026-08-19 - local checkpoint recorded
+
+- Strict pre-commit checks passed: current phase implementation and scientific/security/tenant/
+  provenance reviews were complete; required gates were PASS or truthfully blocked; `git status`,
+  unstaged diff inspection, `git diff --check`, names-only secret audit, staged-scope review,
+  `git diff --cached --check`, and artifact/credential exclusion checks passed.
+- Local commit created and verified:
+  `208de49f8b16e6ef3b90104157876fd01b472831` - `fix: harden controlled deployment readiness`.
+- Resulting worktree was clean and `master` was ahead of `origin/master` by one local commit. No
+  push, remote change, release, reset, clean, ACL operation, or unrelated repository operation was
+  performed.
+- `DEPLOYMENT_STATE.json` now records `current_stage=COMPLETE`, `checkpoint_status=CHECKPOINTED`,
+  `commit_pending=false`, and the checkpoint SHA. The final recommendation remains
+  `READY_WITH_EXTERNAL_GATES`.

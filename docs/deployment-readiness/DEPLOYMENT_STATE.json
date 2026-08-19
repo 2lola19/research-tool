@@ -1,13 +1,13 @@
 {
   "program": "Research Tool Controlled Deployment Readiness",
   "baseline_commit": "a4156e32c969efcbf4363f02413b58dabf6d4dd1",
-  "status": "IN_PROGRESS",
-  "current_stage": "GO_NO_GO",
-  "last_completed_stage": "FINAL_REGRESSION",
-  "checkpoint_status": "READY_FOR_CHECKPOINT",
-  "last_local_commit": null,
+  "status": "COMPLETE",
+  "current_stage": "COMPLETE",
+  "last_completed_stage": "GO_NO_GO",
+  "checkpoint_status": "CHECKPOINTED",
+  "last_local_commit": "208de49f8b16e6ef3b90104157876fd01b472831",
   "expected_phase_commit_message": "fix: harden controlled deployment readiness",
-  "commit_pending": true,
+  "commit_pending": false,
   "environment_gates": {
     "baseline_reconciliation": "PASS",
     "environment_inventory": "PASS",
@@ -33,7 +33,7 @@
     "regression": "PASS_FOCUSED_ENVIRONMENT_BLOCKED_BROAD_INTEGRATION"
   },
   "validation_status": {
-    "overall": "READY_FOR_CHECKPOINT",
+    "overall": "COMPLETE",
     "scientific_review": "COMPLETE",
     "security_review": "COMPLETE_WITH_EXTERNAL_GATES",
     "provenance_review": "COMPLETE",
@@ -83,17 +83,7 @@
     }
   ],
   "last_completed_action": "Completed bounded deployment validation: live PostgreSQL migrations/head/metadata, concurrency, tenant isolation, backup/restore with scientific provenance, worker lease recovery, focused scientific/security tests, final frontend artifacts, image build, health checks, and strict quality gates. No release-blocking defect remains; external gates are recorded.",
-  "next_action": "Perform the strict local checkpoint procedure, record the resulting SHA, verify the worktree, then stop at the durable READY_WITH_EXTERNAL_GATES decision without pushing or starting another development phase.",
-  "files_in_progress": [
-    "docs/deployment-readiness/DEPLOYMENT_PLAN.md",
-    "docs/deployment-readiness/DEPLOYMENT_STATE.json",
-    "docs/deployment-readiness/ENVIRONMENT_INVENTORY.md",
-    "docs/deployment-readiness/VALIDATION_LOG.md",
-    "docs/deployment-readiness/BLOCKERS.md",
-    "docs/deployment-readiness/SECURITY_REVIEW.md",
-    "docs/deployment-readiness/OPERATIONS_REHEARSAL.md",
-    "docs/deployment-readiness/DEPLOYMENT_REPORT.md",
-    "docs/deployment-readiness/RECOVERY.md"
-  ],
-  "updated_at": "2026-08-19T23:29:26+01:00"
+  "next_action": "Stop at the durable READY_WITH_EXTERNAL_GATES decision. Do not push, publish traffic, or start another development phase.",
+  "files_in_progress": [],
+  "updated_at": "2026-08-19T23:38:40+01:00"
 }

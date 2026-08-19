@@ -1,6 +1,6 @@
 # Research Tool Controlled Deployment Readiness Plan
 
-Status: COMPLETE_WITH_EXTERNAL_GATES_PENDING_LOCAL_CHECKPOINT
+Status: COMPLETE_WITH_EXTERNAL_GATES
 
 This is the deployment-readiness program for the completed V1 release candidate. It is not a new
 development phase, does not create Phase 39, and does not add product features. The V1 baseline is

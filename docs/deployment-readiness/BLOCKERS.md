@@ -19,7 +19,7 @@ environment/credential gates; none was fabricated as a pass.
 
 | ID | Gate | Classification | Required resolution | Status |
 |---|---|---|---|---|
-| DR-001 | Local deployment checkpoint | `READY_FOR_CHECKPOINT` | Run strict local commit procedure; record SHA in state/report; no GitHub push | Open until checkpoint is recorded |
+| DR-001 | Local deployment checkpoint | `CHECKPOINTED` | SHA `208de49f8b16e6ef3b90104157876fd01b472831` recorded in state/report; no GitHub push | Complete |
 | DR-002 | OIDC adapter and real identity configuration | `EXTERNAL_CREDENTIAL_REQUIRED` | Supply authorized issuer/audience/JWKS/key rotation, tenant membership, roles, expiry, revocation/logout tests, and secret owner | Open |
 | DR-003 | Production-style object storage | `EXTERNAL_DEPLOYMENT_GATE` | Provide explicitly disposable/approved S3-compatible service; run upload, opaque-key, checksum, tamper, auth, retry, and reconciliation checks | Open |
 | DR-004 | Malware scanning | `EXTERNAL_DEPLOYMENT_GATE` | Provide approved scanner/adapter; exercise clean, failure, unavailable, and safe known-test-signature paths | Open |

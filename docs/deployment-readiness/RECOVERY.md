@@ -78,16 +78,18 @@ traffic, or push GitHub.
 ## Current durable boundary
 
 The current evidence-backed recommendation is `READY_WITH_EXTERNAL_GATES`. The control plane is at
-`GO_NO_GO` with `checkpoint_status=READY_FOR_CHECKPOINT` and `commit_pending=true` until the local
-checkpoint procedure records its SHA. A fresh session must not treat that state as checkpointed or
-advance beyond it without reconciling Git.
+`COMPLETE` with `checkpoint_status=CHECKPOINTED`, `commit_pending=false`, and validated local
+checkpoint `208de49f8b16e6ef3b90104157876fd01b472831`. A fresh session must reconcile that SHA with
+Git HEAD/history before any action; it must not push or start another development phase.
 
 The validated source changes include PostgreSQL portability corrections, ORM/migration metadata
 alignment, workflow invariant migration `20260819_0036`, healthcheck corrections, and opt-in live
 PostgreSQL validation plumbing. Preserve these changes and all valid deployment evidence. Do not
 reset to the V1 baseline merely to make state files agree. After a successful local commit, record
 the exact SHA in `DEPLOYMENT_STATE.json`, `DEPLOYMENT_REPORT.md`, and the validation log, then verify
-`git show`, `git status`, and the intended clean/safely-scoped worktree.
+`git show`, `git status`, and the intended clean/safely-scoped worktree. The state-finalization
+documentation commit may be newer than the phase checkpoint; preserve both commits and do not reset
+merely because HEAD is newer.
 
 The external gates remain explicit: OIDC and secret-manager configuration, approved S3-compatible
 storage, malware scanning, live GROBID, TLS/reverse proxy, shared multi-replica rate limiting,
