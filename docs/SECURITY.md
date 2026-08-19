@@ -254,3 +254,18 @@ Storage reconciliation is tenant/review-scoped, returns counts and document iden
 is read-only: it never deletes or rewrites an object. Parser manifests contain bounded hashes and
 metadata rather than unbounded source bytes. Malware scanning remains an explicit deployment
 boundary and no clean-scan claim is made by the local fixture.
+
+## Phase 36 operational workspace security
+
+The Review operations UI treats the backend as the sole authorization and blinding authority. The
+round index first resolves active organization membership and Review access; membership, QC,
+workflow-control, queue, and provenance sections are independently allowed or marked restricted
+when the server denies them. A foreign Review or direct round identifier is never converted into a
+client-side permission decision or a data-bearing error.
+
+Assignment and adjudication submissions are authenticated Next.js server actions that forward only
+bounded form values to the existing screening endpoints. The UI never accepts a reviewer role,
+reveals peer decisions, or performs consensus/scientific calculations in the browser. Workflow
+payloads are not displayed; operational failure messages are presented as bounded status metadata.
+Loading, service errors, stale reconciliation warnings, and mutation rejection are explicit, and no
+failed read is rendered as a successful scientific state.

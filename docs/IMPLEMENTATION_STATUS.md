@@ -291,3 +291,18 @@ reconciliation. Focused storage/parser/document integration tests, migration upg
 through `20260819_0035`, repository Ruff/format, strict mypy, and compile checks pass. Live GROBID,
 S3, malware scanning, external retrieval, PostgreSQL, and the monolithic full suite remain
 environment/deployment gates and are not represented as passes.
+
+## Phase 36 collaboration, assignment, quality control and operational UX
+
+Phase 36 adds a tenant-scoped screening-round index and a shared server-rendered Review workspace
+shell with accessible navigation, loading/error boundaries, live-read and stale-reconciliation
+notices, role-aware membership/assignment visibility, reviewer queue and manager QC outcome views,
+explicit conflict-adjudication reasons, workflow attempt/checkpoint/reconciliation status, PRISMA
+readiness, provenance records, and safe links to existing reporting and governed-AI surfaces.
+All mutations remain authenticated server actions backed by the canonical screening service; no
+client-side role, blinding, scientific calculation, or autonomous decision authority was added.
+Frontend lint, TypeScript, Vitest (10 tests), and the Next.js production build pass. The focused
+tenant-boundary screening integration passes with `--no-cov`; the narrow default pytest invocation
+cannot satisfy the repository-wide 85% coverage threshold by itself. The full repository pytest
+invocation emitted no output and timed out after 424 seconds; exact descendants were terminated
+safely and this remains an environment limitation, not a pass.

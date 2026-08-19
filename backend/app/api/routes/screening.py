@@ -282,6 +282,16 @@ async def create_screening_round(
     return RoundResponse.from_domain(item)
 
 
+@router.get("/reviews/{review_id}/rounds", response_model=list[RoundResponse])
+async def list_screening_rounds(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    review_id: Annotated[UUID, Path()],
+) -> list[RoundResponse]:
+    rounds = await _service(session).list_rounds(actor, review_id)
+    return [RoundResponse.from_domain(item) for item in rounds]
+
+
 @router.post(
     "/rounds/{round_id}/assignments",
     response_model=AssignmentResponse,

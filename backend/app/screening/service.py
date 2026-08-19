@@ -185,6 +185,10 @@ class ScreeningService:
             result.append(ScreeningQueueItem(assignment, article, decision, outcome))
         return result
 
+    async def list_rounds(self, actor: ActorContext, review_id: UUID) -> list[ScreeningRound]:
+        review = await self._review_service.get(actor, review_id)
+        return await self._repository.list_rounds(actor.organization_id, review.id)
+
     async def decide(
         self,
         actor: ActorContext,

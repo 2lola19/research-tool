@@ -476,6 +476,17 @@ class SqlAlchemyScreeningRepository:
         ).scalar_one_or_none()
         return _round(row) if row is not None else None
 
+    async def list_rounds(self, organization_id: UUID, review_id: UUID) -> list[ScreeningRound]:
+        query = (
+            select(ScreeningRoundRecord)
+            .where(
+                ScreeningRoundRecord.organization_id == organization_id,
+                ScreeningRoundRecord.review_id == review_id,
+            )
+            .order_by(ScreeningRoundRecord.sequence, ScreeningRoundRecord.id)
+        )
+        return [_round(row) for row in await self._session.scalars(query)]
+
     async def close_round(
         self, organization_id: UUID, round_id: UUID, closed_by_user_id: UUID
     ) -> ScreeningRound:

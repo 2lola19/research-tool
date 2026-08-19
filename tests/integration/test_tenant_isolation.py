@@ -1651,6 +1651,21 @@ def test_blinded_screening_consensus_adjudication_and_progression(
     )
     full_text_round = _create_screening_round(tenant_api, name="Full text", stage="FULL_TEXT")
 
+    listed_rounds = tenant_api.client.get(
+        f"/api/v1/screening/reviews/{tenant_api.ids.assigned_review}/rounds",
+        headers=tenant_api.headers(tenant_api.ids.reviewer_a, tenant_api.ids.organization_a),
+    )
+    assert listed_rounds.status_code == 200, listed_rounds.text
+    assert [item["id"] for item in listed_rounds.json()] == [
+        title_round["id"],
+        full_text_round["id"],
+    ]
+    foreign_rounds = tenant_api.client.get(
+        f"/api/v1/screening/reviews/{tenant_api.ids.assigned_review}/rounds",
+        headers=tenant_api.headers(tenant_api.ids.owner_b, tenant_api.ids.organization_b),
+    )
+    assert foreign_rounds.status_code == 404
+
     assignments: dict[tuple[str, UUID], dict[str, object]] = {}
     for article in (progressed_article, excluded_article):
         for reviewer_id in (tenant_api.ids.lead_a, tenant_api.ids.reviewer_a):

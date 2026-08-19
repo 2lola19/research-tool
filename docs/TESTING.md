@@ -251,3 +251,16 @@ repair retry transitions, reconciliation read-only behavior, and foreign-tenant 
 Migration coverage upgrades and downgrades the SQLite chain through `20260819_0035` and asserts
 the new processing-run metadata columns. No live GROBID, S3 service, malware scanner, external
 retrieval, or PostgreSQL concurrency claim is made. Those remain deployment/environment gates.
+
+## Phase 36 collaboration and operational UX coverage
+
+Backend integration coverage verifies the ordered Review-scoped screening-round index and foreign-
+organization not-found behavior alongside existing blinded queue, decision, conflict, and
+progression tests. Frontend API tests verify that bearer and organization headers are sent, a
+reviewer queue can load while membership/QC/workflow sections are explicitly restricted, and no
+restricted response is treated as ready data. ESLint, TypeScript, Vitest (10 tests), and the
+Next.js production build pass. The focused tenant test passes with `--no-cov`; running that single
+test through the repository's default coverage gate is not a full-suite coverage measurement and
+fails the 85% threshold by design. The full pytest command emitted no output and timed out after
+424 seconds; exact descendants were inspected and terminated safely, so this is recorded as an
+environment limitation rather than a test pass.

@@ -231,3 +231,16 @@ existing provenance and append-only audit services.
 Read-only storage reconciliation is operational diagnostics only. It reports tenant/review-scoped
 missing and orphan counts without deleting objects or inventing provenance. Storage credentials,
 malware-scan claims, external URL response bodies, and unbounded parser output are not persisted.
+
+## Phase 36 operational workspace provenance boundary
+
+The Review operations workspace reads the existing append-only scientific provenance ledger and
+displays method/version, subject/source identity, actor kind, and verification state as navigation
+metadata. It does not create, rewrite, or infer provenance records. Workflow attempts, step
+checkpoints, reconciliation issues, assignments, and adjudications remain distinct operational or
+scientific records; assignment and adjudication writes continue through the canonical screening
+service, which appends the required audit/provenance events.
+
+The UI's live-read timestamp and stale-reconciliation notice describe read freshness only. They are
+not scientific evidence, do not alter immutable snapshots, and do not make an operational status a
+claim about the truth of an Article, Study, screening decision, or analysis.

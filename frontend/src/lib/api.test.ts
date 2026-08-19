@@ -9,6 +9,61 @@ import {
   getRiskOfBiasWorkspace,
   getSearchDocumentation,
 } from "./api";
+import { getReviewOperationsWorkspace } from "./review-workspace-api";
+
+describe("getReviewOperationsWorkspace", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps role-restricted sections explicit while loading an authorized queue", async () => {
+    const responses = [
+      { id: "review-1", title: "Review", project_slug: "review", archived: false },
+      null,
+      [{ id: "round-1", sequence: 1, name: "Title and abstract", stage: "TITLE_ABSTRACT", state: "OPEN", blinded: true, required_decisions: 2 }],
+      { counts: {}, readiness: { ready_for_final: false, blockers: [] }, source_references: {} },
+      [],
+      null,
+      null,
+      [],
+      [{ assignment_id: "assignment-1", article_id: "article-1", title: "Queued article", abstract: null, own_decision: null, outcome: null }],
+      null,
+    ];
+    const statuses = [200, 403, 200, 200, 200, 403, 403, 200, 200, 403];
+    const fetchMock = vi.fn();
+    responses.forEach((payload, index) => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(payload === null ? null : JSON.stringify(payload), {
+          status: statuses[index],
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getReviewOperationsWorkspace(
+      "signed-token",
+      "organization-1",
+      "review-1",
+      "round-1",
+    );
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.workspace.members.status).toBe("forbidden");
+    expect(result.workspace.queue.status).toBe("ready");
+    expect(result.workspace.queue.data[0]?.title).toBe("Queued article");
+    expect(result.workspace.outcomes.status).toBe("forbidden");
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8000/api/v1/screening/rounds/round-1/queue",
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({ "X-Organization-ID": "organization-1" }),
+      }),
+    );
+  });
+});
 
 describe("getAnalysisWorkspace", () => {
   afterEach(() => {

@@ -99,6 +99,12 @@ export default async function ReviewsPage() {
                       </span>
                     </div>
                     <div className="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-[var(--brand)]">
+                      <Link className="hover:underline" href={`/reviews/${project.id}`}>
+                        Operations overview
+                      </Link>
+                      <Link className="hover:underline" href={`/reviews/${project.id}/screening`}>
+                        Screening queue &amp; QC
+                      </Link>
                       <Link className="hover:underline" href={`/reviews/${project.id}/search`}>
                         Search
                       </Link>

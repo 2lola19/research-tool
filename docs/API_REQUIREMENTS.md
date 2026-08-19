@@ -282,3 +282,22 @@ document or exceed the configured attempt limit.
 diagnostic. It returns counts, missing document IDs, orphan count, and a status marker, never raw
 storage keys, bytes, credentials, or deletion controls. External retrieval records accept only
 validated HTTPS URLs and do not trigger automatic fetching in this phase.
+
+## Phase 36 collaboration, assignment, quality-control and operational UX API
+
+`GET /api/v1/screening/reviews/{review_id}/rounds` returns the tenant- and Review-scoped ordered
+screening-round index for an authorized Review member. It does not return assignments, peer
+decisions, unrevealed AI suggestions, or storage identifiers. Existing queue and outcome routes
+remain the authority for reviewer-specific queue visibility and manager-only quality-control
+visibility; foreign Review identifiers retain not-found semantics.
+
+The server-rendered Review operations workspace reads Review metadata, round status, optional
+membership visibility, PRISMA readiness, workflow attempts/checkpoints/reconciliation, and
+scientific provenance through existing authenticated routes. Optional role-restricted sections are
+represented as restricted or unavailable rather than guessed. Assignment and conflict-adjudication
+forms call the existing screening service through authenticated server actions; the browser cannot
+grant itself a role, reveal blinded data, finalize a scientific decision, or recover a workflow job.
+
+The workspace provides explicit loading, error, stale-reconciliation, mutation-error, and live-read
+timestamps, plus safe links to existing AI, reporting, and authenticated download surfaces. It does
+not calculate scientific values or export raw workflow payloads.
