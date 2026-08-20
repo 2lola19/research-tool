@@ -1,0 +1,48 @@
+{
+  "program": "Research Tool External Gates and Staging Activation",
+  "baseline_commit": "7be7a605c63e00069881da86a899e71e68ade846",
+  "current_gate": "FINAL_STAGING_REPORT",
+  "last_completed_gate": "FOCUSED_LOCAL_AND_POSTGRES_VALIDATION",
+  "blockers": [
+    "The official postgres:17-alpine and postgres:17-bookworm images both retain one CRITICAL and multiple HIGH Trivy findings in the bundled gosu helper; an approved replacement digest or documented risk acceptance is required.",
+    "Docker Scout is installed but requires Docker ID authentication; no login was attempted.",
+    "No approved malware-scanner adapter or scanner service is present.",
+    "No live GROBID service or non-sensitive representative PDF fixture is present.",
+    "No live S3-compatible client implementation, disposable service, or authorized staging bucket is present.",
+    "No OIDC adapter, issuer, audience, JWKS policy, or authorized test identity configuration is present.",
+    "Rate limiting is process-local and no approved shared or edge limiter is configured.",
+    "No disposable TLS/reverse-proxy topology or staging certificate owner is present.",
+    "The repository-wide pytest run and broad frontend lint were bounded after Windows-environment stalls; focused checks passed but broad gates remain environment-blocked.",
+    "The document-bearing staging lifecycle cannot be called complete until malware, parser, storage, identity, and network-edge gates are supplied."
+  ],
+  "external_actions_required": [
+    "Provide an approved PostgreSQL image digest with no unresolved exploitable HIGH/CRITICAL findings, or a security-owner exception for the exact gosu findings.",
+    "Provide an approved malware scanner and adapter contract, including health, clean-file, EICAR, unavailable, timeout, quarantine, and canonical-write ordering tests.",
+    "Provide a disposable GROBID endpoint/image and a non-sensitive representative PDF; supply GROBID_URL by secret-managed staging configuration only.",
+    "Provide a disposable S3-compatible service or approved staging bucket and owner; configure only the approved variable names and never paste secret values into the repository.",
+    "Provide an authorized OIDC test issuer, audience, JWKS/key-rotation policy, callback URLs, tenant memberships, role mappings, and test users.",
+    "Provide the approved shared or edge rate-limiter topology and failure policy for the intended replica count.",
+    "Provide a private staging reverse proxy, trusted-forwarded-header policy, HTTPS certificate, host/CORS values, and metrics restriction policy without public DNS changes."
+  ],
+  "local_commits": [
+    "7be7a605c63e00069881da86a899e71e68ade846",
+    "95446647d25af3708b7b579fcd4769018d6b990d"
+  ],
+  "validation_status": {
+    "baseline_reconciliation": "PASS",
+    "vulnerability_scanners": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
+    "malware_scanning": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
+    "grobid_parser": "ENVIRONMENT_BLOCKED",
+    "s3_storage": "EXTERNAL_CREDENTIAL_REQUIRED",
+    "oidc_identity": "EXTERNAL_CREDENTIAL_REQUIRED",
+    "shared_rate_limiting": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
+    "tls_reverse_proxy": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
+    "broad_regression": "ENVIRONMENT_BLOCKED",
+    "staging_lifecycle": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
+    "security_review": "PASS_WITH_LIMITATIONS",
+    "final_report": "COMPLETE"
+  },
+  "final_classification": "READY_WITH_EXTERNAL_GATES",
+  "next_action": "Obtain the exact operator-controlled staging services and approved PostgreSQL image disposition listed in EXTERNAL_GATES.md, then rerun only the blocked validations.",
+  "updated_at": "2026-08-20T07:40:07+01:00"
+}
