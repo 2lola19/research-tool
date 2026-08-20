@@ -93,6 +93,8 @@ production deployment should begin.
   baseline.
 - 95446647d25af3708b7b579fcd4769018d6b990d: harden audited staging images.
 - e70ca7a: add fail-closed document malware scanning for SG-002.
+- 37f673d: add the provider-neutral live GROBID adapter and record SG-003
+  external-required evidence.
 
 The durable state, blockers, validation log, recovery instructions, and
 operator handoff are in this directory. No GitHub push was performed.
