@@ -97,3 +97,32 @@ The durable state, blockers, validation log, recovery instructions, and
 operator handoff are in this directory. No GitHub push was performed.
 
 READY_WITH_EXTERNAL_GATES
+
+## 2026-08-20 SG-001 targeted correction and disposition
+
+The prior aggregate PostgreSQL statement is retained as historical staging
+evidence. The targeted refresh used the exact official Compose candidate
+`postgres:17-alpine`, PostgreSQL 17.11, Linux amd64, immutable digest
+`sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73`,
+gosu 1.19, and Go 1.24.6. Trivy 0.74.0 with a refreshed database found one
+CRITICAL and 21 HIGH findings in the bundled gosu binary; the full advisory
+table and evidence are in `SECURITY_SCAN_REPORT.md`.
+
+Official default/trixie, Bookworm, Alpine 3.24, and Alpine 3.23 PostgreSQL
+17.11 variants were also resolved and scanned. No supported official digest
+was clean. The Debian variants added 58 and 52 OS findings, while both Alpine
+variants retained the same 22 gosu findings. The signed upstream gosu binary
+was verified by SHA-256, and govulncheck source/binary analysis found no
+reachable vulnerable symbols for the actual official entrypoint invocation.
+Those findings are individually dispositioned as
+`NOT_AFFECTED_REACHABILITY_PROVEN`, but they are not suppressed or waived.
+
+No Compose/configuration change, project restart, downgrade, unofficial image,
+manual gosu replacement, or custom base image was made. Disposable migration
+and focused PostgreSQL compatibility checks passed for the candidate variants;
+the project-owned stack remained untouched. The SG-001 gate classification is
+`POSTGRES_IMAGE_GATE_ACCEPTED_RISK_REQUIRED`: a security owner must explicitly
+accept or reject the exact digest and 22 advisories. If accepted, re-review is
+required by 2026-09-19 or sooner on an upstream image/gosu/Go/Trivy,
+entrypoint, architecture, or exposure change. The overall staging report
+classification remains `READY_WITH_EXTERNAL_GATES` pending all other gates.

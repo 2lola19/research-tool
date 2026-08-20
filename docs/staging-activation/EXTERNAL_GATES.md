@@ -5,7 +5,10 @@ without direct evidence. Secret values must never be pasted into these records.
 
 ## Gate A: vulnerability scanners and image supply chain
 
-CURRENT STATUS: EXTERNAL_OPERATOR_ACTION_REQUIRED
+CURRENT STATUS: POSTGRES_IMAGE_GATE_ACCEPTED_RISK_REQUIRED
+
+See the dated SG-001 targeted disposition below. The earlier operator-action
+wording is preserved as historical evidence and is not erased.
 
 WHY EXTERNAL: pip-audit, npm audit, names-only key scanning, and disposable
 Trivy were executable locally. The application images are clean after the
@@ -211,3 +214,44 @@ continuity, deterministic outputs, retry/resume, no autonomous canonical AI
 mutation, and no duplicate scientific records.
 
 STAGING BLOCKING?: YES for claiming controlled staging readiness.
+
+## 2026-08-20 SG-001 targeted disposition
+
+This addendum supersedes the earlier aggregate Gate A wording for SG-001 only.
+It does not change or disposition SG-002 through SG-009.
+
+AUTHORITATIVE SG-001 CLASSIFICATION:
+`POSTGRES_IMAGE_GATE_ACCEPTED_RISK_REQUIRED`
+
+Exact image evaluated: official `postgres:17-alpine` / PostgreSQL 17.11,
+Linux amd64, Alpine 3.24.1, immutable digest
+`sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73`.
+The image contains gosu 1.19 built with Go 1.24.6. Refreshed Trivy 0.74.0
+with database UpdatedAt `2026-08-20T00:55:38Z` found one CRITICAL and 21 HIGH
+Go stdlib findings in `/usr/local/bin/gosu`; the complete record is in
+`SECURITY_SCAN_REPORT.md`.
+
+The supported official PostgreSQL 17.11 default/trixie, Bookworm, Alpine 3.24,
+and Alpine 3.23 variants were compared. The Debian variants added 58 and 52
+Debian findings respectively; both Alpine variants retained the same 22 gosu
+findings. No clean supported official digest was found. All variants used
+gosu 1.19; no upstream gosu release newer than 1.19 or official PostgreSQL
+rebuild with a fixed Go toolchain was available at review time.
+
+Reachability was investigated rather than assumed. The gosu binary SHA-256
+matched the signed upstream 1.19 amd64 asset. `govulncheck@v1.7.0` source and
+binary modes found no reachable vulnerable symbols. The official entrypoint
+uses gosu only to drop from root to `postgres` and then `exec` the entrypoint;
+the binary is not a long-lived network/TLS/HTTP/parser process. The 22 records
+are therefore individually dispositioned as
+`NOT_AFFECTED_REACHABILITY_PROVEN` for this bounded Linux amd64 invocation,
+but the image remains scanner-visible and this is not a waiver or false-
+positive claim.
+
+Required human action: the security owner must explicitly accept or reject the
+exact digest and 22 advisories in the bounded security assessment. Acceptance
+must be re-reviewed by 2026-09-19 or sooner on an official image, gosu, Go,
+Trivy database, entrypoint, architecture, or exposure change. Until that
+decision or an upstream-remediated official digest exists, SG-001 remains a
+staging security gate. No scanner suppression, manual gosu replacement,
+unofficial image, custom base image, or PostgreSQL downgrade was used.

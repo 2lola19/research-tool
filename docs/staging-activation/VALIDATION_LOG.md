@@ -178,3 +178,69 @@ record:
   append-only ledger, have been reviewed, reconciled, and staged as the
   documentation checkpoint. This entry records the transition and does not
   replace the earlier checkpoint fact.
+
+## 2026-08-20T09:56:34+01:00 SG-001 targeted PostgreSQL image gate
+
+- Current HEAD was `6fdb35f526a1ea9c54a46eb86bde4d3b0e4740ad`; the worktree was
+  clean before this evidence-only update. No Git reset, clean operation,
+  public traffic, production deployment, paid service, secret value, or GitHub
+  push was used.
+- Compose still declares `postgres:17-alpine`. The intended official amd64
+  digest was resolved and scanned as
+  `sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73`.
+  It is PostgreSQL 17.11 / Alpine 3.24.1 with gosu 1.19 built by Go 1.24.6.
+- The running `research-tool-readiness-db-1` container was separately
+  identified as untagged local image ID
+  `sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193`,
+  PostgreSQL 17.10 / gosu 1.19 / Go 1.24.6. It has no retained registry
+  RepoDigest. A scan by that image ID returned the same 22 gosu findings. The
+  project DB was not restarted because no clean official digest exists.
+- Trivy 0.74.0 was run from the pinned image digest
+  `sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`
+  with scanners `vuln`, package types `os,library`, severity `HIGH,CRITICAL`,
+  and no `ignore-unfixed` or suppression. The project-scoped cache volume was
+  retained. Database metadata was UpdatedAt `2026-08-20T00:55:38Z` and
+  DownloadedAt `2026-08-20T05:08:45Z`.
+- The exact final digest scan was created at `2026-08-20T08:43:54Z` and found
+  22 gosu findings: CVE-2025-68121 (CRITICAL), CVE-2025-61726,
+  CVE-2025-61729, CVE-2026-25679, CVE-2026-27145, CVE-2026-32280,
+  CVE-2026-32281, CVE-2026-32283, CVE-2026-33811, CVE-2026-33814,
+  CVE-2026-33818, CVE-2026-39820, CVE-2026-39821, CVE-2026-39822,
+  CVE-2026-39836, CVE-2026-42499, CVE-2026-42504, CVE-2026-56853,
+  CVE-2026-56858, CVE-2026-56859, CVE-2026-56860, and CVE-2026-56862
+  (all other records HIGH). Installed module was `stdlib v1.24.6`; Trivy
+  marked all 22 `fixed` with newer Go versions. The Alpine OS target was
+  clean at HIGH/CRITICAL.
+- Current official candidate scans were equivalent and ran against Linux amd64
+  images: default/trixie digest `sha256:e38411452a464af89e5adadb8d223bf53b898d47d6ef918b2d58c08707350449`
+  returned 80 findings (18 CRITICAL, 62 HIGH); Bookworm digest
+  `sha256:84560e3b9c6874893fc4e2854f5dc3e7c1a37bc9d1dfd7a8c641310ae22ba5ad`
+  returned 74 (20 CRITICAL, 54 HIGH); Alpine 3.23 digest
+  `sha256:9ae4e8f8d0284836a505f0b2e825144e32e20499856e7dc5f7b99e19d10eedd6`
+  returned 22 (1 CRITICAL, 21 HIGH). Alpine 3.24 aliases shared the final
+  `18cfe3...` digest. All official variants used gosu 1.19 / Go 1.24.6.
+- Official source inspection found `GOSU_VERSION 1.19`, signed release
+  verification, and the entrypoint path `exec gosu postgres "$BASH_SOURCE"
+  "$@"` only for a root-started container. The gosu binary SHA-256 was
+  `52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0`, matching
+  the upstream 1.19 amd64 release asset.
+- `govulncheck@v1.7.0` with Go 1.26.7 used the Go vulnerability database last
+  updated `2026-08-19 17:06:06 +0000 UTC`. Source mode on gosu tag 1.19 and
+  binary mode on the exact upstream gosu-amd64 artifact both reported no
+  reachable symbol vulnerabilities. All 22 Trivy CVEs mapped to Go advisory
+  IDs that appeared only as non-reachable module/package information.
+- Disposable compatibility checks did not touch the project DB: Alpine 3.24
+  ran `test_postgresql_migrations.py` plus `test_tenant_isolation.py` (54
+  tenant tests), all PASS; default/trixie, Bookworm, and Alpine 3.23 each ran
+  `test_postgresql_migrations.py`, all PASS. Each temporary candidate passed
+  `pg_isready` and was removed after the check.
+- No official PostgreSQL 17 digest with acceptable HIGH/CRITICAL evidence was
+  found. No tag downgrade, unofficial image, manual gosu replacement, custom
+  base image, scanner suppression, or project container restart was performed.
+  Existing project health/migration/tenant evidence remains valid and no
+  workflow, scientific data, provenance, or tenant state was changed.
+- SG-001 disposition: `POSTGRES_IMAGE_GATE_ACCEPTED_RISK_REQUIRED`. This is a
+  bounded security-owner handoff, not self-authorized acceptance. Re-review is
+  required by 2026-09-19 and sooner on an official image/gosu/Go/Trivy update,
+  entrypoint or architecture change, or increased exposure. The complete
+  finding table and risk assessment are in `SECURITY_SCAN_REPORT.md`.
