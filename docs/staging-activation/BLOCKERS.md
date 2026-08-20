@@ -37,3 +37,13 @@ in the SG-001 evidence. The current SG-001 classification is
 The acceptance does not authorize public production use. Re-review is due by
 2026-09-19 or sooner on the documented image, gosu, Go, architecture,
 entrypoint, scanner/advisory, exposure, or upstream-remediation triggers.
+
+## 2026-08-20 SG-002 correction and closure
+
+The SG-002 table row above is retained as the historical pre-investigation
+blocker. The targeted investigation implemented the provider-neutral boundary,
+official private ClamAV service, fail-closed document ordering, append-only
+tenant-scoped scan evidence, clean/EICAR/unavailable/timeout/error/retry and
+security tests, and exact-image Trivy validation. The current SG-002
+classification is `MALWARE_SCANNER_GATE_PASS`; it is no longer a blocker for
+the bounded controlled-staging scope. SG-003 and all other rows are unchanged.

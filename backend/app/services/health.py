@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from backend.app.core.config import Settings
 from backend.app.db.session import engine
+from backend.app.malware.contracts import MalwareScanner
+from backend.app.malware.factory import build_malware_scanner
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +20,13 @@ class HealthService:
         database_engine: AsyncEngine,
         *,
         require_migrations: bool = False,
-        expected_revision: str = "20260819_0036",
+        expected_revision: str = "20260820_0037",
+        malware_scanner: MalwareScanner | None = None,
     ) -> None:
         self._database_engine = database_engine
         self._require_migrations = require_migrations
         self._expected_revision = expected_revision
+        self._malware_scanner = malware_scanner
 
     async def database_is_ready(self) -> bool:
         try:
@@ -46,6 +50,11 @@ class HealthService:
             return False
         return True
 
+    async def malware_scanner_is_ready(self) -> bool:
+        if self._malware_scanner is None:
+            return True
+        return (await self._malware_scanner.health()).healthy
+
 
 def get_health_service(request: Request) -> HealthService:
     settings = cast(Settings, request.app.state.settings)
@@ -53,4 +62,5 @@ def get_health_service(request: Request) -> HealthService:
         engine,
         require_migrations=settings.database_require_migrations,
         expected_revision=settings.database_expected_revision,
+        malware_scanner=build_malware_scanner(settings),
     )

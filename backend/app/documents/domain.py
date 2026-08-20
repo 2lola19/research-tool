@@ -5,6 +5,8 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
+from backend.app.malware.domain import MalwareScanErrorClass, MalwareScanOutcome
+
 
 class DocumentStatus(StrEnum):
     NOT_REQUESTED = "NOT_REQUESTED"
@@ -16,6 +18,10 @@ class DocumentStatus(StrEnum):
     PAYWALLED = "PAYWALLED"
     NOT_FOUND = "NOT_FOUND"
     INVALID_FILE = "INVALID_FILE"
+    MALWARE_SCAN_PENDING = "MALWARE_SCAN_PENDING"
+    MALWARE_CLEAN = "MALWARE_CLEAN"
+    MALWARE_INFECTED = "MALWARE_INFECTED"
+    MALWARE_SCAN_FAILED = "MALWARE_SCAN_FAILED"
     PROCESSING = "PROCESSING"
     PROCESSED = "PROCESSED"
     PROCESSING_FAILED = "PROCESSING_FAILED"
@@ -122,6 +128,27 @@ class DocumentProcessingRun:
     chunk_manifest: list[dict[str, object]] | None = None
     block_count: int = 0
     text_byte_size: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentMalwareScanAttempt:
+    id: UUID
+    document_id: UUID
+    organization_id: UUID
+    review_id: UUID
+    attempt_number: int
+    provider_type: str
+    scanner_version: str | None
+    signature_database_version: str | None
+    content_sha256: str
+    content_size: int
+    outcome: MalwareScanOutcome
+    detection_name: str | None
+    error_class: MalwareScanErrorClass | None
+    error_message: str | None
+    started_at: datetime
+    finished_at: datetime
+    created_at: datetime
 
 
 @dataclass(frozen=True, slots=True)

@@ -10,6 +10,9 @@ class FakeHealthService:
     async def database_is_ready(self) -> bool:
         return self._ready
 
+    async def malware_scanner_is_ready(self) -> bool:
+        return self._ready
+
 
 def test_liveness_returns_request_id(client: TestClient) -> None:
     response = client.get("/health/live", headers={"X-Request-ID": "test-request"})
@@ -28,7 +31,10 @@ def test_readiness_reports_database_up(client: TestClient) -> None:
     response = client.get("/health/ready")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy", "checks": {"database": "up"}}
+    assert response.json() == {
+        "status": "healthy",
+        "checks": {"database": "up", "malware_scanner": "up"},
+    }
 
 
 def test_readiness_reports_database_down(client: TestClient) -> None:
@@ -37,7 +43,10 @@ def test_readiness_reports_database_down(client: TestClient) -> None:
     response = client.get("/health/ready")
 
     assert response.status_code == 503
-    assert response.json() == {"status": "unhealthy", "checks": {"database": "down"}}
+    assert response.json() == {
+        "status": "unhealthy",
+        "checks": {"database": "down", "malware_scanner": "down"},
+    }
 
 
 def test_metrics_are_low_cardinality_and_operational_only(client: TestClient) -> None:

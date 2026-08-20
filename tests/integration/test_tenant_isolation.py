@@ -275,6 +275,7 @@ def tenant_api(tmp_path: Path) -> TenantApi:
             app_env="test",
             database_url=database_url,
             local_auth_secret="test-local-authentication-secret",
+            malware_scanner_provider="fixture",
         )
         app = create_app(settings)
 

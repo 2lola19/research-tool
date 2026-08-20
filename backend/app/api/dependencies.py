@@ -11,6 +11,8 @@ from backend.app.identity.domain import ActorContext
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
 from backend.app.identity.security import LocalTokenAuthenticationProvider
 from backend.app.identity.service import ActorContextService
+from backend.app.malware.contracts import MalwareScanner
+from backend.app.malware.factory import build_malware_scanner
 from backend.app.services.health import HealthService, get_health_service
 from backend.app.storage.contracts import VerifiedObjectStorageProvider
 from backend.app.storage.local import LocalFileStorageProvider
@@ -33,6 +35,13 @@ def get_object_storage(settings: SettingsDependency) -> VerifiedObjectStoragePro
 
 
 ObjectStorageDependency = Annotated[VerifiedObjectStorageProvider, Depends(get_object_storage)]
+
+
+def get_malware_scanner(settings: SettingsDependency) -> MalwareScanner:
+    return build_malware_scanner(settings)
+
+
+MalwareScannerDependency = Annotated[MalwareScanner, Depends(get_malware_scanner)]
 
 
 def build_authentication_provider(settings: Settings) -> LocalTokenAuthenticationProvider:

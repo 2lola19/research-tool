@@ -16,6 +16,7 @@ from backend.app.documents.domain import (
     CriterionDecision,
     Document,
     DocumentEvidenceLocation,
+    DocumentMalwareScanAttempt,
     DocumentProcessingRun,
     DocumentRetrievalMethod,
     DocumentStatus,
@@ -36,6 +37,12 @@ from backend.app.documents.parsers import (
 from backend.app.identity.contracts import IdentityRepository
 from backend.app.identity.domain import ActorContext, Permission
 from backend.app.identity.service import AuthorizationService
+from backend.app.malware.contracts import MalwareScanner
+from backend.app.malware.domain import (
+    MalwareScanErrorClass,
+    MalwareScanOutcome,
+    MalwareScanResult,
+)
 from backend.app.protocols.contracts import ProtocolRepository
 from backend.app.protocols.domain import ProtocolDecisionKind
 from backend.app.provenance.contracts import ProvenanceRepository
@@ -72,6 +79,7 @@ class DocumentService:
         identity_repository: IdentityRepository,
         provenance_repository: ProvenanceRepository,
         storage: VerifiedObjectStorageProvider,
+        malware_scanner: MalwareScanner,
         settings: Settings,
     ) -> None:
         self._repository = repository
@@ -82,6 +90,7 @@ class DocumentService:
             provenance_repository, review_repository, identity_repository
         )
         self._storage = storage
+        self._malware_scanner = malware_scanner
         self._settings = settings
 
     async def upload_pdf(
@@ -129,7 +138,7 @@ class DocumentService:
                 organization_id=actor.organization_id,
                 review_id=review.id,
                 article_id=article.id,
-                status=DocumentStatus.USER_UPLOADED,
+                status=DocumentStatus.MALWARE_SCAN_PENDING,
                 retrieval_method=DocumentRetrievalMethod.USER_UPLOAD,
                 source_name=source_name.strip() or "user-upload",
                 source_identifier=None,
@@ -171,6 +180,10 @@ class DocumentService:
             DocumentStatus.PROCESSED,
             DocumentStatus.PROCESSING_FAILED,
             DocumentStatus.INVALID_FILE,
+            DocumentStatus.MALWARE_SCAN_PENDING,
+            DocumentStatus.MALWARE_CLEAN,
+            DocumentStatus.MALWARE_INFECTED,
+            DocumentStatus.MALWARE_SCAN_FAILED,
         }:
             raise ConflictError("retrieval records cannot use a file-processing status")
         if status == DocumentStatus.EXTERNAL_LINK_ONLY and not source_url:
@@ -228,6 +241,100 @@ class DocumentService:
         storage_key = document.storage_key
         if document.status == DocumentStatus.PROCESSED:
             raise ConflictError("document has already been processed")
+        if document.status == DocumentStatus.MALWARE_INFECTED:
+            raise ConflictError("document is blocked by malware scanning")
+        if document.sha256 is None or document.file_size is None:
+            return await self._record_processing_failure(
+                actor,
+                document,
+                parser,
+                StorageIntegrityError("document has incomplete storage metadata"),
+            )
+        content_sha256 = document.sha256
+        content_size = document.file_size
+        try:
+            content = await self._storage.get_verified(
+                storage_key,
+                expected_sha256=content_sha256,
+                expected_size=content_size,
+                max_bytes=self._settings.max_document_file_size_bytes,
+            )
+        except Exception as exc:
+            return await self._record_processing_failure(actor, document, parser, exc)
+
+        clean_scan = await self._repository.latest_clean_malware_scan(
+            actor.organization_id,
+            document.review_id,
+            document.id,
+            content_sha256,
+            content_size,
+        )
+        if clean_scan is None:
+            scan_attempts = await self._repository.count_malware_scan_attempts(
+                actor.organization_id, document.review_id, document.id
+            )
+            if scan_attempts >= self._settings.max_malware_scan_attempts:
+                await self._repository.update_document_status(
+                    actor.organization_id, document.id, DocumentStatus.MALWARE_SCAN_FAILED
+                )
+                raise ConflictError("malware scanner retry limit has been reached")
+            scan_started_at = datetime.now(UTC)
+            scan_result = await self._run_malware_scan(content)
+            scan_finished_at = datetime.now(UTC)
+            scan_attempt = await self._repository.create_malware_scan_attempt(
+                document=document,
+                attempt_number=scan_attempts + 1,
+                provider_type=scan_result.provider_type,
+                scanner_version=scan_result.scanner_version,
+                signature_database_version=scan_result.signature_database_version,
+                content_sha256=content_sha256,
+                content_size=content_size,
+                outcome=scan_result.outcome.value,
+                detection_name=scan_result.detection_name,
+                error_class=scan_result.error_class.value if scan_result.error_class else None,
+                error_message=scan_result.error_message,
+                started_at=scan_started_at,
+                finished_at=scan_finished_at,
+            )
+            if scan_result.outcome == MalwareScanOutcome.INFECTED:
+                blocked = await self._repository.update_document_status(
+                    actor.organization_id, document.id, DocumentStatus.MALWARE_INFECTED
+                )
+                await self._audit(
+                    actor,
+                    document.review_id,
+                    blocked,
+                    "malware_scan_blocked",
+                    self._malware_scan_snapshot(scan_attempt),
+                )
+                return blocked
+            if scan_result.outcome != MalwareScanOutcome.CLEAN:
+                failed = await self._repository.update_document_status(
+                    actor.organization_id, document.id, DocumentStatus.MALWARE_SCAN_FAILED
+                )
+                await self._audit(
+                    actor,
+                    document.review_id,
+                    failed,
+                    "malware_scan_failed",
+                    self._malware_scan_snapshot(scan_attempt),
+                )
+                return failed
+            document = await self._repository.update_document_status(
+                actor.organization_id, document.id, DocumentStatus.MALWARE_CLEAN
+            )
+            await self._audit(
+                actor,
+                document.review_id,
+                document,
+                "malware_scan_clean",
+                self._malware_scan_snapshot(scan_attempt),
+            )
+        elif document.status != DocumentStatus.MALWARE_CLEAN:
+            document = await self._repository.update_document_status(
+                actor.organization_id, document.id, DocumentStatus.MALWARE_CLEAN
+            )
+
         attempts = await self._repository.count_processing_runs(
             actor.organization_id, document.review_id, document.id
         )
@@ -246,26 +353,17 @@ class DocumentService:
             started_at=datetime.now(UTC),
             finished_at=None,
         )
-        content: bytes | None = None
         manifest: list[dict[str, object]] = []
         manifest_hash = ""
         text_byte_size = 0
         try:
-            if document.sha256 is None or document.file_size is None:
-                raise StorageIntegrityError("document has incomplete storage metadata")
-            content = await self._storage.get_verified(
-                storage_key,
-                expected_sha256=document.sha256,
-                expected_size=document.file_size,
-                max_bytes=self._settings.max_document_file_size_bytes,
-            )
             canonical = await asyncio.wait_for(
                 asyncio.to_thread(parser.parse, content),
                 timeout=self._settings.document_parser_timeout_seconds,
             )
             validate_canonical_document(canonical, self._parser_limits())
             manifest, manifest_hash, text_byte_size = build_chunk_manifest(
-                canonical, content_sha256=document.sha256
+                canonical, content_sha256=content_sha256
             )
             await self._repository.replace_document_blocks(document, canonical)
         except Exception as exc:
@@ -276,7 +374,7 @@ class DocumentService:
                 status=ProcessingRunStatus.FAILED,
                 error_message=self._safe_processing_error(exc),
                 failure_class=failure_class.value,
-                content_sha256=document.sha256 if content is not None else None,
+                content_sha256=content_sha256 if content is not None else None,
                 content_size=len(content) if content is not None else None,
                 chunk_manifest_hash=None,
                 chunk_manifest=None,
@@ -303,7 +401,7 @@ class DocumentService:
             status=ProcessingRunStatus.SUCCEEDED,
             error_message=None,
             failure_class=None,
-            content_sha256=document.sha256,
+            content_sha256=content_sha256,
             content_size=len(content),
             chunk_manifest_hash=manifest_hash,
             chunk_manifest=manifest,
@@ -338,6 +436,101 @@ class DocumentService:
         )
         return processed
 
+    async def _run_malware_scan(self, content: bytes) -> MalwareScanResult:
+        try:
+            return await asyncio.wait_for(
+                self._malware_scanner.scan(content),
+                timeout=self._settings.malware_scanner_timeout_seconds,
+            )
+        except TimeoutError:
+            return MalwareScanResult(
+                provider_type=self._malware_scanner.provider_type,
+                scanner_version=None,
+                signature_database_version=None,
+                outcome=MalwareScanOutcome.TIMEOUT,
+                error_class=MalwareScanErrorClass.TIMEOUT,
+                error_message="malware scanner timed out",
+            )
+        except (ConnectionError, OSError):
+            return MalwareScanResult(
+                provider_type=self._malware_scanner.provider_type,
+                scanner_version=None,
+                signature_database_version=None,
+                outcome=MalwareScanOutcome.UNAVAILABLE,
+                error_class=MalwareScanErrorClass.UNAVAILABLE,
+                error_message="malware scanner endpoint is unavailable",
+            )
+        except Exception:
+            return MalwareScanResult(
+                provider_type=self._malware_scanner.provider_type,
+                scanner_version=None,
+                signature_database_version=None,
+                outcome=MalwareScanOutcome.ERROR,
+                error_class=MalwareScanErrorClass.SCANNER_ERROR,
+                error_message="malware scanner returned an operational error",
+            )
+
+    async def _record_processing_failure(
+        self,
+        actor: ActorContext,
+        document: Document,
+        parser: DocumentParser,
+        exc: Exception,
+    ) -> Document:
+        failure_class = self._processing_failure_class(exc)
+        now = datetime.now(UTC)
+        run = await self._repository.create_processing_run(
+            document=document,
+            parser_name=parser.name,
+            parser_version=parser.version,
+            status=ProcessingRunStatus.FAILED,
+            error_message=self._safe_processing_error(exc),
+            requested_by_user_id=actor.user_id,
+            started_at=now,
+            finished_at=now,
+        )
+        await self._repository.finish_processing_run(
+            organization_id=actor.organization_id,
+            run_id=run.id,
+            status=ProcessingRunStatus.FAILED,
+            error_message=self._safe_processing_error(exc),
+            failure_class=failure_class.value,
+            content_sha256=None,
+            content_size=None,
+            chunk_manifest_hash=None,
+            chunk_manifest=None,
+            block_count=0,
+            text_byte_size=0,
+            finished_at=now,
+        )
+        failed = await self._repository.update_document_status(
+            actor.organization_id, document.id, DocumentStatus.PROCESSING_FAILED
+        )
+        await self._audit(
+            actor,
+            document.review_id,
+            failed,
+            "processing_failed",
+            {"parser": parser.name, "failure_class": failure_class.value},
+        )
+        return failed
+
+    @staticmethod
+    def _malware_scan_snapshot(scan: DocumentMalwareScanAttempt) -> dict[str, object]:
+        return {
+            "scan_attempt_id": str(scan.id),
+            "attempt_number": scan.attempt_number,
+            "provider_type": scan.provider_type,
+            "scanner_version": scan.scanner_version,
+            "signature_database_version": scan.signature_database_version,
+            "content_sha256": scan.content_sha256,
+            "content_size": scan.content_size,
+            "outcome": scan.outcome.value,
+            "detection_name": scan.detection_name,
+            "error_class": scan.error_class.value if scan.error_class else None,
+            "error_message": scan.error_message,
+        }
+
     async def content(self, actor: ActorContext, document_id: UUID) -> tuple[Document, bytes]:
         document = await self.get(actor, document_id)
         if document.storage_key is None or document.sha256 is None or document.file_size is None:
@@ -346,6 +539,13 @@ class DocumentService:
             document.access_classification or ""
         ).strip().upper() in _RESTRICTED_ACCESS_CLASSIFICATIONS:
             AuthorizationService.require(actor, Permission.SCREEN_ARTICLES)
+        if document.status in {
+            DocumentStatus.USER_UPLOADED,
+            DocumentStatus.MALWARE_SCAN_PENDING,
+            DocumentStatus.MALWARE_SCAN_FAILED,
+            DocumentStatus.MALWARE_INFECTED,
+        }:
+            raise ConflictError("document content is unavailable until malware scanning succeeds")
         try:
             content = await self._storage.get_verified(
                 document.storage_key,
@@ -364,6 +564,15 @@ class DocumentService:
     ) -> list[DocumentProcessingRun]:
         document = await self.get(actor, document_id)
         return await self._repository.list_processing_runs(
+            actor.organization_id, document.review_id, document.id
+        )
+
+    async def list_malware_scan_attempts(
+        self, actor: ActorContext, *, document_id: UUID
+    ) -> list[DocumentMalwareScanAttempt]:
+        document = await self.get(actor, document_id)
+        AuthorizationService.require(actor, Permission.MANAGE_DOCUMENTS)
+        return await self._repository.list_malware_scan_attempts(
             actor.organization_id, document.review_id, document.id
         )
 

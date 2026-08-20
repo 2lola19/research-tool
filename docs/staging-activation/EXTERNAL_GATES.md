@@ -275,3 +275,33 @@ architecture, entrypoint behavior, and private staging exposure model. Re-
 review is required no later than 2026-09-19, or immediately after any image,
 gosu, Go, architecture, entrypoint, scanner/advisory, exposure, or upstream
 remediation change. No PostgreSQL image or scanner configuration was changed.
+
+## 2026-08-20 SG-002 targeted disposition
+
+The earlier Gate B entry is retained as historical baseline evidence. The
+targeted SG-002 investigation implemented and validated a repository-owned,
+provider-neutral malware boundary and a disposable official ClamAV service.
+
+AUTHORITATIVE SG-002 CLASSIFICATION: `MALWARE_SCANNER_GATE_PASS`
+
+The selected scanner is official `clamav/clamav:1.4.6` at immutable digest
+`sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803`,
+Linux amd64, ClamAV `1.4.6`, active signature database `28098`. Compose
+exposes port 3310 only on the private project network, uses the official
+`clamdcheck.sh` healthcheck, and applies 2g/2 CPU bounds. The pinned Trivy
+0.74.0 scan (database updated 2026-08-20) found zero HIGH/CRITICAL findings in
+the exact scanner image. No host changes, public port, real malware, EICAR
+artifact, scanner suppression, or raw payload storage was used.
+
+Uploads now retain verified original bytes in `MALWARE_SCAN_PENDING`. Exact
+hash/size-linked append-only scan attempts are persisted before the parser is
+eligible. `CLEAN` alone permits parser, canonical block, and scientific
+provenance writes; `INFECTED`, `ERROR`, `TIMEOUT`, and `UNAVAILABLE` fail closed
+with bounded retries. Live clean and standard EICAR scans passed; focused unit,
+document integration, tenant/authorization/redaction, migration, readiness,
+compile, Ruff, mypy, Compose, and image-scan checks passed. The full evidence
+is in `SECURITY_SCAN_REPORT.md`.
+
+No external organizational action is required for SG-002 within the bounded
+controlled-staging scope. SG-003 and the other unrelated gates remain
+unchanged and are not opened by this disposition.

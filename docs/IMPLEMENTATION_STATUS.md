@@ -319,6 +319,26 @@ schema or provenance model changed. The controlled-deployment package remains en
 until PostgreSQL, Docker/image/dependency scans, OIDC, external object storage/malware scanning,
 TLS/proxy, shared rate limiting, secret management, and backup/restore evidence are available.
 
+## SG-002 malware scanning gate (2026-08-20)
+
+Implemented the smallest provider-neutral malware boundary for document ingestion. Official
+`clamav/clamav:1.4.6` is isolated in Compose with no host port, a healthcheck, `2g` memory and
+`2.0` CPU bounds, and immutable image-index digest
+`sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803` on Linux amd64. The
+standard-library TCP adapter records ClamAV version/signature metadata while exposing only
+`CLEAN`, `INFECTED`, `ERROR`, `TIMEOUT`, `UNAVAILABLE`, and bounded operational error fields.
+
+Document uploads now retain the acquisition object in `MALWARE_SCAN_PENDING`; append-only,
+tenant-scoped scan attempts link exact content hashes/sizes to results. Parser runs, canonical
+blocks, and scientific provenance are unreachable until an exact clean scan succeeds. Infected
+content is retained but blocked; scanner failure, timeout, or unavailability is retryable and
+fail-closed with a bounded attempt limit. A manager-only scan-history route returns no raw content.
+
+Focused unit, document integration, tenant/auth, migration, health, compile, Ruff, mypy, Compose,
+live ClamAV clean/EICAR, and pinned Trivy checks pass. The live EICAR string was generated only in
+one-off runtime memory and was not committed. No real malware, scanner database, secret, or
+quarantine payload was added to the repository.
+
 ## Phase 38 end-to-end V1 validation and launch gate
 
 Phase 38 validates the repository-controlled V1 lifecycle and records

@@ -107,6 +107,7 @@ from backend.app.deduplication.persistence import (
 from backend.app.documents.persistence import (
     DocumentBlockRecord,
     DocumentEvidenceLocationRecord,
+    DocumentMalwareScanAttemptRecord,
     DocumentProcessingRunRecord,
     DocumentRecord,
     DocumentWarningRecord,
@@ -274,6 +275,7 @@ __all__ = [
     "DeduplicationRunRecord",
     "DocumentBlockRecord",
     "DocumentEvidenceLocationRecord",
+    "DocumentMalwareScanAttemptRecord",
     "DocumentProcessingRunRecord",
     "DocumentRecord",
     "DocumentWarningRecord",

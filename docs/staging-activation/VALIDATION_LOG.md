@@ -258,5 +258,89 @@ record:
   scope. No PostgreSQL image, Compose configuration, scanner policy, or
   project container was modified.
 - Re-review is due no later than `2026-09-19`, and immediately if the image
-  digest, gosu build/version, Go toolchain, architecture, entrypoint,
-  scanner/advisory evidence, exposure model, or upstream remediation changes.
+digest, gosu build/version, Go toolchain, architecture, entrypoint,
+scanner/advisory evidence, exposure model, or upstream remediation changes.
+
+## 2026-08-20T11:50:48+01:00 SG-002 malware-scanning validation
+
+- Current HEAD before the SG-002 local change was
+  `10f83f1541bbc8263e38cc1f1f51f7c84e3205a3`; the worktree was inspected and
+  contained only the scoped SG-002 changes listed in the final diff. No
+  GitHub push, paid service, host antivirus/firewall modification, public
+  traffic, real malware, or secret value was used.
+- Baseline documents, architecture, ADR-002, ADR-034, domain/provenance
+  boundaries, upload/storage/parser/canonical-write path, restricted-content
+  authorization, processing runs, and worker architecture were inspected.
+  The scanner sits before parser execution and does not replace Document,
+  provenance, workflow, or scientific state.
+- Added provider-neutral `MalwareScanner` and structured outcomes
+  `CLEAN`, `INFECTED`, `ERROR`, `TIMEOUT`, and `UNAVAILABLE`; bounded scanner
+  version/signature/detection/error fields; and ClamAV TCP transport with
+  timeout and fail-closed error mapping. The test-only fixture provider is
+  rejected by staging/production configuration validation.
+- Added migration `20260820_0037`, append-only tenant/review/document-scoped
+  `document_malware_scan_attempts`, exact content SHA-256/size linkage, bounded
+  retries, fail-closed document statuses, manager-only scan history, and
+  scanner-aware readiness. Original acquisition bytes remain retained; no raw
+  payload is persisted.
+- Compose configuration passed `docker compose config --quiet`. The selected
+  official image is
+  `clamav/clamav:1.4.6@sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803`,
+  Linux amd64, with private-network-only port 3310, official `clamdcheck.sh`,
+  2g memory, and 2.0 CPU limits. The service became healthy after its bounded
+  startup/database-load interval. A transient first Compose start waited on
+  PostgreSQL crash recovery after the project-owned container recreation; the
+  database subsequently became healthy and the migration service completed.
+- `docker compose -p research-tool-readiness up -d --build clamav migrate
+  backend worker`: PASS after the disposable database recovery interval.
+  `docker compose -p research-tool-readiness ps` showed db, clamav, backend,
+  worker, and existing frontend healthy; migrate exited successfully. Live
+  `alembic current` and `alembic heads` both reported `20260820_0037 (head)`.
+  `GET http://localhost:8000/health/ready` returned HTTP 200 with database and
+  malware scanner `up`.
+- Runtime ClamAV version was `1.4.6`; the provider `zVERSION` response reported
+  signature database `28098` after service restart and database refresh.
+  A harmless clean fixture scanned live through the repository adapter as
+  `CLEAN`. Standard EICAR test content was generated only in one-off container
+  memory and scanned live as `INFECTED` / `Eicar-Test-Signature`; no test file
+  was created in the repository or retained in runtime storage.
+- Trivy `0.74.0` from immutable image digest
+  `sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`
+  scanned the exact ClamAV image with `vuln`, `HIGH,CRITICAL`, no suppression,
+  and returned zero findings. Vulnerability DB metadata was
+  `UpdatedAt=2026-08-20T00:55:38.477267043Z` and
+  `DownloadedAt=2026-08-20T05:08:45.429790275Z`.
+- `tests/unit/test_malware.py`: PASS for ClamAV protocol clean/infected
+  parsing, unavailable endpoint, bounded timeout, scanner error, and fixture
+  outcome taxonomy. `tests/integration/test_documents.py`: PASS for clean
+  metadata and eligibility, infected blocking before processing runs/canonical
+  writes, unavailable/timeout/error fail-closed behavior, bounded retry with
+  retained attempts, exact content-hash integrity, tenant isolation,
+  manager-only diagnostics, restricted authorization, and log/response
+  redaction. `tests/integration/test_migrations.py` and health tests: PASS.
+- `.venv\Scripts\ruff.exe check` and `format --check` on the changed scope,
+  `.venv\Scripts\mypy.exe backend workers`, `python -m compileall -q backend
+  workers`, Compose config, and `git diff --check`: PASS. Full repository
+  regression was not claimed.
+- SG-002 disposition: `MALWARE_SCANNER_GATE_PASS`. No external organizational
+  action is required for this bounded controlled-staging scanner gate. This
+entry does not begin SG-003; all unrelated gates remain in their prior state.
+
+## 2026-08-20T12:42:43+01:00 SG-002 final post-rebuild checkpoint
+
+- Final source was rebuilt into the project-owned migration, backend, and
+  worker images with `docker compose -p research-tool-readiness up -d --build
+  migrate backend worker`; the command completed successfully. No unrelated
+  service was changed beyond the named project stack required by the Compose
+  dependency/configuration update.
+- Final `docker compose -p research-tool-readiness ps` showed db, clamav,
+  backend, worker, and the existing frontend healthy. The final migration
+  container exited successfully; `alembic current` reported
+  `20260820_0037 (head)`. Final `GET /health/ready` returned HTTP 200 with
+  `{"database":"up","malware_scanner":"up"}`.
+- Against the final rebuilt backend image and private ClamAV service, the
+  provider health result was healthy, ClamAV `1.4.6`, signature database
+  `28098`; a harmless clean fixture returned `CLEAN`; standard EICAR test
+  content generated in memory returned `INFECTED` / `Eicar-Test-Signature`.
+- No EICAR file, malware payload, scanner database, secret, or runtime test
+  artifact was committed. SG-002 remains `MALWARE_SCANNER_GATE_PASS`.

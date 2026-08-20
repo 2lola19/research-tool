@@ -298,3 +298,18 @@ and S3-compatible storage are provider implementations behind a small protocol; 
 reconciliation is read-only diagnostics and cannot delete objects or silently alter document
 state. Restricted document classes require screening authorization before verified content bytes
 are returned.
+
+## SG-002 document malware boundary
+
+Uploaded document bytes are first retained under the document's opaque storage identity with
+`MALWARE_SCAN_PENDING` status. `DocumentMalwareScanAttempt` is append-only, tenant- and
+Review-scoped operational evidence containing the provider type, bounded scanner/signature
+versions, exact content SHA-256 and size, outcome, bounded detection or error taxonomy, attempt
+identity, and timestamps. It never stores raw document bytes or replaces `Document` provenance.
+
+Only an exact `CLEAN` result for the current verified content hash and size can transition the
+document to `MALWARE_CLEAN` and make parser execution eligible. `INFECTED`, `ERROR`, `TIMEOUT`,
+and `UNAVAILABLE` remain fail-closed states; their acquisition record is retained and a bounded
+retry may create another scan-attempt row. Parser runs, canonical `DocumentBlock` writes, and
+scientific provenance occur only after the malware gate succeeds. Malware disposition and
+scientific provenance therefore remain separate ledgers.

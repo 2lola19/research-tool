@@ -324,3 +324,13 @@ Migration `20260819_0036` adds the workflow-job `payload_version > 0` and bounde
 checks that were present in the ORM mapping but absent from the live migration chain. It is a
 deployment correctness correction, not a new workflow feature; the PostgreSQL target must apply
 it successfully before readiness is claimed.
+
+## SG-002 malware scan metadata
+
+Migration `20260820_0037` adds the allowed document malware-processing statuses and the
+append-only `document_malware_scan_attempts` table. Each attempt is tenant/review/document scoped,
+links the exact SHA-256 and byte size that was scanned, and constrains outcome and error taxonomy
+values. Detection names and error messages are bounded operational fields; raw document or malware
+payloads are never stored. The table is separate from document provenance, parser runs, canonical
+blocks, and scientific data. SQLite upgrade/downgrade and live PostgreSQL migration execution pass
+for the new head.

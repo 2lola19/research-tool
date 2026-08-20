@@ -10,6 +10,7 @@ from backend.app.documents.domain import (
     Document,
     DocumentBlock,
     DocumentEvidenceLocation,
+    DocumentMalwareScanAttempt,
     DocumentProcessingRun,
     DocumentRetrievalMethod,
     DocumentStatus,
@@ -85,6 +86,27 @@ class DocumentRepository(Protocol):
     async def list_processing_runs(
         self, organization_id: UUID, review_id: UUID, document_id: UUID
     ) -> list[DocumentProcessingRun]: ...
+
+    async def count_malware_scan_attempts(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> int: ...
+
+    async def latest_clean_malware_scan(
+        self,
+        organization_id: UUID,
+        review_id: UUID,
+        document_id: UUID,
+        content_sha256: str,
+        content_size: int,
+    ) -> DocumentMalwareScanAttempt | None: ...
+
+    async def create_malware_scan_attempt(
+        self, *, document: Document, **values: object
+    ) -> DocumentMalwareScanAttempt: ...
+
+    async def list_malware_scan_attempts(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> list[DocumentMalwareScanAttempt]: ...
 
     async def list_documents_for_review(
         self, organization_id: UUID, review_id: UUID

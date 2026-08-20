@@ -11,6 +11,7 @@ def settings(tmp_path: object) -> Settings:
         app_env="test",
         database_url="sqlite+aiosqlite:///:memory:",
         local_storage_path=tmp_path,
+        malware_scanner_provider="fixture",
     )
 
 

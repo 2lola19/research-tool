@@ -38,9 +38,20 @@ async def metrics(request: Request) -> PlainTextResponse:
 async def readiness(health_service: HealthServiceDependency) -> HealthResponse | JSONResponse:
     database_is_ready = await health_service.database_is_ready()
     if not database_is_ready:
-        payload = HealthResponse(status="unhealthy", checks={"database": "down"})
+        payload = HealthResponse(
+            status="unhealthy", checks={"database": "down", "malware_scanner": "down"}
+        )
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content=payload.model_dump(),
         )
-    return HealthResponse(status="healthy", checks={"database": "up"})
+    scanner_is_ready = await health_service.malware_scanner_is_ready()
+    if not scanner_is_ready:
+        payload = HealthResponse(
+            status="unhealthy", checks={"database": "up", "malware_scanner": "down"}
+        )
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=payload.model_dump(),
+        )
+    return HealthResponse(status="healthy", checks={"database": "up", "malware_scanner": "up"})

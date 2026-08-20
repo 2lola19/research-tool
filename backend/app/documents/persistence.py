@@ -29,6 +29,7 @@ from backend.app.documents.domain import (
     DocumentBlock,
     DocumentBlockType,
     DocumentEvidenceLocation,
+    DocumentMalwareScanAttempt,
     DocumentProcessingRun,
     DocumentRetrievalMethod,
     DocumentStatus,
@@ -41,6 +42,7 @@ from backend.app.documents.domain import (
     ProcessingRunStatus,
 )
 from backend.app.documents.parsers import materialize_blocks
+from backend.app.malware.domain import MalwareScanErrorClass, MalwareScanOutcome
 
 
 class DocumentRecord(Base):
@@ -57,7 +59,9 @@ class DocumentRecord(Base):
         CheckConstraint(
             "status IN ('NOT_REQUESTED', 'RETRIEVAL_PENDING', 'RETRIEVED', 'OPEN_ACCESS', "
             "'USER_UPLOADED', 'EXTERNAL_LINK_ONLY', 'PAYWALLED', 'NOT_FOUND', 'INVALID_FILE', "
-            "'PROCESSING', 'PROCESSED', 'PROCESSING_FAILED', 'RETRACTION_WARNING', "
+            "'MALWARE_SCAN_PENDING', 'MALWARE_CLEAN', 'MALWARE_INFECTED', "
+            "'MALWARE_SCAN_FAILED', 'PROCESSING', 'PROCESSED', 'PROCESSING_FAILED', "
+            "'RETRACTION_WARNING', "
             "'SUPPLEMENT_AVAILABLE')",
             name="ck_documents_status",
         ),
@@ -165,6 +169,52 @@ class DocumentProcessingRunRecord(Base):
     requested_by_user_id: Mapped[UUID] = mapped_column()
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DocumentMalwareScanAttemptRecord(Base):
+    __tablename__ = "document_malware_scan_attempts"
+    __table_args__ = (
+        UniqueConstraint("id", "organization_id", "review_id", name="uq_document_scans_id_tenant"),
+        UniqueConstraint(
+            "document_id", "attempt_number", name="uq_document_scans_document_attempt"
+        ),
+        CheckConstraint("attempt_number > 0", name="ck_document_scans_attempt_number"),
+        CheckConstraint("content_size >= 0", name="ck_document_scans_content_size"),
+        CheckConstraint("length(content_sha256) = 64", name="ck_document_scans_content_hash"),
+        CheckConstraint(
+            "outcome IN ('CLEAN', 'INFECTED', 'ERROR', 'TIMEOUT', 'UNAVAILABLE')",
+            name="ck_document_scans_outcome",
+        ),
+        CheckConstraint(
+            "error_class IS NULL OR error_class IN "
+            "('UNAVAILABLE', 'TIMEOUT', 'SCANNER_ERROR', 'PROTOCOL_ERROR')",
+            name="ck_document_scans_error_class",
+        ),
+        ForeignKeyConstraint(
+            ["document_id", "organization_id", "review_id"],
+            ["documents.id", "documents.organization_id", "documents.review_id"],
+            name="fk_document_scans_document_tenant",
+            ondelete="CASCADE",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    document_id: Mapped[UUID] = mapped_column()
+    organization_id: Mapped[UUID] = mapped_column()
+    review_id: Mapped[UUID] = mapped_column()
+    attempt_number: Mapped[int] = mapped_column(Integer)
+    provider_type: Mapped[str] = mapped_column(String(80))
+    scanner_version: Mapped[str | None] = mapped_column(String(120))
+    signature_database_version: Mapped[str | None] = mapped_column(String(120))
+    content_sha256: Mapped[str] = mapped_column(String(64))
+    content_size: Mapped[int] = mapped_column(Integer)
+    outcome: Mapped[str] = mapped_column(String(20))
+    detection_name: Mapped[str | None] = mapped_column(String(200))
+    error_class: Mapped[str | None] = mapped_column(String(30))
+    error_message: Mapped[str | None] = mapped_column(String(4000))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -426,6 +476,29 @@ def _run(row: DocumentProcessingRunRecord) -> DocumentProcessingRun:
     )
 
 
+def _malware_scan(row: DocumentMalwareScanAttemptRecord) -> DocumentMalwareScanAttempt:
+    now = datetime.now(UTC)
+    return DocumentMalwareScanAttempt(
+        id=row.id,
+        document_id=row.document_id,
+        organization_id=row.organization_id,
+        review_id=row.review_id,
+        attempt_number=row.attempt_number,
+        provider_type=row.provider_type,
+        scanner_version=row.scanner_version,
+        signature_database_version=row.signature_database_version,
+        content_sha256=row.content_sha256,
+        content_size=row.content_size,
+        outcome=MalwareScanOutcome(row.outcome),
+        detection_name=row.detection_name,
+        error_class=MalwareScanErrorClass(row.error_class) if row.error_class else None,
+        error_message=row.error_message,
+        started_at=row.started_at or now,
+        finished_at=row.finished_at or now,
+        created_at=row.created_at or now,
+    )
+
+
 def _block(row: DocumentBlockRecord) -> DocumentBlock:
     return DocumentBlock(
         id=row.id,
@@ -625,6 +698,74 @@ class SqlAlchemyDocumentRepository:
             )
         )
         return [_run(row) for row in rows]
+
+    async def count_malware_scan_attempts(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> int:
+        return int(
+            await self._session.scalar(
+                select(func.count(DocumentMalwareScanAttemptRecord.id)).where(
+                    DocumentMalwareScanAttemptRecord.organization_id == organization_id,
+                    DocumentMalwareScanAttemptRecord.review_id == review_id,
+                    DocumentMalwareScanAttemptRecord.document_id == document_id,
+                )
+            )
+            or 0
+        )
+
+    async def latest_clean_malware_scan(
+        self,
+        organization_id: UUID,
+        review_id: UUID,
+        document_id: UUID,
+        content_sha256: str,
+        content_size: int,
+    ) -> DocumentMalwareScanAttempt | None:
+        row = await self._session.scalar(
+            select(DocumentMalwareScanAttemptRecord)
+            .where(
+                DocumentMalwareScanAttemptRecord.organization_id == organization_id,
+                DocumentMalwareScanAttemptRecord.review_id == review_id,
+                DocumentMalwareScanAttemptRecord.document_id == document_id,
+                DocumentMalwareScanAttemptRecord.content_sha256 == content_sha256,
+                DocumentMalwareScanAttemptRecord.content_size == content_size,
+                DocumentMalwareScanAttemptRecord.outcome == MalwareScanOutcome.CLEAN.value,
+            )
+            .order_by(DocumentMalwareScanAttemptRecord.finished_at.desc())
+            .limit(1)
+        )
+        return _malware_scan(row) if row is not None else None
+
+    async def create_malware_scan_attempt(
+        self, *, document: Document, **values: object
+    ) -> DocumentMalwareScanAttempt:
+        row = DocumentMalwareScanAttemptRecord(
+            document_id=document.id,
+            organization_id=document.organization_id,
+            review_id=document.review_id,
+            **values,
+        )
+        self._session.add(row)
+        await self._session.flush()
+        await self._session.refresh(row)
+        return _malware_scan(row)
+
+    async def list_malware_scan_attempts(
+        self, organization_id: UUID, review_id: UUID, document_id: UUID
+    ) -> list[DocumentMalwareScanAttempt]:
+        rows = await self._session.scalars(
+            select(DocumentMalwareScanAttemptRecord)
+            .where(
+                DocumentMalwareScanAttemptRecord.organization_id == organization_id,
+                DocumentMalwareScanAttemptRecord.review_id == review_id,
+                DocumentMalwareScanAttemptRecord.document_id == document_id,
+            )
+            .order_by(
+                DocumentMalwareScanAttemptRecord.attempt_number,
+                DocumentMalwareScanAttemptRecord.created_at,
+            )
+        )
+        return [_malware_scan(row) for row in rows]
 
     async def get_full_text_screening_for_document(
         self, organization_id: UUID, review_id: UUID, document_id: UUID

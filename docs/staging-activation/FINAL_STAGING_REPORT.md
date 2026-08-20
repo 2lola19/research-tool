@@ -141,3 +141,26 @@ digest, gosu version/build, Go toolchain, architecture, entrypoint/invocation,
 scanner/advisory evidence, network/exposure model, or upstream remediation
 availability changes. No PostgreSQL image or configuration change was made;
 the remaining staging gates are unaffected.
+
+## 2026-08-20 SG-002 malware scanning gate disposition
+
+SG-002 is closed for the bounded controlled-staging scope as
+`MALWARE_SCANNER_GATE_PASS`. The repository now uses a provider-neutral
+malware-scanner protocol with official ClamAV `1.4.6` in a private,
+project-isolated Compose service. The exact scanner image is
+`clamav/clamav:1.4.6@sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803`,
+Linux amd64; ClamAV reported signature database `28098` after startup refresh.
+The service has no host port, an official healthcheck, and bounded 2g/2 CPU
+resources. Its pinned Trivy 0.74.0 scan found zero HIGH/CRITICAL findings.
+
+The document path retains original bytes as `MALWARE_SCAN_PENDING`, persists
+tenant-scoped append-only hash-linked scan attempts, and fails closed for
+infection, scanner errors, timeouts, unavailability, and retry exhaustion.
+Only an exact clean scan can precede parser execution, canonical block writes,
+and scientific provenance. Live clean and standard EICAR scans passed; focused
+unit, integration, tenant/auth/redaction, migration, readiness, compile,
+Ruff, mypy, Compose, and image-scan validation passed. No real malware, EICAR
+artifact, raw payload, scanner database, or secret was committed.
+
+This disposition does not begin SG-003. The overall staging program remains
+`READY_WITH_EXTERNAL_GATES` because the unrelated gates remain unchanged.

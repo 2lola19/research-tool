@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     )
     database_echo: bool = False
     database_require_migrations: bool = False
-    database_expected_revision: str = Field(default="20260819_0036", min_length=13, max_length=13)
+    database_expected_revision: str = Field(default="20260820_0037", min_length=13, max_length=13)
     ai_provider: Literal["mock", "openai", "anthropic", "gemini"] = "mock"
     ai_live_provider_execution_enabled: bool = False
     ai_provider_user_agent: str = Field(
@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     ai_require_pricing_for_live_providers: bool = True
     object_storage_provider: Literal["local", "s3"] = "local"
     local_storage_path: Path = Path("data/objects")
+    malware_scanner_provider: Literal["clamav", "fixture"] = "clamav"
+    malware_scanner_host: str = Field(default="clamav", min_length=1, max_length=255)
+    malware_scanner_port: int = Field(default=3310, ge=1, le=65_535)
+    malware_scanner_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    max_malware_scan_attempts: int = Field(default=3, ge=1, le=10)
     max_document_file_size_bytes: int = Field(default=25_000_000, ge=1024, le=200_000_000)
     max_document_processing_attempts: int = Field(default=3, ge=1, le=10)
     document_parser_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
@@ -106,6 +111,8 @@ class Settings(BaseSettings):
         }:
             raise ValueError("local authentication is restricted to development and test")
         if self.app_env in {"staging", "production"}:
+            if self.malware_scanner_provider != "clamav":
+                raise ValueError("staging and production require the ClamAV malware scanner")
             if self.app_log_level == "DEBUG":
                 raise ValueError("DEBUG logging is not allowed in staging or production")
             if self.database_url.split(":", 1)[0] in {"sqlite", "sqlite+aiosqlite"}:

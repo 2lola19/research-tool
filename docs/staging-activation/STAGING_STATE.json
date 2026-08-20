@@ -6,7 +6,6 @@
   "blockers": [
     "The official postgres:17-alpine and postgres:17-bookworm images both retain one CRITICAL and multiple HIGH Trivy findings in the bundled gosu helper; an approved replacement digest or documented risk acceptance is required.",
     "Docker Scout is installed but requires Docker ID authentication; no login was attempted.",
-    "No approved malware-scanner adapter or scanner service is present.",
     "No live GROBID service or non-sensitive representative PDF fixture is present.",
     "No live S3-compatible client implementation, disposable service, or authorized staging bucket is present.",
     "No OIDC adapter, issuer, audience, JWKS policy, or authorized test identity configuration is present.",
@@ -17,7 +16,6 @@
   ],
   "external_actions_required": [
     "Provide an approved PostgreSQL image digest with no unresolved exploitable HIGH/CRITICAL findings, or a security-owner exception for the exact gosu findings.",
-    "Provide an approved malware scanner and adapter contract, including health, clean-file, EICAR, unavailable, timeout, quarantine, and canonical-write ordering tests.",
     "Provide a disposable GROBID endpoint/image and a non-sensitive representative PDF; supply GROBID_URL by secret-managed staging configuration only.",
     "Provide a disposable S3-compatible service or approved staging bucket and owner; configure only the approved variable names and never paste secret values into the repository.",
     "Provide an authorized OIDC test issuer, audience, JWKS/key-rotation policy, callback URLs, tenant memberships, role mappings, and test users.",
@@ -31,7 +29,7 @@
   "validation_status": {
     "baseline_reconciliation": "PASS",
     "vulnerability_scanners": "ACCEPTED_BOUNDED_RISK",
-    "malware_scanning": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
+    "malware_scanning": "MALWARE_SCANNER_GATE_PASS",
     "grobid_parser": "ENVIRONMENT_BLOCKED",
     "s3_storage": "EXTERNAL_CREDENTIAL_REQUIRED",
     "oidc_identity": "EXTERNAL_CREDENTIAL_REQUIRED",
@@ -43,9 +41,38 @@
     "final_report": "COMPLETE"
   },
   "final_classification": "READY_WITH_EXTERNAL_GATES",
-  "next_action": "Maintain SG-001 acceptance only within controlled/private staging scope; re-review no later than 2026-09-19 or immediately on an image, gosu, Go, architecture, entrypoint, scanner/advisory, exposure, or upstream-remediation change.",
+  "next_action": "Maintain SG-001 acceptance only within controlled/private staging scope; retain SG-002 ClamAV health/signature refresh and re-scan evidence on scanner image or configuration changes; do not begin SG-003.",
   "gate_classifications": {
-    "SG-001": "ACCEPTED_BOUNDED_RISK"
+    "SG-001": "ACCEPTED_BOUNDED_RISK",
+    "SG-002": "MALWARE_SCANNER_GATE_PASS"
+  },
+  "sg_002_malware_scanning": {
+    "classification": "MALWARE_SCANNER_GATE_PASS",
+    "evaluated_at": "2026-08-20T12:42:43+01:00",
+    "provider": "ClamAV",
+    "image": "clamav/clamav:1.4.6",
+    "immutable_digest": "sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803",
+    "architecture": "linux/amd64",
+    "clamav_version": "1.4.6",
+    "signature_database_version": "28098",
+    "compose_isolation": "Private Compose network only; no host port; official clamdcheck.sh healthcheck; 2g memory and 2.0 CPU limits.",
+    "trivy": {
+      "version": "0.74.0",
+      "image_digest": "sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969",
+      "database_updated_at": "2026-08-20T00:55:38.477267043Z",
+      "database_downloaded_at": "2026-08-20T05:08:45.429790275Z",
+      "target": "clamav/clamav@sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803",
+      "high": 0,
+      "critical": 0
+    },
+    "live_results": {
+      "clean": "CLEAN",
+      "eicar": "INFECTED / Eicar-Test-Signature",
+      "eicar_artifact_retained": false
+    },
+    "ordering": "Original bytes retained as MALWARE_SCAN_PENDING; exact clean hash/size required before parser, canonical blocks, or scientific provenance; infected/error/timeout/unavailable fail closed.",
+    "evidence": "SECURITY_SCAN_REPORT.md SG-002 addendum; VALIDATION_LOG.md SG-002 entry; focused unit/document/tenant/auth/migration/health tests.",
+    "external_action_required": false
   },
   "sg_001_postgres_image_gate": {
     "classification": "ACCEPTED_BOUNDED_RISK",
@@ -91,5 +118,5 @@
       "scanner_suppression_authorized": false
     }
   },
-  "updated_at": "2026-08-20T10:18:43+01:00"
+  "updated_at": "2026-08-20T12:42:43+01:00"
 }

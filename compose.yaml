@@ -1,6 +1,23 @@
 name: review-platform
 
 services:
+  clamav:
+    image: clamav/clamav:1.4.6@sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803
+    platform: linux/amd64
+    expose:
+      - "3310"
+    volumes:
+      - clamav_data:/var/lib/clamav
+    mem_limit: 2g
+    cpus: 2.0
+    healthcheck:
+      test: ["CMD-SHELL", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 12
+      start_period: 360s
+    restart: unless-stopped
+
   db:
     image: postgres:17-alpine
     environment:
@@ -31,10 +48,15 @@ services:
       APP_RATE_LIMIT_ENABLED: "true"
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-review}:${POSTGRES_PASSWORD:-review}@db:5432/${POSTGRES_DB:-review_platform}
       DATABASE_REQUIRE_MIGRATIONS: "true"
-      DATABASE_EXPECTED_REVISION: "20260819_0036"
+      DATABASE_EXPECTED_REVISION: "20260820_0037"
       AI_PROVIDER: mock
       OBJECT_STORAGE_PROVIDER: local
       LOCAL_STORAGE_PATH: /app/data/objects
+      MALWARE_SCANNER_PROVIDER: clamav
+      MALWARE_SCANNER_HOST: clamav
+      MALWARE_SCANNER_PORT: "3310"
+      MALWARE_SCANNER_TIMEOUT_SECONDS: "30"
+      MAX_MALWARE_SCAN_ATTEMPTS: "3"
     depends_on:
       db:
         condition: service_healthy
@@ -52,6 +74,8 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -79,6 +103,8 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
     security_opt:
       - no-new-privileges:true
     stop_grace_period: 30s
@@ -119,5 +145,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  clamav_data:
   postgres_data:
   object_data:

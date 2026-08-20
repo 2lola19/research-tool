@@ -263,3 +263,78 @@ The SG-001 gate is therefore set to `ACCEPTED_BOUNDED_RISK`. The findings,
 reachability dispositions, risk controls, and upstream remediation watch remain
 unchanged; no image replacement, manual gosu replacement, or scanner
 suppression was performed.
+
+## 2026-08-20 SG-002 malware-scanner security evidence
+
+This addendum records the targeted SG-002 malware-scanning gate. It does not
+change the SG-001 PostgreSQL findings or waive any vulnerability.
+
+### Scanner image and vulnerability scan
+
+- Provider: official `clamav/clamav` image, version `1.4.6`, Compose reference
+  `clamav/clamav:1.4.6@sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803`.
+- Architecture: Linux amd64. Local image ID and immutable reference both
+  resolved to `sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803`.
+  Trivy identified Alpine `3.24.1`.
+- Runtime version: `ClamAV 1.4.6`; the live `zVERSION` adapter response
+  reported signature database `28098` after the disposable service refreshed
+  its database. The service healthcheck is the official `clamdcheck.sh` and
+  was healthy.
+- Compose isolation: private service-network exposure only (`3310` exposed
+  to the Compose network, no host port), named disposable signature volume,
+  `2g` memory limit, and `2.0` CPU limit. No host antivirus, firewall, or
+  Docker project outside Research Tool was changed.
+- Scanner: Trivy `0.74.0` from immutable image digest
+  `sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`.
+  Vulnerability DB `UpdatedAt=2026-08-20T00:55:38.477267043Z`,
+  `DownloadedAt=2026-08-20T05:08:45.429790275Z`.
+- Exact command target: `clamav/clamav@sha256:c3bfbf2a2c9abc1fc179e63832a9e8bfac901ede83853e3fa10acf6f1fb5c803`,
+  scanners `vuln`, severity `HIGH,CRITICAL`, JSON output. Result: zero HIGH
+  and zero CRITICAL findings. No scanner suppression or `ignore-unfixed` was
+  used.
+
+### Provider-neutral boundary and ordering
+
+The repository-owned `MalwareScanner` protocol exposes only health and a
+structured result with `CLEAN`, `INFECTED`, `ERROR`, `TIMEOUT`, and
+`UNAVAILABLE`. The ClamAV TCP transport is isolated in the malware adapter;
+document services do not consume ClamAV response strings. Detection names and
+error messages are bounded and sanitized. No raw uploaded document or malware
+payload is logged or persisted.
+
+Upload writes the verified original bytes under the opaque document key and
+creates `MALWARE_SCAN_PENDING`. Processing re-verifies the exact stored hash
+and size, checks for an exact prior clean result, and only then invokes the
+parser. A scan attempt is persisted before any result-driven transition.
+`INFECTED` becomes `MALWARE_INFECTED`; operational failures become
+`MALWARE_SCAN_FAILED`; neither creates a processing run or canonical block.
+Only `CLEAN` permits `MALWARE_CLEAN`, parser execution, canonical blocks, and
+scientific provenance. Scan attempts are append-only and separate from parser
+runs, scientific provenance, and acquisition evidence. Changed/corrupt bytes
+fail storage-integrity verification before scan eligibility and cannot reuse a
+prior clean result.
+
+### Test evidence
+
+- `tests/unit/test_malware.py`: ClamAV protocol clean/infected parsing,
+  unavailable endpoint, bounded timeout, scanner error, and deterministic
+  test-provider outcomes: PASS.
+- `tests/integration/test_documents.py`: clean metadata, EICAR-equivalent
+  fixture detection path, parser/canonical-write blocking, unavailable/
+  timeout/error fail-closed states, three-attempt retry bound, content-hash
+  integrity, tenant isolation, manager-only diagnostics, restricted content,
+  and redaction assertions: PASS.
+- `tests/integration/test_migrations.py`: SQLite upgrade/downgrade through
+  `20260820_0037`: PASS. Live Compose migration reached `20260820_0037 (head)`.
+- `tests/api/test_health.py` and `tests/unit/test_health_service.py`: scanner
+  readiness behavior: PASS. `GET /health/ready` on the Compose stack returned
+  HTTP 200 with database and malware scanner both `up`.
+- Live adapter clean scan against the Compose ClamAV service returned
+  `CLEAN`, ClamAV `1.4.6`, signature DB `28098`.
+- Live standard EICAR test content generated only in one-off container memory
+  returned `INFECTED` / `Eicar-Test-Signature`. No EICAR file or repository
+  artifact was created or committed.
+- Ruff, Ruff format check, mypy (`backend workers`), compileall, Compose config,
+  `git diff --check`, and the pinned ClamAV Trivy scan: PASS.
+
+AUTHORITATIVE SG-002 CLASSIFICATION: `MALWARE_SCANNER_GATE_PASS`

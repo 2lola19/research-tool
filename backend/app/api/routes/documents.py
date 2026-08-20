@@ -18,6 +18,7 @@ from backend.app.documents.domain import (
     CriterionDecision,
     Document,
     DocumentEvidenceLocation,
+    DocumentMalwareScanAttempt,
     DocumentProcessingRun,
     DocumentRetrievalMethod,
     DocumentStatus,
@@ -30,6 +31,8 @@ from backend.app.documents.parsers import FixtureDocumentParser
 from backend.app.documents.persistence import SqlAlchemyDocumentRepository
 from backend.app.documents.service import DocumentService
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
+from backend.app.malware.domain import MalwareScanOutcome
+from backend.app.malware.factory import build_malware_scanner
 from backend.app.protocols.persistence import SqlAlchemyProtocolRepository
 from backend.app.provenance.persistence import SqlAlchemyProvenanceRepository
 from backend.app.reviews.persistence import SqlAlchemyReviewRepository
@@ -197,6 +200,42 @@ class ProcessingRunResponse(BaseModel):
         )
 
 
+class MalwareScanResponse(BaseModel):
+    id: UUID
+    document_id: UUID
+    attempt_number: int
+    provider_type: str
+    scanner_version: str | None
+    signature_database_version: str | None
+    content_sha256: str
+    content_size: int
+    outcome: MalwareScanOutcome
+    detection_name: str | None
+    error_class: str | None
+    error_message: str | None
+    started_at: datetime
+    finished_at: datetime
+
+    @classmethod
+    def from_domain(cls, item: DocumentMalwareScanAttempt) -> MalwareScanResponse:
+        return cls(
+            id=item.id,
+            document_id=item.document_id,
+            attempt_number=item.attempt_number,
+            provider_type=item.provider_type,
+            scanner_version=item.scanner_version,
+            signature_database_version=item.signature_database_version,
+            content_sha256=item.content_sha256,
+            content_size=item.content_size,
+            outcome=item.outcome,
+            detection_name=item.detection_name,
+            error_class=item.error_class.value if item.error_class else None,
+            error_message=item.error_message,
+            started_at=item.started_at,
+            finished_at=item.finished_at,
+        )
+
+
 class StorageReconciliationResponse(BaseModel):
     review_id: UUID
     document_count: int
@@ -221,6 +260,7 @@ def _service(
         identity,
         SqlAlchemyProvenanceRepository(session),
         storage,
+        build_malware_scanner(settings),
         settings,
     )
 
@@ -366,6 +406,20 @@ async def list_document_processing_runs(
         actor, document_id=document_id
     )
     return [ProcessingRunResponse.from_domain(item) for item in runs]
+
+
+@router.get("/{document_id}/malware-scans", response_model=list[MalwareScanResponse])
+async def list_document_malware_scans(
+    actor: ActorContextDependency,
+    session: DbSessionDependency,
+    storage: ObjectStorageDependency,
+    settings: SettingsDependency,
+    document_id: Annotated[UUID, Path()],
+) -> list[MalwareScanResponse]:
+    scans = await _service(session, storage, settings).list_malware_scan_attempts(
+        actor, document_id=document_id
+    )
+    return [MalwareScanResponse.from_domain(item) for item in scans]
 
 
 @router.post("/{document_id}/evidence-locations", response_model=EvidenceLocationResponse)

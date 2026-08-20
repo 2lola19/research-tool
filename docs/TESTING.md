@@ -297,3 +297,14 @@ the database-backed operational signal.
 
 The frontend container healthcheck uses explicit IPv4 loopback so a healthy server is not falsely
 reported unavailable by image-local `localhost` resolution.
+
+## SG-002 malware scanner coverage
+
+Malware coverage uses a deterministic fixture adapter for repository tests and the provider-neutral
+ClamAV TCP adapter for protocol tests. It covers clean and standard EICAR live detection, bounded
+timeouts, unavailable endpoints, scanner errors, append-only retry history, exact content-hash
+eligibility, infected-content blocking before parser/canonical writes, tenant and authorization
+boundaries, generic redacted responses, migration metadata, and scanner readiness. The disposable
+ClamAV service is official `clamav/clamav:1.4.6`, pinned by Compose digest, with no host port and
+its image scanned by Trivy for HIGH/CRITICAL vulnerabilities. EICAR is generated only in disposable
+runtime memory and is never committed.

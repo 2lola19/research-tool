@@ -313,3 +313,19 @@ Every response receives the generated or validated `X-Request-ID` and a bounded 
 Structured completion logs contain only method, route template, status, and duration. The token
 issuance endpoint returns `429` with `Retry-After` and rate-limit headers after its configured
 process-local bound; a production edge/shared-store limiter remains required for multiple replicas.
+
+## SG-002 document malware scanning
+
+Document upload returns tenant-scoped metadata with status `MALWARE_SCAN_PENDING`; the verified
+object remains retained for audit and repair but is not content-accessible or parser-eligible.
+`POST /api/v1/documents/{document_id}/process` invokes the provider-neutral malware scanner after
+verified storage retrieval and before any parser run, canonical block write, or scientific
+provenance record. Only an exact clean result for the current SHA-256 and byte size permits
+processing. Infected, error, timeout, unavailable, and retry-exhausted outcomes fail closed with
+generic document status/error responses and retain append-only scan evidence.
+
+Manager-authorized `GET /api/v1/documents/{document_id}/malware-scans` exposes only bounded,
+tenant-scoped operational metadata: provider/version, signature database version, content hash and
+size, outcome, bounded detection/error fields, attempt number, and timestamps. It never returns
+document bytes, raw scanner output, credentials, storage keys, or restricted metadata to an
+unauthorized caller. The readiness endpoint includes the scanner health dependency.
