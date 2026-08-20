@@ -126,3 +126,18 @@ accept or reject the exact digest and 22 advisories. If accepted, re-review is
 required by 2026-09-19 or sooner on an upstream image/gosu/Go/Trivy,
 entrypoint, architecture, or exposure change. The overall staging report
 classification remains `READY_WITH_EXTERNAL_GATES` pending all other gates.
+
+## 2026-08-20 explicit SG-001 security-owner decision
+
+The security owner accepted the documented bounded residual risk for controlled/
+private staging of official `postgres:17-alpine` at
+`sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73`,
+Linux amd64, with the current official PostgreSQL entrypoint. The acceptance is
+limited to that exact image scope and does not waive the 22 Trivy findings or
+authorize scanner suppression. SG-001 is now `ACCEPTED_BOUNDED_RISK`.
+
+Re-review is required no later than 2026-09-19, or immediately if the image
+digest, gosu version/build, Go toolchain, architecture, entrypoint/invocation,
+scanner/advisory evidence, network/exposure model, or upstream remediation
+availability changes. No PostgreSQL image or configuration change was made;
+the remaining staging gates are unaffected.

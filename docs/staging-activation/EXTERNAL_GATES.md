@@ -255,3 +255,23 @@ Trivy database, entrypoint, architecture, or exposure change. Until that
 decision or an upstream-remediated official digest exists, SG-001 remains a
 staging security gate. No scanner suppression, manual gosu replacement,
 unofficial image, custom base image, or PostgreSQL downgrade was used.
+
+## 2026-08-20 explicit SG-001 security-owner decision
+
+The security owner accepted the bounded residual risk for controlled/private
+staging use of the exact official `postgres:17-alpine` image at
+`sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73`,
+Linux amd64, using the current official PostgreSQL entrypoint. This decision
+is based on the documented 22 Trivy findings and the source/binary govulncheck
+and entrypoint evidence showing no reachable vulnerable symbols in the deployed
+gosu invocation.
+
+LATEST SG-001 CLASSIFICATION:
+`ACCEPTED_BOUNDED_RISK`
+
+This is not a blanket CVE waiver and does not authorize scanner suppression.
+The scope excludes public production and is limited to the exact digest,
+architecture, entrypoint behavior, and private staging exposure model. Re-
+review is required no later than 2026-09-19, or immediately after any image,
+gosu, Go, architecture, entrypoint, scanner/advisory, exposure, or upstream
+remediation change. No PostgreSQL image or scanner configuration was changed.

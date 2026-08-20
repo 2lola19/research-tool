@@ -244,3 +244,19 @@ record:
   required by 2026-09-19 and sooner on an official image/gosu/Go/Trivy update,
   entrypoint or architecture change, or increased exposure. The complete
   finding table and risk assessment are in `SECURITY_SCAN_REPORT.md`.
+
+## 2026-08-20T10:18:43+01:00 SG-001 explicit security-owner disposition
+
+- The security owner accepted the bounded residual risk for controlled/private
+  staging of official `postgres:17-alpine` at
+  `sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73`,
+  Linux amd64, with the current official PostgreSQL entrypoint only.
+- The acceptance is based on the recorded 22 gosu findings and the bounded
+  source/binary govulncheck plus entrypoint evidence. It is not a blanket CVE
+  waiver and does not authorize Trivy suppression.
+- SG-001 is now `ACCEPTED_BOUNDED_RISK` for this exact controlled-staging
+  scope. No PostgreSQL image, Compose configuration, scanner policy, or
+  project container was modified.
+- Re-review is due no later than `2026-09-19`, and immediately if the image
+  digest, gosu build/version, Go toolchain, architecture, entrypoint,
+  scanner/advisory evidence, exposure model, or upstream remediation changes.

@@ -27,3 +27,13 @@ scanner waiver: all 22 findings remain recorded, individually assessed as
 `NOT_AFFECTED_REACHABILITY_PROVEN` for the bounded gosu invocation, and require
 explicit security-owner acceptance because no clean supported official digest
 exists.
+
+## 2026-08-20 SG-001 explicit security-owner decision
+
+The security owner accepted the bounded residual risk for controlled/private
+staging of the exact official PostgreSQL image and Linux amd64 digest recorded
+in the SG-001 evidence. The current SG-001 classification is
+`ACCEPTED_BOUNDED_RISK`; all 22 scanner findings remain recorded and unsuppressed.
+The acceptance does not authorize public production use. Re-review is due by
+2026-09-19 or sooner on the documented image, gosu, Go, architecture,
+entrypoint, scanner/advisory, exposure, or upstream-remediation triggers.

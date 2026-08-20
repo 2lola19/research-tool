@@ -238,3 +238,28 @@ for `postgres:17-alpine` at
 and the 22 listed advisories. If rejected, staging remains blocked until an
 upstream-remediated official digest is available. No Trivy ignore rule,
 manual gosu replacement, or custom PostgreSQL base image was introduced.
+
+### 2026-08-20 explicit security-owner decision
+
+At `2026-08-20T10:18:43+01:00`, the security owner explicitly accepted the
+bounded residual risk for controlled/private staging use of the exact official
+image `postgres:17-alpine` at immutable digest
+`sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73`,
+Linux amd64 only. The decision relies on the evidence above: the 22 Trivy
+HIGH/CRITICAL records remain visible in gosu 1.19's embedded Go standard
+library, while source/binary govulncheck and official-entrypoint analysis found
+no reachable vulnerable symbols in the deployed gosu invocation.
+
+This is an explicit bounded risk acceptance, not a CVE waiver and not an
+authorization to suppress Trivy findings. Scope is limited to controlled
+private staging, this exact digest and architecture, the current official
+PostgreSQL entrypoint, and no public-production authorization. Re-review is
+required no later than `2026-09-19`, or immediately on any PostgreSQL digest,
+gosu build/version, Go toolchain, architecture, entrypoint/invocation path,
+scanner/advisory evidence, network/exposure-model, or upstream-remediation
+change.
+
+The SG-001 gate is therefore set to `ACCEPTED_BOUNDED_RISK`. The findings,
+reachability dispositions, risk controls, and upstream remediation watch remain
+unchanged; no image replacement, manual gosu replacement, or scanner
+suppression was performed.

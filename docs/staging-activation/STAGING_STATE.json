@@ -30,7 +30,7 @@
   ],
   "validation_status": {
     "baseline_reconciliation": "PASS",
-    "vulnerability_scanners": "POSTGRES_IMAGE_GATE_ACCEPTED_RISK_REQUIRED",
+    "vulnerability_scanners": "ACCEPTED_BOUNDED_RISK",
     "malware_scanning": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
     "grobid_parser": "ENVIRONMENT_BLOCKED",
     "s3_storage": "EXTERNAL_CREDENTIAL_REQUIRED",
@@ -43,12 +43,12 @@
     "final_report": "COMPLETE"
   },
   "final_classification": "READY_WITH_EXTERNAL_GATES",
-  "next_action": "Obtain explicit security-owner acceptance or rejection for SG-001 exact digest and advisories, or wait for an upstream-remediated official digest; stop this targeted investigation here.",
+  "next_action": "Maintain SG-001 acceptance only within controlled/private staging scope; re-review no later than 2026-09-19 or immediately on an image, gosu, Go, architecture, entrypoint, scanner/advisory, exposure, or upstream-remediation change.",
   "gate_classifications": {
-    "SG-001": "POSTGRES_IMAGE_GATE_ACCEPTED_RISK_REQUIRED"
+    "SG-001": "ACCEPTED_BOUNDED_RISK"
   },
   "sg_001_postgres_image_gate": {
-    "classification": "POSTGRES_IMAGE_GATE_ACCEPTED_RISK_REQUIRED",
+    "classification": "ACCEPTED_BOUNDED_RISK",
     "evaluated_at": "2026-08-20T09:56:34+01:00",
     "compose_tag": "postgres:17-alpine",
     "immutable_digest": "sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73",
@@ -71,7 +71,25 @@
     "finding_disposition": "All 22 are individually NOT_AFFECTED_REACHABILITY_PROVEN for the bounded Linux amd64 gosu 1.19 official-entrypoint invocation; findings remain scanner-visible and are not suppressed.",
     "reachability_evidence": "govulncheck 1.7.0 source and binary modes reported no reachable vulnerable symbols; the signed upstream gosu 1.19 amd64 artifact matched SHA-256 52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0.",
     "upstream_status": "Fixed Go toolchains are published, but gosu 1.19 remains the latest upstream release and current official PostgreSQL 17.11 images have not incorporated a fixed-toolchain gosu rebuild.",
-    "human_action_required": "Security owner must explicitly accept or reject this exact digest and the 22 listed advisories. Re-review by 2026-09-19 or sooner on image/gosu/Go/Trivy/entrypoint/architecture/exposure change."
+    "human_action_required": "No further acceptance action is required for the recorded scope. Re-review by 2026-09-19 or sooner on image/gosu/Go/Trivy/entrypoint/architecture/exposure/upstream-remediation change.",
+    "security_owner_decision": {
+      "classification": "ACCEPTED_BOUNDED_RISK",
+      "decided_at": "2026-08-20T10:18:43+01:00",
+      "scope": "Controlled/private staging only; exact digest; Linux amd64; current official PostgreSQL entrypoint; no public production authorization.",
+      "basis": "Documented SG-001 evidence: 22 Trivy gosu findings remain visible and unsuppressed, while source/binary govulncheck and official-entrypoint analysis found no reachable vulnerable symbols in the deployed gosu invocation.",
+      "re_review_due": "2026-09-19",
+      "immediate_triggers": [
+        "PostgreSQL image digest",
+        "gosu version/build",
+        "Go toolchain",
+        "architecture",
+        "entrypoint/invocation path",
+        "scanner/advisory evidence",
+        "network/exposure model",
+        "upstream remediation availability"
+      ],
+      "scanner_suppression_authorized": false
+    }
   },
-  "updated_at": "2026-08-20T09:56:34+01:00"
+  "updated_at": "2026-08-20T10:18:43+01:00"
 }
