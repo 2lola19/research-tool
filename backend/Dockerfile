@@ -6,12 +6,27 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install --only-upgrade -y --no-install-recommends \
+        bsdutils \
+        libblkid1 \
+        liblastlog2-2 \
+        libmount1 \
+        libsmartcols1 \
+        libuuid1 \
+        login \
+        mount \
+        util-linux \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system --gid 1001 app && adduser --system --uid 1001 --ingroup app app
 
 COPY pyproject.toml README.md alembic.ini ./
 COPY backend ./backend
 COPY workers ./workers
-RUN python -m pip install --no-cache-dir .
+RUN python -m pip install --no-cache-dir . \
+    && python -m pip uninstall --yes pip \
+    && rm -rf /usr/local/lib/python3.13/ensurepip /root/.cache
 
 RUN mkdir -p /app/data/objects && chown -R app:app /app
 USER app
