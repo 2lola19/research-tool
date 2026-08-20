@@ -344,3 +344,11 @@ entry does not begin SG-003; all unrelated gates remain in their prior state.
   content generated in memory returned `INFECTED` / `Eicar-Test-Signature`.
 - No EICAR file, malware payload, scanner database, secret, or runtime test
   artifact was committed. SG-002 remains `MALWARE_SCANNER_GATE_PASS`.
+
+## 2026-08-20 SG-002 local commit checkpoint
+
+- The SG-002 implementation, validation, and evidence changes were committed
+  locally as `e70ca7a` (`feat: add fail-closed document malware scanning`).
+  No GitHub push was performed. The disposable `sg002-clamav` validation
+  container was removed; the project-owned Compose ClamAV service remains the
+  recorded staging service.

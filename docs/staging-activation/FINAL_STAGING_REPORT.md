@@ -92,6 +92,7 @@ production deployment should begin.
 - 7be7a605c63e00069881da86a899e71e68ade846: deployment-readiness recovery
   baseline.
 - 95446647d25af3708b7b579fcd4769018d6b990d: harden audited staging images.
+- e70ca7a: add fail-closed document malware scanning for SG-002.
 
 The durable state, blockers, validation log, recovery instructions, and
 operator handoff are in this directory. No GitHub push was performed.
