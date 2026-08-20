@@ -26,7 +26,7 @@ At minimum, a production configuration must provide:
 - `APP_ENV=production`, `AUTHENTICATION_PROVIDER=oidc`, and a reviewed production identity
   provider adapter. The local HMAC token provider is rejected outside development/test.
 - A PostgreSQL `DATABASE_URL`, `DATABASE_REQUIRE_MIGRATIONS=true`, and
-  `DATABASE_EXPECTED_REVISION=20260819_0036` (or the deployed migration head).
+  `DATABASE_EXPECTED_REVISION=20260820_0038` (or the deployed migration head).
 - Explicit HTTPS `APP_CORS_ORIGINS` without `*`, local hosts, or credentials in URLs.
 - `APP_SECURITY_HEADERS_ENABLED=true`, `APP_METRICS_ENABLED` only on an internal scrape path,
   and an edge/shared-store rate limit in addition to the process-local authentication limiter.
@@ -62,6 +62,15 @@ SG-002 adds migration `20260820_0037` for tenant-scoped append-only malware scan
 fail-closed document statuses. Compose readiness now requires the private ClamAV service to be
 healthy in addition to the database and migration head; the scanner image is pinned by immutable
 digest and exposes no host port.
+
+SG-003 adds migration `20260820_0038` for canonical parsed-content hashes and live-parser failure
+classes. The disposable GROBID validation overlay pins the official
+`grobid/grobid:0.9.1-crf` Linux amd64 image by digest, keeps it private with no host port, and
+probes `/api/health` readiness before the application depends on it. Application liveness and
+ordinary readiness remain independent of optional parser availability; `/health/processing-ready`
+reports parser unavailability without exposing the internal endpoint. The live SG-003 gate remains
+external-required because the host could not safely start the selected service and complete the
+exact-image scan.
 
 Before publishing an image, run the organization-approved dependency and image scanners (for
 example `pip-audit`, `npm audit --omit=dev`, and a container scanner) and record tool versions,

@@ -50,6 +50,9 @@ class ProcessingFailureClass(StrEnum):
     PARSER_INVALID = "PARSER_INVALID"
     PARSER_LIMIT = "PARSER_LIMIT"
     PARSER_TIMEOUT = "PARSER_TIMEOUT"
+    PARSER_UNAVAILABLE = "PARSER_UNAVAILABLE"
+    PARSER_ERROR = "PARSER_ERROR"
+    PARSER_UNSUPPORTED = "PARSER_UNSUPPORTED"
     UNEXPECTED = "UNEXPECTED"
 
 
@@ -124,6 +127,7 @@ class DocumentProcessingRun:
     failure_class: ProcessingFailureClass | None = None
     content_sha256: str | None = None
     content_size: int | None = None
+    parsed_content_hash: str | None = None
     chunk_manifest_hash: str | None = None
     chunk_manifest: list[dict[str, object]] | None = None
     block_count: int = 0

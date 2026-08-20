@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 
 ## Status by milestone
 
@@ -38,7 +38,7 @@ Last updated: 2026-08-19
 
 | Scholarly Search Provider Integrations (Phase 33) | IMPLEMENTED | Provider-neutral OpenAlex, PubMed, Europe PMC, and deterministic fixture adapters; bounded allowlisted HTTP transport; normalized citation import; raw artifact checksums; immutable provider-attempt provenance; explicit opt-in API/configuration; deterministic unit, integration, and migration coverage. Live network execution remains an environment/deployment gate. |
 | Production AI Provider Integrations and Governance (Phase 34) | IMPLEMENTED | Fixed OpenAI/Anthropic/Gemini adapters behind a bounded transport; explicit live opt-in; deterministic task/model routing and allowlists; normalized usage, exact known-cost accounting, tenant budget/circuit checks, usage API, and deterministic no-network coverage. Live credentials/network and PostgreSQL concurrency remain deployment gates. |
-| Document Processing/Object Storage/PDF Hardening (Phase 35) | IMPLEMENTED | Verified local/S3-compatible storage contracts, atomic/checksum-checked PDF acquisition, parser limits/timeouts, append-only retry/failure metadata, deterministic chunk manifests, restricted-content authorization, read-only reconciliation, migration `20260819_0035`, and tenant/security coverage. Live GROBID/S3/malware scanning/PostgreSQL remain deployment gates. |
+| Document Processing/Object Storage/PDF Hardening (Phase 35) | IMPLEMENTED | Verified local/S3-compatible storage contracts, atomic/checksum-checked PDF acquisition, provider-neutral fixture/live-GROBID adapter boundary, parser limits/timeouts, append-only retry/failure metadata, parsed-content hashes, deterministic chunk manifests, restricted-content authorization, read-only reconciliation, migration `20260820_0038`, and tenant/security coverage. Live GROBID execution remains `GROBID_GATE_EXTERNAL_REQUIRED`; S3/PostgreSQL remain deployment gates. |
 
 | End-to-End V1 Validation and Launch Gate (Phase 38) | READY_WITH_DOCUMENTED_LIMITATIONS | Deterministic scientific benchmark, focused full-lifecycle integration, tenant/security/provenance review, backend/frontend/configuration gates, release report, and launch classification pass locally. Full pytest, live PostgreSQL, Docker/image/scanner, OIDC, external storage/malware scanning, shared rate limiting, and backup/restore remain controlled-deployment gates. |
 
@@ -98,12 +98,12 @@ Last updated: 2026-08-19
   heartbeats, attempt history, failure/requeue, and a deterministic local runner. Phase 32 still
   owns richer resumability, retry taxonomy, and operational reconciliation.
 - Unblinded screening remains rejected until an explicit reveal policy exists.
-- GROBID is evaluated and adapter-ready, but its live service and resource profile are not validated on this host.
+- GROBID is adapter-ready and the official `0.9.1-crf` image was evaluated in a private disposable overlay, but startup was OOM-killed at 2g and the 4g retry was blocked by Docker Desktop's Linux-engine HTTP 500 state; live parser evidence remains `GROBID_GATE_EXTERNAL_REQUIRED`.
 
 ## Deferred and planned
 
 - Advanced estimators/dependency policies, general subgroup inference, meta-regression, publication-bias inference, network meta-analysis, mature report authoring, paid AI providers, and real external scholarly APIs remain out of scope until separately authorized.
-- GROBID live deployment, ASReview, external scholarly APIs, R/metafor, paid AI providers, production identity, and cloud object storage remain deferred.
+- GROBID live deployment, ASReview, external scholarly APIs, R/metafor, paid AI providers, production identity, and cloud object storage remain external/deferred gates; no live GROBID parse is claimed.
 
 ## Architecture decisions
 
@@ -293,6 +293,22 @@ reconciliation. Focused storage/parser/document integration tests, migration upg
 through `20260819_0035`, repository Ruff/format, strict mypy, and compile checks pass. Live GROBID,
 S3, malware scanning, external retrieval, PostgreSQL, and the monolithic full suite remain
 environment/deployment gates and are not represented as passes.
+
+### SG-003 live GROBID checkpoint (2026-08-20)
+
+The parser boundary now has a provider-neutral HTTP GROBID adapter with pinned
+provider/version identity, readiness/version probes, bounded response handling,
+canonical parsed-content hashing, and processing-run provenance linkage. The
+expected migration head is `20260820_0038`; `/health/processing-ready` separates
+parser readiness from application liveness/readiness. Local parser, migration,
+health, security, Ruff, format, mypy, and compile checks pass.
+
+The exact official `grobid/grobid:0.9.1-crf` image was pulled and exercised in a
+private overlay, but repeated 2g/4g starts were OOM-killed before readiness
+(with a transient Docker-engine HTTP 500 during one retry). The final Trivy
+scan found 3 HIGH and 1 CRITICAL Java findings in the exact image. No live PDF,
+GROBID version response, or parse was obtained. SG-003 is therefore
+`GROBID_GATE_EXTERNAL_REQUIRED`, not pass.
 
 ## Phase 36 collaboration, assignment, quality control and operational UX
 

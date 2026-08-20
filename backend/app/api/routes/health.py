@@ -55,3 +55,28 @@ async def readiness(health_service: HealthServiceDependency) -> HealthResponse |
             content=payload.model_dump(),
         )
     return HealthResponse(status="healthy", checks={"database": "up", "malware_scanner": "up"})
+
+
+@router.get(
+    "/health/processing-ready",
+    response_model=HealthResponse,
+    responses={status.HTTP_503_SERVICE_UNAVAILABLE: {"model": HealthResponse}},
+)
+async def processing_readiness(
+    health_service: HealthServiceDependency,
+) -> HealthResponse | JSONResponse:
+    database_is_ready = await health_service.database_is_ready()
+    scanner_is_ready = await health_service.malware_scanner_is_ready()
+    parser_is_ready = await health_service.document_parser_is_ready()
+    checks = {
+        "database": "up" if database_is_ready else "down",
+        "malware_scanner": "up" if scanner_is_ready else "down",
+        "document_parser": "up" if parser_is_ready else "down",
+    }
+    if not all(value == "up" for value in checks.values()):
+        payload = HealthResponse(status="unhealthy", checks=checks)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=payload.model_dump(),
+        )
+    return HealthResponse(status="healthy", checks=checks)

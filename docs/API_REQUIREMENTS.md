@@ -38,7 +38,7 @@ input/result hashes. The download proxy keeps bearer credentials server-side.
 |---|---|---|---|---|---|---|---|
 | AI inference | Screening, extraction, adjudication assistance | Screening onward | OpenAI, Anthropic, Gemini | Provider API key | Local models where validated | `MockAIProvider` | Mock interface only; real providers deferred |
 | Scholarly metadata | Discovery and enrichment | Search/import | OpenAlex, PubMed, Europe PMC, Crossref | Usually none; polite email/key may apply | Deterministic fixture translator/provider | Provider adapters and fixture implemented | Live execution explicit opt-in/deployment gate |
-| Document parsing | Scholarly PDF to structured TEI | Document management | GROBID | None for self-hosted | Fixture parser + TEI adapter | `DocumentParser` + `GrobidTeiParser` | Adapter foundation implemented; live service deferred |
+| Document parsing | Scholarly PDF to structured TEI | Document management | GROBID | None for self-hosted | Fixture parser + provider-neutral HTTP/TEI adapter | `DocumentParser` + `GrobidDocumentParser` | Adapter and bounded readiness implemented; live gate `GROBID_GATE_EXTERNAL_REQUIRED` |
 | Object storage | Durable document storage | Document management | S3-compatible providers | Access key/secret/role | Local filesystem | `LocalFileStorageProvider` | Local-first foundation implemented; S3 adapter deferred |
 | Notifications | Human checkpoints and job failures | Workflow | Email providers | Provider credentials | Console/mock notifications | Mock planned | Deferred to Phase 4 |
 | Durable orchestration | Retries, timers, checkpoints | Workflow | Temporal self-hosted/cloud | None locally; cloud credentials later | Local PostgreSQL-backed adapter | Contract created | Evaluate in Phase 4 |
@@ -283,6 +283,15 @@ diagnostic. It returns counts, missing document IDs, orphan count, and a status 
 storage keys, bytes, credentials, or deletion controls. External retrieval records accept only
 validated HTTPS URLs and do not trigger automatic fetching in this phase.
 
+The live parser configuration selects an explicitly pinned GROBID provider/version. Processing
+eligibility remains downstream of the exact current-content `CLEAN` malware result. A successful
+processing run retains the source document hash, parser/provider identity, processing-run ID,
+parsed-content hash, deterministic chunk-manifest hash, and bounded block/text metadata. Parser
+unavailable, timeout, provider-error, unsupported, invalid-output, and limit outcomes remain
+failed runs with bounded retry behavior; they do not create parser-derived evidence. The live
+GROBID gate remains external-required until a safe service and non-sensitive scholarly PDF have
+been exercised directly.
+
 ## Phase 36 collaboration, assignment, quality-control and operational UX API
 
 `GET /api/v1/screening/reviews/{review_id}/rounds` returns the tenant- and Review-scoped ordered
@@ -329,3 +338,9 @@ tenant-scoped operational metadata: provider/version, signature database version
 size, outcome, bounded detection/error fields, attempt number, and timestamps. It never returns
 document bytes, raw scanner output, credentials, storage keys, or restricted metadata to an
 unauthorized caller. The readiness endpoint includes the scanner health dependency.
+
+`GET /health/processing-ready` additionally checks the configured document parser's real health
+and pinned version probe. `GET /health/live` and ordinary `/health/ready` do not fail solely
+because an optional parser is unavailable; processing readiness returns `503` with only bounded
+dependency names and `up`/`down` states. GROBID endpoints and raw TEI are never exposed through
+tenant-facing API responses.

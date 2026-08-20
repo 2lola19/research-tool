@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from backend.app.api.dependencies import (
     ActorContextDependency,
     DbSessionDependency,
+    DocumentParserDependency,
     ObjectStorageDependency,
     SettingsDependency,
 )
@@ -27,7 +28,6 @@ from backend.app.documents.domain import (
     FullTextDecision,
     FullTextScreening,
 )
-from backend.app.documents.parsers import FixtureDocumentParser
 from backend.app.documents.persistence import SqlAlchemyDocumentRepository
 from backend.app.documents.service import DocumentService
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
@@ -180,6 +180,7 @@ class ProcessingRunResponse(BaseModel):
     chunk_manifest: list[dict[str, object]] | None
     block_count: int
     text_byte_size: int
+    parsed_content_hash: str | None
 
     @classmethod
     def from_domain(cls, item: DocumentProcessingRun) -> ProcessingRunResponse:
@@ -197,6 +198,7 @@ class ProcessingRunResponse(BaseModel):
             chunk_manifest=item.chunk_manifest,
             block_count=item.block_count,
             text_byte_size=item.text_byte_size,
+            parsed_content_hash=item.parsed_content_hash,
         )
 
 
@@ -385,10 +387,11 @@ async def process_document(
     session: DbSessionDependency,
     storage: ObjectStorageDependency,
     settings: SettingsDependency,
+    parser: DocumentParserDependency,
     document_id: Annotated[UUID, Path()],
 ) -> DocumentResponse:
     document = await _service(session, storage, settings).process(
-        actor, document_id=document_id, parser=FixtureDocumentParser()
+        actor, document_id=document_id, parser=parser
     )
     await session.commit()
     return DocumentResponse.from_domain(document)

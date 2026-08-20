@@ -121,7 +121,7 @@ class DocumentProcessingRunRecord(Base):
         CheckConstraint(
             "failure_class IS NULL OR failure_class IN "
             "('STORAGE_MISSING','STORAGE_INTEGRITY','PARSER_INVALID','PARSER_LIMIT',"
-            "'PARSER_TIMEOUT','UNEXPECTED')",
+            "'PARSER_TIMEOUT','PARSER_UNAVAILABLE','PARSER_ERROR','PARSER_UNSUPPORTED','UNEXPECTED')",
             name="ck_document_runs_failure_class",
         ),
         CheckConstraint(
@@ -136,6 +136,10 @@ class DocumentProcessingRunRecord(Base):
         CheckConstraint(
             "chunk_manifest_hash IS NULL OR length(chunk_manifest_hash) = 64",
             name="ck_document_runs_manifest_hash",
+        ),
+        CheckConstraint(
+            "parsed_content_hash IS NULL OR length(parsed_content_hash) = 64",
+            name="ck_document_runs_parsed_hash",
         ),
         ForeignKeyConstraint(
             ["document_id", "organization_id", "review_id"],
@@ -162,6 +166,7 @@ class DocumentProcessingRunRecord(Base):
     failure_class: Mapped[str | None] = mapped_column(String(30))
     content_sha256: Mapped[str | None] = mapped_column(String(64))
     content_size: Mapped[int | None] = mapped_column(Integer)
+    parsed_content_hash: Mapped[str | None] = mapped_column(String(64))
     chunk_manifest_hash: Mapped[str | None] = mapped_column(String(64))
     chunk_manifest: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON)
     block_count: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
@@ -469,6 +474,7 @@ def _run(row: DocumentProcessingRunRecord) -> DocumentProcessingRun:
         failure_class=(ProcessingFailureClass(row.failure_class) if row.failure_class else None),
         content_sha256=row.content_sha256,
         content_size=row.content_size,
+        parsed_content_hash=row.parsed_content_hash,
         chunk_manifest=row.chunk_manifest,
         chunk_manifest_hash=row.chunk_manifest_hash,
         block_count=row.block_count,

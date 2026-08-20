@@ -32,6 +32,11 @@ from backend.app.documents.parsers import (
     DocumentParseError,
     DocumentParserLimitError,
     DocumentParserLimits,
+    DocumentParserProviderError,
+    DocumentParserTimeoutError,
+    DocumentParserUnavailableError,
+    DocumentParserUnsupportedError,
+    canonical_document_hash,
     validate_canonical_document,
 )
 from backend.app.identity.contracts import IdentityRepository
@@ -355,6 +360,7 @@ class DocumentService:
         )
         manifest: list[dict[str, object]] = []
         manifest_hash = ""
+        parsed_content_hash = ""
         text_byte_size = 0
         try:
             canonical = await asyncio.wait_for(
@@ -362,6 +368,7 @@ class DocumentService:
                 timeout=self._settings.document_parser_timeout_seconds,
             )
             validate_canonical_document(canonical, self._parser_limits())
+            parsed_content_hash = canonical_document_hash(canonical)
             manifest, manifest_hash, text_byte_size = build_chunk_manifest(
                 canonical, content_sha256=content_sha256
             )
@@ -376,6 +383,7 @@ class DocumentService:
                 failure_class=failure_class.value,
                 content_sha256=content_sha256 if content is not None else None,
                 content_size=len(content) if content is not None else None,
+                parsed_content_hash=None,
                 chunk_manifest_hash=None,
                 chunk_manifest=None,
                 block_count=0,
@@ -403,6 +411,7 @@ class DocumentService:
             failure_class=None,
             content_sha256=content_sha256,
             content_size=len(content),
+            parsed_content_hash=parsed_content_hash,
             chunk_manifest_hash=manifest_hash,
             chunk_manifest=manifest,
             block_count=len(manifest),
@@ -419,7 +428,13 @@ class DocumentService:
             subject_id=document.id,
             source_type="document",
             source_id=document.id,
-            source_locator={"storage_key": document.storage_key},
+            source_locator={
+                "storage_key": document.storage_key,
+                "document_sha256": content_sha256,
+                "processing_run_id": str(run.id),
+                "parsed_content_hash": parsed_content_hash,
+                "chunk_manifest_hash": manifest_hash,
+            },
             method_name=parser.name,
             method_version=parser.version,
             actor_kind=ProvenanceActorKind.HUMAN,
@@ -432,7 +447,13 @@ class DocumentService:
             document.review_id,
             processed,
             "processed",
-            {"parser": parser.name, "parser_version": parser.version},
+            {
+                "parser": parser.name,
+                "parser_version": parser.version,
+                "processing_run_id": str(run.id),
+                "parsed_content_hash": parsed_content_hash,
+                "chunk_manifest_hash": manifest_hash,
+            },
         )
         return processed
 
@@ -497,6 +518,7 @@ class DocumentService:
             failure_class=failure_class.value,
             content_sha256=None,
             content_size=None,
+            parsed_content_hash=None,
             chunk_manifest_hash=None,
             chunk_manifest=None,
             block_count=0,
@@ -836,8 +858,16 @@ class DocumentService:
             return ProcessingFailureClass.STORAGE_INTEGRITY
         if isinstance(exc, asyncio.TimeoutError):
             return ProcessingFailureClass.PARSER_TIMEOUT
+        if isinstance(exc, DocumentParserTimeoutError):
+            return ProcessingFailureClass.PARSER_TIMEOUT
         if isinstance(exc, DocumentParserLimitError):
             return ProcessingFailureClass.PARSER_LIMIT
+        if isinstance(exc, DocumentParserUnavailableError):
+            return ProcessingFailureClass.PARSER_UNAVAILABLE
+        if isinstance(exc, DocumentParserProviderError):
+            return ProcessingFailureClass.PARSER_ERROR
+        if isinstance(exc, DocumentParserUnsupportedError):
+            return ProcessingFailureClass.PARSER_UNSUPPORTED
         if isinstance(exc, DocumentParseError):
             return ProcessingFailureClass.PARSER_INVALID
         return ProcessingFailureClass.UNEXPECTED
@@ -850,6 +880,8 @@ class DocumentService:
             return "document content failed checksum or size verification"
         if isinstance(exc, asyncio.TimeoutError):
             return "document parser exceeded its time limit"
+        if isinstance(exc, DocumentParserTimeoutError):
+            return str(exc)[:4000]
         if isinstance(exc, DocumentParserLimitError):
             return str(exc)[:4000]
         if isinstance(exc, DocumentParseError):

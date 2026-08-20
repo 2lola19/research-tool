@@ -222,15 +222,24 @@ same checksum boundary; a corrupted or missing object produces a classified fail
 run and does not overwrite the original artifact or prior run history.
 
 Each processing run records parser name/version, requester, start/finish times, verified content
-hash/size, bounded canonical block count and text-byte total, and a deterministic versioned chunk
-manifest/hash. Manifest entries identify block type/order/page/section and text hashes so later
-evidence can be reconstructed and compared without treating the manifest as a canonical Article,
-Study, or scientific decision. Consequential block persistence and screening continue to use the
-existing provenance and append-only audit services.
+hash/size, bounded canonical block count and text-byte total, the canonical parsed-content hash,
+and a deterministic versioned chunk manifest/hash. Manifest entries identify block type/order/page/
+section and text hashes so later evidence can be reconstructed and compared without treating the
+manifest as a canonical Article, Study, or scientific decision. The document hash, provider/version,
+adapter identity, processing-run identity, parsed-content hash, and manifest hash together pin the
+bounded representation; a reparse creates a new run rather than overwriting historical evidence.
+Consequential block persistence and screening continue to use the existing provenance and
+append-only audit services.
 
 Read-only storage reconciliation is operational diagnostics only. It reports tenant/review-scoped
 missing and orphan counts without deleting objects or inventing provenance. Storage credentials,
 malware-scan claims, external URL response bodies, and unbounded parser output are not persisted.
+
+The live GROBID adapter is a document-parser provider only. Health/version failures, timeouts,
+unavailable/provider errors, unsupported documents, malformed TEI, and parser-limit failures retain
+bounded processing-run evidence but cannot create parsed blocks, chunk-derived evidence, or scientific
+interpretation. Live GROBID execution remains an external gate until a safe service and approved
+non-sensitive PDF are directly validated.
 
 ## Phase 36 operational workspace provenance boundary
 

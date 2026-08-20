@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
@@ -177,3 +178,19 @@ class DocumentParser(Protocol):
     def version(self) -> str: ...
 
     def parse(self, content: bytes) -> CanonicalDocument: ...
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentParserHealth:
+    healthy: bool
+    provider: str
+    version: str | None = None
+    error_class: str | None = None
+
+
+class DocumentParserHealthProvider(Protocol):
+    def health(self) -> DocumentParserHealth: ...
+
+
+class ConfiguredDocumentParser(DocumentParser, DocumentParserHealthProvider, Protocol):
+    pass

@@ -1,0 +1,36 @@
+services:
+  grobid:
+    image: grobid/grobid:0.9.1-crf@sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d
+    platform: linux/amd64
+    init: true
+    expose:
+      - "8070"
+    mem_limit: 4g
+    cpus: 2.0
+    ulimits:
+      core: 0
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8070; printf \"GET /api/health HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3; grep -q \"200 OK\" <&3'",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 300s
+    restart: "no"
+
+  backend:
+    ports: !reset
+      - "18000:8000"
+    environment:
+      DOCUMENT_PARSER_PROVIDER: grobid
+      GROBID_URL: http://grobid:8070
+      GROBID_VERSION: "0.9.1"
+    depends_on:
+      grobid:
+        condition: service_healthy
+
+  db:
+    ports: !reset []

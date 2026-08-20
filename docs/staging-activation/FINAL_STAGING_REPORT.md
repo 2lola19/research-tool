@@ -165,3 +165,41 @@ artifact, raw payload, scanner database, or secret was committed.
 
 This disposition does not begin SG-003. The overall staging program remains
 `READY_WITH_EXTERNAL_GATES` because the unrelated gates remain unchanged.
+
+## 2026-08-20 SG-003 live GROBID gate disposition
+
+SG-003 is classified `GROBID_GATE_EXTERNAL_REQUIRED`. The provider-neutral live
+parser adapter, canonical parsed-content hash, append-only processing-run
+provenance, bounded chunk linkage, parser readiness endpoint, migration
+`20260820_0038`, and disposable private Compose overlay were implemented and
+focused-tested. GROBID remains a document parser and was not made a Study,
+Article, scientific source of truth, extraction engine, screening engine, or
+Risk-of-Bias assessor.
+
+The selected official image was
+`grobid/grobid:0.9.1-crf@sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d`,
+Linux amd64, configured for GROBID `0.9.1` and adapter identity
+`grobid-0.9.1+adapter-1`. It was isolated to a private network with no host
+port and a real `/api/health` readiness probe. A two-GB startup was OOM-killed
+with exit 137 before readiness. The first retry using the upstream full-text
+four-GB memory guidance and the same two-CPU bound temporarily left Docker
+Desktop's Linux engine returning HTTP 500 for container inspection/listing/
+teardown. After recovery, a final four-GB retry was observed to exit 137 with
+`OOMKilled=true` while loading the CRF segmentation model. Docker/WSL was not
+repaired or restarted.
+
+The final exact-image Trivy 0.74.0 scan (scanner digest
+`sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`)
+took an initial timeout during Java database/layer analysis, then completed
+with zero Ubuntu OS findings and four Java findings (HIGH=3, CRITICAL=1):
+CVE-2026-54399, CVE-2026-54428, CVE-2025-14813, and CVE-2026-10050. The
+affected versions remain in the selected image; no waiver or suppression was
+applied. No runtime PDF was acquired, so no live GROBID health,
+version, parse, title/abstract/body, processing-run, parsed hash, chunk
+manifest, retry, or evidence-reconstruction claim is made. Existing SG-002
+clean-only ordering and local parser/tenant/security tests remain supporting
+evidence only.
+
+The remaining SG-003 action is to provide a supported private GROBID runtime or
+approved private endpoint, complete the exact image security scan, and rerun
+with one openly shareable scholarly PDF. SG-004 is not started.

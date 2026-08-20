@@ -48,7 +48,7 @@ services:
       APP_RATE_LIMIT_ENABLED: "true"
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-review}:${POSTGRES_PASSWORD:-review}@db:5432/${POSTGRES_DB:-review_platform}
       DATABASE_REQUIRE_MIGRATIONS: "true"
-      DATABASE_EXPECTED_REVISION: "20260820_0037"
+      DATABASE_EXPECTED_REVISION: "20260820_0038"
       AI_PROVIDER: mock
       OBJECT_STORAGE_PROVIDER: local
       LOCAL_STORAGE_PATH: /app/data/objects

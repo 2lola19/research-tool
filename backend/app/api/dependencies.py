@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.core.config import Settings
 from backend.app.core.errors import AuthenticationError, InvalidOrganizationContextError
 from backend.app.db.session import get_db_session
+from backend.app.documents.contracts import ConfiguredDocumentParser
+from backend.app.documents.factory import build_document_parser
 from backend.app.identity.domain import ActorContext
 from backend.app.identity.persistence import SqlAlchemyIdentityRepository
 from backend.app.identity.security import LocalTokenAuthenticationProvider
@@ -26,6 +28,13 @@ def get_request_settings(request: Request) -> Settings:
 
 
 SettingsDependency = Annotated[Settings, Depends(get_request_settings)]
+
+
+def get_document_parser(settings: SettingsDependency) -> ConfiguredDocumentParser:
+    return build_document_parser(settings)
+
+
+DocumentParserDependency = Annotated[ConfiguredDocumentParser, Depends(get_document_parser)]
 
 
 def get_object_storage(settings: SettingsDependency) -> VerifiedObjectStorageProvider:

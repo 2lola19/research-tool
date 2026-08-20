@@ -349,6 +349,78 @@ entry does not begin SG-003; all unrelated gates remain in their prior state.
 
 - The SG-002 implementation, validation, and evidence changes were committed
   locally as `e70ca7a` (`feat: add fail-closed document malware scanning`).
-  No GitHub push was performed. The disposable `sg002-clamav` validation
-  container was removed; the project-owned Compose ClamAV service remains the
-  recorded staging service.
+No GitHub push was performed. The disposable `sg002-clamav` validation
+container was removed; the project-owned Compose ClamAV service remains the
+recorded staging service.
+
+## 2026-08-20T14:54:30+01:00 SG-003 live GROBID/parser gate
+
+- SG-003 was run alone. SG-004 through SG-009 were not started. The worktree
+  was clean before the SG-003 implementation, and prior SG-001/SG-002 evidence
+  remains preserved.
+- The selected supported upstream service was
+  `grobid/grobid:0.9.1-crf` at immutable Linux amd64 manifest digest
+  `sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d`.
+  The image was pulled and its local image ID/repository digest matched. The
+  disposable overlay kept GROBID on a private Compose network with no host
+  port and probed real `/api/health` readiness.
+- The first service start used a 2-GB bound and ended before readiness with
+  exit `137`, `OOMKilled=true`; the health probe recorded connection refusal
+  and the logs ended during model loading. The overlay was then corrected to
+  the upstream full-text 4-GB memory guidance, retained a two-CPU bound, added
+  `init`/`core=0`, and was retried once. During that retry Docker Desktop's
+  Linux engine began returning HTTP 500 for container inspection, listing, and
+  teardown. No live `/api/health` 200, `/api/version`, or parse request was
+  obtained. Docker/WSL was not repaired or restarted.
+- Docker later recovered without intervention. A bounded teardown then removed
+  the exact `research-tool-sg003` containers, private network, and three
+  disposable volumes; no broad Docker cleanup was attempted.
+- The exact-image Trivy attempt used scanner image
+  `aquasec/trivy:0.74.0` at
+  `sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`,
+  with vulnerability scanning, HIGH/CRITICAL severity, unfixed findings
+  included, and no suppression. It downloaded the database but exited with
+  `context deadline exceeded` during Java database/layer analysis. A retry was
+  blocked by the Docker API 500. HIGH/CRITICAL counts have no disposition and
+  were not treated as zero.
+- No runtime PDF was acquired because the service never became ready. There is
+  therefore no PDF source, license/type, SHA-256, byte size, TEI artifact,
+  parsed-output hash, or live processing-run result to claim.
+- Implemented the provider-neutral HTTP parser adapter, pinned parser/version
+  identity, bounded request/response and timeout handling, GROBID TEI
+  normalization, canonical parsed-content hashing, append-only processing-run
+  hash persistence, deterministic chunk/provenance linkage, parser readiness,
+  migration `20260820_0038`, and the isolated SG-003 Compose overlay. GROBID
+  remains a parser and does not become Article, Study, extraction, screening,
+  Risk-of-Bias, or scientific source-of-truth state.
+- Focused parser, health, security, config, migration, Ruff, format, strict
+  mypy, and compile checks passed. Local failure taxonomy and SG-002
+  malware-before-parser tests provide bounded/mock evidence only; no live
+  GROBID success or live GROBID failure/retry result was inferred from them.
+- Authoritative SG-003 disposition: `GROBID_GATE_EXTERNAL_REQUIRED`. The gate
+  requires a supported private GROBID runtime with enough memory, an exact
+  vulnerability result/disposition, and one openly shareable scholarly PDF
+  before the live health, parse, retry, manifest, tenant, and evidence
+  reconstruction checks can be rerun. No GitHub push was performed.
+
+## 2026-08-20T15:27:57+01:00 SG-003 final retry and security checkpoint
+
+- After the initial bounded teardown, the same isolated pinned image was
+  started once more with the documented 4-GB/2-CPU bound. Docker inspection
+  initially reported `running|OOMKilled=false|starting`; the terminal state was
+  `exited|OOMKilled=true|137|unhealthy`. The real health probe saw only
+  connection refused, and logs ended while loading the CRF segmentation model.
+  No `/api/health` 200, `/api/version`, or full-text request was obtained.
+- The exact Trivy scan then completed with scanner `0.74.0`, scanner digest
+  `sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`,
+  target digest
+  `sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d`,
+  vulnerability scanning, HIGH/CRITICAL, unfixed findings included, and no
+  suppression. OS findings were `0`; Java findings were `4` (`HIGH=3`,
+  `CRITICAL=1`): `CVE-2026-54399`, `CVE-2026-54428`, `CVE-2025-14813`, and
+  `CVE-2026-10050`. Published fixes exist, but the selected image still ships
+  affected versions, so no security acceptance was made.
+- The exact GROBID project was removed after the final attempt; its containers,
+  private network, and disposable volumes were removed. The temporary named
+  Trivy cache volume was also removed. No PDF or parser output was retained.
+- Final SG-003 classification remains `GROBID_GATE_EXTERNAL_REQUIRED`.

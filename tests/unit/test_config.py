@@ -10,6 +10,7 @@ def test_production_disables_interactive_api_docs() -> None:
         database_url="postgresql+psycopg://app:password@db.internal:5432/review_platform",
         app_cors_origins=["https://review.example.test"],
         database_require_migrations=True,
+        document_parser_provider="grobid",
     )
 
     assert settings.docs_enabled is False

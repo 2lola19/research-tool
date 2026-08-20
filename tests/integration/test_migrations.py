@@ -37,7 +37,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
             for row in connection.execute("PRAGMA table_info(document_processing_runs)").fetchall()
         }
 
-    assert version == ("20260820_0037",)
+    assert version == ("20260820_0038",)
     assert {
         "users",
         "organizations",
@@ -202,6 +202,7 @@ def test_alembic_upgrade_applies_current_schema(tmp_path: Path) -> None:
         "failure_class",
         "content_sha256",
         "content_size",
+        "parsed_content_hash",
         "chunk_manifest_hash",
         "chunk_manifest",
         "block_count",

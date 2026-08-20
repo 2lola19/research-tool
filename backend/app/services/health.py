@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import cast
 
@@ -8,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from backend.app.core.config import Settings
 from backend.app.db.session import engine
+from backend.app.documents.contracts import DocumentParserHealthProvider
+from backend.app.documents.factory import build_document_parser
 from backend.app.malware.contracts import MalwareScanner
 from backend.app.malware.factory import build_malware_scanner
 
@@ -20,13 +23,15 @@ class HealthService:
         database_engine: AsyncEngine,
         *,
         require_migrations: bool = False,
-        expected_revision: str = "20260820_0037",
+        expected_revision: str = "20260820_0038",
         malware_scanner: MalwareScanner | None = None,
+        document_parser: DocumentParserHealthProvider | None = None,
     ) -> None:
         self._database_engine = database_engine
         self._require_migrations = require_migrations
         self._expected_revision = expected_revision
         self._malware_scanner = malware_scanner
+        self._document_parser = document_parser
 
     async def database_is_ready(self) -> bool:
         try:
@@ -55,6 +60,16 @@ class HealthService:
             return True
         return (await self._malware_scanner.health()).healthy
 
+    async def document_parser_is_ready(self) -> bool:
+        if self._document_parser is None:
+            return True
+        try:
+            health = await asyncio.to_thread(self._document_parser.health)
+        except Exception:
+            logger.warning("document_parser_readiness_failed", exc_info=True)
+            return False
+        return health.healthy
+
 
 def get_health_service(request: Request) -> HealthService:
     settings = cast(Settings, request.app.state.settings)
@@ -63,4 +78,5 @@ def get_health_service(request: Request) -> HealthService:
         require_migrations=settings.database_require_migrations,
         expected_revision=settings.database_expected_revision,
         malware_scanner=build_malware_scanner(settings),
+        document_parser=build_document_parser(settings),
     )

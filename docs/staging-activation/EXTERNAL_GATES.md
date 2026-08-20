@@ -305,3 +305,49 @@ is in `SECURITY_SCAN_REPORT.md`.
 No external organizational action is required for SG-002 within the bounded
 controlled-staging scope. SG-003 and the other unrelated gates remain
 unchanged and are not opened by this disposition.
+
+## 2026-08-20 SG-003 targeted disposition
+
+AUTHORITATIVE SG-003 CLASSIFICATION: `GROBID_GATE_EXTERNAL_REQUIRED`
+
+The provider-neutral live parser implementation is present and locally tested,
+but direct live-service evidence was not obtained. The selected official image
+was `grobid/grobid:0.9.1-crf` at immutable Linux amd64 digest
+`sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d`.
+The disposable overlay used a private network, no GROBID host port, real
+`/api/health` readiness, a two-CPU bound, and a four-GB memory bound after the
+initial two-GB attempt was OOM-killed. The upstream service's documented
+full-text readiness/version/process endpoints and resource guidance are linked
+in `PARSER_VALIDATION.md`.
+
+The two-GB attempt exited with code 137 and `OOMKilled=true` before port 8070
+opened. The first four-GB retry temporarily caused Docker Desktop's Linux
+engine to return HTTP 500 for container inspection/listing/teardown. After the
+engine recovered without repair, a final bounded four-GB retry was observed to
+exit with code 137 and `OOMKilled=true` while loading the CRF segmentation
+model. No health 200, version response, or parser request was observed.
+Docker/WSL repair is outside SG-003 scope.
+
+The final exact-image Trivy 0.74.0 scan used scanner digest
+`sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`,
+HIGH/CRITICAL, unfixed findings included, and no suppression. It timed out
+during the first Java database/layer attempt, but the final scan completed:
+the Ubuntu OS layer had zero findings and the Java layer had four findings
+(HIGH=3, CRITICAL=1): CVE-2026-54399, CVE-2026-54428, CVE-2025-14813, and
+CVE-2026-10050. Published fixed versions exist, but the selected image still
+contains the affected versions; no waiver or security-owner disposition is
+accepted.
+
+No runtime scholarly PDF was acquired; consequently no live parse, title,
+abstract, body, parsed hash, processing run, chunk manifest, retry, or live
+evidence reconstruction is claimed. Existing SG-002 evidence and local parser
+tests prove the clean-scan ordering boundary only; they do not substitute for
+the required live GROBID gate.
+
+EXTERNAL ACTION REQUIRED: restore a supported private Docker runtime with the
+memory needed for GROBID full-text parsing, or provide an approved private
+GROBID endpoint. Re-run the exact-image security scan, use one openly shareable
+scholarly PDF, and record health/version, malware-before-parser ordering,
+parse/provenance/hash/manifest evidence, bounded timeout and failure behavior,
+retry/idempotency, tenant isolation, and evidence reconstruction. Do not begin
+SG-004 while this action is outstanding.

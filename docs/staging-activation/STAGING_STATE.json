@@ -6,7 +6,7 @@
   "blockers": [
     "The official postgres:17-alpine and postgres:17-bookworm images both retain one CRITICAL and multiple HIGH Trivy findings in the bundled gosu helper; an approved replacement digest or documented risk acceptance is required.",
     "Docker Scout is installed but requires Docker ID authentication; no login was attempted.",
-    "No live GROBID service or non-sensitive representative PDF fixture is present.",
+    "SG-003 remains external-required: the pinned official GROBID service was pulled but repeated 2g/4g starts were OOM-killed before readiness; the exact image scan found 3 HIGH and 1 CRITICAL Java findings, and no live PDF parse or security-owner disposition is available.",
     "No live S3-compatible client implementation, disposable service, or authorized staging bucket is present.",
     "No OIDC adapter, issuer, audience, JWKS policy, or authorized test identity configuration is present.",
     "Rate limiting is process-local and no approved shared or edge limiter is configured.",
@@ -16,7 +16,7 @@
   ],
   "external_actions_required": [
     "Provide an approved PostgreSQL image digest with no unresolved exploitable HIGH/CRITICAL findings, or a security-owner exception for the exact gosu findings.",
-    "Provide a disposable GROBID endpoint/image and a non-sensitive representative PDF; supply GROBID_URL by secret-managed staging configuration only.",
+    "Restore a supported private Docker runtime with enough memory for the pinned GROBID full-text service, or provide an approved private GROBID endpoint; resolve or explicitly disposition the exact image's 3 HIGH/1 CRITICAL Java findings and supply one openly shareable scholarly PDF before rerunning SG-003.",
     "Provide a disposable S3-compatible service or approved staging bucket and owner; configure only the approved variable names and never paste secret values into the repository.",
     "Provide an authorized OIDC test issuer, audience, JWKS/key-rotation policy, callback URLs, tenant memberships, role mappings, and test users.",
     "Provide the approved shared or edge rate-limiter topology and failure policy for the intended replica count.",
@@ -31,7 +31,7 @@
     "baseline_reconciliation": "PASS",
     "vulnerability_scanners": "ACCEPTED_BOUNDED_RISK",
     "malware_scanning": "MALWARE_SCANNER_GATE_PASS",
-    "grobid_parser": "ENVIRONMENT_BLOCKED",
+    "grobid_parser": "GROBID_GATE_EXTERNAL_REQUIRED",
     "s3_storage": "EXTERNAL_CREDENTIAL_REQUIRED",
     "oidc_identity": "EXTERNAL_CREDENTIAL_REQUIRED",
     "shared_rate_limiting": "EXTERNAL_OPERATOR_ACTION_REQUIRED",
@@ -42,10 +42,11 @@
     "final_report": "COMPLETE"
   },
   "final_classification": "READY_WITH_EXTERNAL_GATES",
-  "next_action": "Maintain SG-001 acceptance only within controlled/private staging scope; retain SG-002 ClamAV health/signature refresh and re-scan evidence on scanner image or configuration changes; do not begin SG-003.",
+  "next_action": "Stop after SG-003; restore/provide a safe private GROBID runtime and rerun the live parser/security/PDF evidence before changing SG-003; do not begin SG-004.",
   "gate_classifications": {
     "SG-001": "ACCEPTED_BOUNDED_RISK",
-    "SG-002": "MALWARE_SCANNER_GATE_PASS"
+    "SG-002": "MALWARE_SCANNER_GATE_PASS",
+    "SG-003": "GROBID_GATE_EXTERNAL_REQUIRED"
   },
   "sg_002_malware_scanning": {
     "classification": "MALWARE_SCANNER_GATE_PASS",
@@ -119,5 +120,67 @@
       "scanner_suppression_authorized": false
     }
   },
-  "updated_at": "2026-08-20T12:42:43+01:00"
+  "sg_003_grobid_parser": {
+    "classification": "GROBID_GATE_EXTERNAL_REQUIRED",
+    "evaluated_at": "2026-08-20T15:27:57+01:00",
+    "image": "grobid/grobid:0.9.1-crf",
+    "immutable_digest": "sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d",
+    "architecture": "linux/amd64",
+    "configured_version": "0.9.1",
+    "adapter_version": "grobid-0.9.1+adapter-1",
+    "network_exposure": "Private disposable Compose network; no GROBID host port.",
+    "resource_attempts": [
+      {
+        "memory": "2g",
+        "cpus": 2,
+        "health": "Never ready; port 8070 connection refused.",
+        "exit_code": 137,
+        "oom_killed": true
+      },
+      {
+        "memory": "4g",
+        "cpus": 2,
+        "health": "No health response obtained; Docker Linux engine returned HTTP 500 during inspection/listing/teardown.",
+        "docker_repair_attempted": false
+      },
+      {
+        "memory": "4g",
+        "cpus": 2,
+        "health": "Never ready; /api/health connection refused and logs ended during CRF segmentation model loading.",
+        "exit_code": 137,
+        "oom_killed": true,
+        "docker_repair_attempted": false,
+        "cleanup": "Completed after Docker recovered: exact research-tool-sg003 containers, network, and disposable volumes removed."
+      }
+    ],
+    "trivy": {
+      "version": "0.74.0",
+      "image_digest": "sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969",
+      "target": "grobid/grobid@sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d",
+      "result": "FINDINGS_PRESENT",
+      "high": 3,
+      "critical": 1,
+      "os_findings": 0,
+      "java_findings": 4,
+      "vulnerabilities": [
+        "CVE-2026-54399",
+        "CVE-2026-54428",
+        "CVE-2025-14813",
+        "CVE-2026-10050"
+      ],
+      "finding_disposition": "Unresolved in the exact selected image; all have published fixed versions, but no image update or security-owner acceptance was available. No suppression.",
+      "suppression": false
+    },
+    "test_document": {
+      "acquired": false,
+      "sha256": null,
+      "byte_size": null,
+      "reason": "No runtime PDF was acquired because live GROBID never became ready."
+    },
+    "live_parse": "NOT_OBTAINED",
+    "malware_ordering": "SG-002 clean-only eligibility preserved and locally focused-tested; no live GROBID request occurred.",
+    "local_validation": "Parser, health, security, config, migration, Ruff, format, strict mypy, and compile checks passed; live-service claims remain unmade.",
+    "external_action_required": true
+  },
+  "updated_at": "2026-08-20T15:27:57+01:00"
 }

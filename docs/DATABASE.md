@@ -294,6 +294,13 @@ upgrade and downgrade retain the existing tenant/review foreign-key structure. P
 remain operational history, while `documents`, `document_blocks`, evidence locations, warnings,
 and provenance retain their separate scientific and audit responsibilities.
 
+Migration `20260820_0038` adds the nullable canonical `parsed_content_hash` and live-parser failure
+classes `PARSER_UNAVAILABLE`, `PARSER_ERROR`, and `PARSER_UNSUPPORTED`. A successful processing run
+therefore retains the verified source hash, parser/provider version, parsed-content hash, and
+deterministic chunk-manifest hash without replacing prior runs; failed attempts retain bounded
+failure evidence and no parser-derived block or scientific decision. The migration head used by
+staging readiness is `20260820_0038`.
+
 Storage keys are opaque relative paths and are not persisted as filesystem paths. No database row
 stores object-storage credentials, external retrieval secrets, raw parser output beyond the
 bounded manifest, or a claim that live S3/GROBID/PostgreSQL behavior has been validated.

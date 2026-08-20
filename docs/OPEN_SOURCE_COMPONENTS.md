@@ -1,10 +1,10 @@
 # Open-Source Component Evaluation
 
-Evaluation snapshot: 2026-08-11. Versions are pinned only when integration begins.
+Evaluation snapshot: 2026-08-20. Versions are pinned only when integration begins.
 
 | Component | Repository | License | Purpose | Evaluated | Decision | Reason / integration approach | Version |
 |---|---|---|---|---|---|---|---|
-| GROBID | https://github.com/grobidOrg/grobid | Apache-2.0 | Scholarly PDF parsing | Evaluated | Adapter boundary accepted; live service deferred | PDF-to-TEI service remains isolated; `GrobidTeiParser` normalizes fixture TEI into the canonical document model; Docker execution is blocked | TBD |
+| GROBID | https://github.com/grobidOrg/grobid | Apache-2.0 | Scholarly PDF parsing | Evaluated 2026-08-20 | Provider-neutral adapter accepted; live gate external-required | Official `grobid/grobid:0.9.1-crf` was pinned to Linux amd64 digest `sha256:eb306e6d494f6f7e89b35bbaf3b4925afd58c6a5638c775f2a1c35bfd3c5db0d`; private disposable startup was attempted, but 2g OOM-killed and 4g Docker API failure prevented live parse evidence | 0.9.1-crf |
 | ASReview | https://github.com/asreview/asreview | Apache-2.0 | Active-learning screening | Preliminary | Deferred | Screening Foundation uses the local blinded decision/provenance model; evaluate ASReview only after this recovery checkpoint | TBD |
 | dedupe | https://github.com/dedupeio/dedupe | MIT | Fuzzy entity resolution | Preliminary | Candidate | Layer after deterministic DOI/PMID/title rules; never destructively merge source records | TBD |
 | Temporal | https://github.com/temporalio/temporal | MIT (server); SDK licenses vary | Durable orchestration | Preliminary | Deferred behind port | Strong fit, but extra service complexity is premature before workflow semantics are implemented | TBD |
@@ -82,8 +82,8 @@ copyrighted screening instrument is introduced.
 
 Phase 25 adds no third-party dependency. Full-text selection, Unicode/whitespace normalization,
 evidence validation, metrics, and mock fixtures are deterministic repository code. `DocumentParser`
-remains the provider boundary; the fixture parser is sufficient. Live GROBID, OCR/computer vision,
-embeddings, external retrieval, and paid AI providers remain deferred.
+remains the provider boundary; the fixture parser is sufficient for offline tests. Live GROBID, OCR/
+computer vision, embeddings, external retrieval, and paid AI providers remain separately gated.
 ## Phase 26 dependency impact
 
 Governed structured extraction adds no new third-party runtime dependency. Typed validation, hashing,
@@ -149,11 +149,12 @@ licenses, and live network access are deployment configuration rather than commi
 ## Phase 35 dependency impact
 
 Document processing and object-storage hardening adds no third-party runtime dependency. The local
-atomic provider, verified metadata contract, S3-compatible adapter boundary, PDF fixture parser,
-canonical validation, and deterministic manifests use the existing Python/FastAPI/Pydantic/
-SQLAlchemy stack. No S3 vendor SDK, GROBID client SDK, OCR/computer-vision package, malware scanner,
-cloud credential, or live external service was introduced. GROBID and production S3 remain explicit
-deployment choices behind the repository-owned protocols.
+atomic provider, verified metadata contract, S3-compatible adapter boundary, provider-neutral
+GROBID HTTP/TEI adapter, PDF fixture parser, canonical validation, and deterministic manifests use
+the existing Python/FastAPI/Pydantic/SQLAlchemy stack. No S3 vendor SDK, GROBID client SDK, OCR/
+computer-vision package, malware scanner, cloud credential, or raw external artifact was introduced.
+The official GROBID image is an explicit disposable deployment choice behind the repository-owned
+protocol; its live gate remains external-required.
 
 ## Phase 37 dependency impact
 

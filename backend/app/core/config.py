@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     )
     database_echo: bool = False
     database_require_migrations: bool = False
-    database_expected_revision: str = Field(default="20260820_0037", min_length=13, max_length=13)
+    database_expected_revision: str = Field(default="20260820_0038", min_length=13, max_length=13)
     ai_provider: Literal["mock", "openai", "anthropic", "gemini"] = "mock"
     ai_live_provider_execution_enabled: bool = False
     ai_provider_user_agent: str = Field(
@@ -74,7 +74,11 @@ class Settings(BaseSettings):
     max_malware_scan_attempts: int = Field(default=3, ge=1, le=10)
     max_document_file_size_bytes: int = Field(default=25_000_000, ge=1024, le=200_000_000)
     max_document_processing_attempts: int = Field(default=3, ge=1, le=10)
+    document_parser_provider: Literal["fixture", "grobid"] = "fixture"
+    grobid_url: str = Field(default="http://grobid:8070", min_length=1, max_length=500)
+    grobid_version: str = Field(default="0.9.1", min_length=1, max_length=80)
     document_parser_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
+    max_document_parser_response_bytes: int = Field(default=50_000_000, ge=1024, le=200_000_000)
     max_document_parser_blocks: int = Field(default=20_000, ge=1, le=100_000)
     max_document_parser_text_bytes: int = Field(default=20_000_000, ge=1024, le=200_000_000)
     max_document_parser_block_text_bytes: int = Field(default=1_000_000, ge=256, le=20_000_000)
@@ -127,6 +131,8 @@ class Settings(BaseSettings):
                     raise ValueError("staging and production CORS origins cannot be local hosts")
             if "*" in self.app_cors_origins:
                 raise ValueError("wildcard CORS is not allowed in staging or production")
+            if self.document_parser_provider != "grobid":
+                raise ValueError("staging and production require the live GROBID parser")
         return self
 
     @property
