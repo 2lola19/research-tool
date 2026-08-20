@@ -82,8 +82,8 @@
       "action": "Run organization-approved pip-audit and container scans and disposition every high/critical finding."
     }
   ],
-  "last_completed_action": "Completed bounded deployment validation: live PostgreSQL migrations/head/metadata, concurrency, tenant isolation, backup/restore with scientific provenance, worker lease recovery, focused scientific/security tests, final frontend artifacts, image build, health checks, and strict quality gates. No release-blocking defect remains; external gates are recorded.",
+  "last_completed_action": "Completed bounded deployment validation: live PostgreSQL migrations/head/metadata, concurrency, tenant isolation, backup/restore with scientific provenance, worker lease recovery, focused scientific/security tests, final frontend artifacts, image build, health checks, and strict quality gates. Recovery reconciliation on 2026-08-20 rebuilt and reran the project-scoped migration service successfully against the disposable database; no release-blocking defect remains and external gates remain recorded.",
   "next_action": "Stop at the durable READY_WITH_EXTERNAL_GATES decision. Do not push, publish traffic, or start another development phase.",
   "files_in_progress": [],
-  "updated_at": "2026-08-19T23:38:40+01:00"
+  "updated_at": "2026-08-20T05:28:37+01:00"
 }

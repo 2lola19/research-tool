@@ -182,3 +182,28 @@ Subsequent entries must remain chronological and distinguish `PASS` from `ENVIRO
 - `DEPLOYMENT_STATE.json` now records `current_stage=COMPLETE`, `checkpoint_status=CHECKPOINTED`,
   `commit_pending=false`, and the checkpoint SHA. The final recommendation remains
   `READY_WITH_EXTERNAL_GATES`.
+
+### 2026-08-20 - recovery reconciliation after local checkpoint
+
+- Safe-directory Git reconciliation used only per-command `safe.directory` overrides: `HEAD` is
+  `476ad71445855f00edcb84f741d25d6dbdee621b` (`docs: record deployment readiness checkpoint`),
+  the recorded implementation checkpoint `208de49f8b16e6ef3b90104157876fd01b472831` is an
+  ancestor, `master` is ahead of `origin/master` by two local commits, and the worktree is clean.
+  No GitHub, remote, ACL, reset, clean, or unrelated-repository operation occurred.
+- Docker Engine 29.6.1 / Docker Desktop 4.80.0 remained available. The explicitly named
+  `research-tool-readiness` project contained only its expected network and PostgreSQL/object-data
+  volumes; `docker compose -p research-tool-readiness config --quiet` passed.
+- The existing one-shot migration container was an historical pre-fix attempt whose recorded exit
+  was 1 at migration `0033` due to the already documented PostgreSQL FK/index dependency. It was
+  reconciled without resetting or overwriting the database by running
+  `docker compose -p research-tool-readiness up --build --no-deps migrate` from the current source;
+  the rebuilt migration service exited 0.
+- The disposable `review_platform` database accepted connections and remained at Alembic head
+  `20260819_0036`; the expected scientific/provenance/workflow tables and workflow constraints were
+  present. Backend `/health/live`, `/health/ready`, and `/health/metrics`, plus frontend
+  `/api/health`, each returned HTTP 200. Backend, worker, frontend, and database remained healthy.
+- Result: container and PostgreSQL evidence remain valid `PASS`/`PASS_WITH_FIXES`; no durable gate was
+  reopened or advanced. The control plane remains `COMPLETE`/`CHECKPOINTED` with final classification
+  `READY_WITH_EXTERNAL_GATES`; the first remaining gates are the explicitly recorded external or
+  environment-blocked identity, storage, scanner, parser, proxy/shared-limiter, scanner-tool, and
+  broad-regression gates.
